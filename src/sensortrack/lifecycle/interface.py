@@ -266,23 +266,17 @@ ConfigSetting = Union[
 
 
 @frozen
-class AbstractConfigValue(ABC):
-    """Abstract parent class for all types of config values."""
-
-    value_type: ConfigValueType
-
-
-@frozen
 class DeviceValue:
     device_id: str
     component_id: str
 
 
 @frozen
-class DeviceConfigValue(AbstractConfigValue):
+class DeviceConfigValue:
     """DEVICE configuration value."""
 
     device_config: DeviceValue
+    value_type: ConfigValueType = ConfigValueType.DEVICE
 
 
 @frozen
@@ -291,10 +285,11 @@ class StringValue:
 
 
 @frozen
-class StringConfigValue(AbstractConfigValue):
+class StringConfigValue:
     """STRING configuration value."""
 
     string_config: StringValue
+    value_type: ConfigValueType = ConfigValueType.STRING
 
 
 ConfigValue = Union[
@@ -527,7 +522,7 @@ class ConfirmationRequest(AbstractRequest):
 
     app_id: str
     confirmation_data: ConfirmationData
-    settings: Dict[str, Any]
+    settings: Dict[str, Any] = field(factory=dict)
 
 
 @frozen
@@ -542,7 +537,7 @@ class ConfigurationRequest(AbstractRequest):
     """Request for CONFIGURATION phase"""
 
     configuration_data: ConfigRequestData
-    settings: Dict[str, Any]
+    settings: Dict[str, Any] = field(factory=dict)
 
 
 @frozen
@@ -564,7 +559,7 @@ class InstallRequest(AbstractRequest):
     """Request for INSTALL phase"""
 
     install_data: InstallData
-    settings: Dict[str, Any]
+    settings: Dict[str, Any] = field(factory=dict)
 
 
 @frozen
@@ -579,7 +574,7 @@ class UpdateRequest(AbstractRequest):
     """Request for UPDATE phase"""
 
     update_data: UpdateData
-    settings: Dict[str, Any]
+    settings: Dict[str, Any] = field(factory=dict)
 
 
 @frozen
@@ -594,7 +589,7 @@ class UninstallRequest(AbstractRequest):
     """Request for UNINSTALL phase"""
 
     uninstall_data: UninstallData
-    settings: Dict[str, Any]
+    settings: Dict[str, Any] = field(factory=dict)
 
 
 @frozen
@@ -623,7 +618,7 @@ class EventRequest(AbstractRequest):
     """Request for EVENT phase"""
 
     event_data: EventData
-    settings: Dict[str, Any]
+    settings: Dict[str, Any] = field(factory=dict)
 
 
 @frozen

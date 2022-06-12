@@ -20,7 +20,6 @@ from sensortrack.lifecycle.interface import (
     ConfigurationInitResponse,
     ConfigurationPageResponse,
     ConfigurationRequest,
-    ConfigValueType,
     ConfirmationData,
     ConfirmationRequest,
     ConfirmationResponse,
@@ -78,34 +77,18 @@ def responses():
     return load_data(RESPONSE_DIR)
 
 
-class TestResponseRoundTrip:
-    @pytest.mark.parametrize(
-        "source,obj",
-        [
-            ("INSTALL", InstallResponse),
-            ("UPDATE", UpdateResponse),
-            ("UNINSTALL", UninstallResponse),
-            ("OAUTH_CALLBACK", OauthCallbackResponse),
-            ("EVENT", EventResponse),
-        ],
-    )
-    def test_empty(self, source, obj, responses):
-        # Most responses are empty, so we're just that we can generate and round-trip JSON as expected
-        o = obj()
-        j = responses["%s.json" % source]
-        assert CONVERTER.from_json(j, obj) == o
-        assert CONVERTER.from_json(CONVERTER.to_json(o), obj) == o
-
+class TestParseResponse:
     def test_confirmation(self, responses):
-        # Confirmation takes a single argument, which the example shows as "{TARGET_URL}"
-        o = ConfirmationResponse("{TARGET_URL}")
+        expected = ConfirmationResponse("{TARGET_URL}")
         j = responses["CONFIRMATION.json"]
-        assert CONVERTER.from_json(j, ConfirmationResponse) == o
-        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfirmationResponse) == o
+        r = CONVERTER.from_json(j, ConfirmationResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfirmationResponse)
+        assert c == r and c is not r
 
-    def test_configration_initialize(self, responses):
+    def test_configuration_initialize(self, responses):
         # Response for INITIALIZE is different than for PAGE
-        o = ConfigurationInitResponse(
+        expected = ConfigurationInitResponse(
             configuration_data=ConfigInitData(
                 initialize=ConfigInit(
                     name="On When Open/Off When Shut WebHook App",
@@ -117,13 +100,15 @@ class TestResponseRoundTrip:
             )
         )
         j = responses["CONFIGURATION-INITIALIZE.json"]
-        assert CONVERTER.from_json(j, ConfigurationInitResponse) == o
-        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfigurationInitResponse) == o
+        r = CONVERTER.from_json(j, ConfigurationInitResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfigurationInitResponse)
+        assert c == r and c is not r
 
     def test_configuration_page_only(self, responses):
         # Response for PAGE is different than for INITIALIZE
         # This tests the example for an only page (1 of 1)
-        o = ConfigurationPageResponse(
+        expected = ConfigurationPageResponse(
             configuration_data=ConfigPageData(
                 page=ConfigPage(
                     page_id="1",
@@ -165,13 +150,15 @@ class TestResponseRoundTrip:
             )
         )
         j = responses["CONFIGURATION-PAGE-only.json"]
-        assert CONVERTER.from_json(j, ConfigurationPageResponse) == o
-        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfigurationPageResponse) == o
+        r = CONVERTER.from_json(j, ConfigurationPageResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfigurationPageResponse)
+        assert c == r and c is not r
 
     def test_configuration_page_1of2(self, responses):
         # Response for PAGE is different than for INITIALIZE
         # This tests the example for page 1 of 2
-        o = ConfigurationPageResponse(
+        expected = ConfigurationPageResponse(
             configuration_data=ConfigPageData(
                 page=ConfigPage(
                     page_id="1",
@@ -199,33 +186,49 @@ class TestResponseRoundTrip:
             )
         )
         j = responses["CONFIGURATION-PAGE-1of2.json"]
-        assert CONVERTER.from_json(j, ConfigurationPageResponse) == o
-        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfigurationPageResponse) == o
+        r = CONVERTER.from_json(j, ConfigurationPageResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfigurationPageResponse)
+        assert c == r and c is not r
 
+    def test_install(self, responses):
+        expected = InstallResponse()
+        j = responses["INSTALL.json"]
+        r = CONVERTER.from_json(j, InstallResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), InstallResponse)
+        assert c == r and c is not r
 
-class TestRequestRoundTrip:
+    def test_update(self, responses):
+        expected = UpdateResponse()
+        j = responses["UPDATE.json"]
+        r = CONVERTER.from_json(j, UpdateResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), UpdateResponse)
+        assert c == r and c is not r
 
-    # This spot-checks that we get the right type from each example file and that we can round-trip it succesfully
-    # Other tests below confirm that we are actually parsing each file properly
+    def test_uninstall(self, responses):
+        expected = UninstallResponse()
+        j = responses["UNINSTALL.json"]
+        r = CONVERTER.from_json(j, UninstallResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), UninstallResponse)
+        assert c == r and c is not r
 
-    @pytest.mark.parametrize(
-        "source,obj",
-        [
-            ("CONFIRMATION", ConfirmationRequest),
-            ("CONFIGURATION", ConfigurationRequest),
-            ("INSTALL", InstallRequest),
-            ("UPDATE", UpdateRequest),
-            ("UNINSTALL", UninstallRequest),
-            ("OAUTH_CALLBACK", OauthCallbackRequest),
-            ("EVENT-DEVICE", EventRequest),
-            ("EVENT-TIMER", EventRequest),
-        ],
-    )
-    def test_round_trip(self, source, obj, requests):
-        j = requests["%s.json" % source]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, obj)
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+    def test_oauth_callback(self, responses):
+        expected = OauthCallbackResponse()
+        j = responses["OAUTH_CALLBACK.json"]
+        r = CONVERTER.from_json(j, OauthCallbackResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), OauthCallbackResponse)
+        assert c == r and c is not r
+
+    def test_event(self, responses):
+        expected = EventResponse()
+        j = responses["EVENT.json"]
+        r = CONVERTER.from_json(j, EventResponse)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), EventResponse)
         assert c == r and c is not r
 
 
@@ -248,8 +251,10 @@ class TestParseRequest:
         j = requests["CONFIRMATION.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
-    def test_configuration(self, requests):
+    def test_configuration_initialize(self, requests):
         expected = ConfigurationRequest(
             lifecycle=LifecyclePhase.CONFIGURATION,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -263,7 +268,6 @@ class TestParseRequest:
                 config={
                     "property1": [
                         DeviceConfigValue(
-                            value_type=ConfigValueType.DEVICE,
                             device_config=DeviceValue(
                                 device_id="31192dc9-eb45-4d90-b606-21e9b66d8c2b",
                                 component_id="main",
@@ -272,7 +276,6 @@ class TestParseRequest:
                     ],
                     "property2": [
                         DeviceConfigValue(
-                            value_type=ConfigValueType.DEVICE,
                             device_config=DeviceValue(
                                 device_id="31192dc9-eb45-4d90-b606-21e9b66d8c2b",
                                 component_id="main",
@@ -286,9 +289,39 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["CONFIGURATION.json"]
+        j = requests["CONFIGURATION-INITIALIZE.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
+
+    def test_configuration_page(self, requests):
+        # Note that the invalid "app" config item is ignored when we deserialize
+        expected = ConfigurationRequest(
+            lifecycle=LifecyclePhase.CONFIGURATION,
+            execution_id="ce3975c1-0d03-3777-5250-0e61b15ad1d4",
+            locale="en",
+            version="0.1.0",
+            configuration_data=ConfigRequestData(
+                installed_app_id="58065067-52b9-49a5-a378-ce3871bc710b",
+                phase=ConfigPhase.PAGE,
+                page_id="2",
+                previous_page_id="1",
+                config={
+                    "minutes": [
+                        StringConfigValue(
+                            string_config=StringValue(value="3"),
+                        )
+                    ],
+                },
+            ),
+            settings={},
+        )
+        j = requests["CONFIGURATION-PAGE.json"]
+        r = CONVERTER.from_json(j, LifecycleRequest)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
     def test_install(self, requests):
         expected = InstallRequest(
@@ -305,7 +338,6 @@ class TestParseRequest:
                     config={
                         "contactSensor": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="e457978e-5e37-43e6-979d-18112e12c961",
                                     component_id="main",
@@ -314,7 +346,6 @@ class TestParseRequest:
                         ],
                         "lightSwitch": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
                                     component_id="main",
@@ -323,7 +354,6 @@ class TestParseRequest:
                         ],
                         "minutes": [
                             StringConfigValue(
-                                value_type=ConfigValueType.STRING,
                                 string_config=StringValue(value="5"),
                             )
                         ],
@@ -343,6 +373,8 @@ class TestParseRequest:
         j = requests["INSTALL.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
     def test_update(self, requests):
         expected = UpdateRequest(
@@ -359,7 +391,6 @@ class TestParseRequest:
                     config={
                         "contactSensor": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="e457978e-5e37-43e6-979d-18112e12c961",
                                     component_id="main",
@@ -368,7 +399,6 @@ class TestParseRequest:
                         ],
                         "lightSwitch": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
                                     component_id="main",
@@ -377,7 +407,6 @@ class TestParseRequest:
                         ],
                         "minutes": [
                             StringConfigValue(
-                                value_type=ConfigValueType.STRING,
                                 string_config=StringValue(value="5"),
                             )
                         ],
@@ -391,7 +420,6 @@ class TestParseRequest:
                 previous_config={
                     "contactSensor": [
                         DeviceConfigValue(
-                            value_type=ConfigValueType.DEVICE,
                             device_config=DeviceValue(
                                 device_id="e457978e-5e37-43e6-979d-18112e12c961",
                                 component_id="main",
@@ -400,7 +428,6 @@ class TestParseRequest:
                     ],
                     "lightSwitch": [
                         DeviceConfigValue(
-                            value_type=ConfigValueType.DEVICE,
                             device_config=DeviceValue(
                                 device_id="74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
                                 component_id="main",
@@ -409,7 +436,6 @@ class TestParseRequest:
                     ],
                     "minutes": [
                         StringConfigValue(
-                            value_type=ConfigValueType.STRING,
                             string_config=StringValue(value="5"),
                         )
                     ],
@@ -428,6 +454,8 @@ class TestParseRequest:
         j = requests["UPDATE.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
     def test_uninstall(self, requests):
         expected = UninstallRequest(
@@ -442,7 +470,6 @@ class TestParseRequest:
                     config={
                         "contactSensor": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="e457978e-5e37-43e6-979d-18112e12c961",
                                     component_id="main",
@@ -451,7 +478,6 @@ class TestParseRequest:
                         ],
                         "lightSwitch": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
                                     component_id="main",
@@ -460,7 +486,6 @@ class TestParseRequest:
                         ],
                         "minutes": [
                             StringConfigValue(
-                                value_type=ConfigValueType.STRING,
                                 string_config=StringValue(value="5"),
                             )
                         ],
@@ -480,6 +505,8 @@ class TestParseRequest:
         j = requests["UNINSTALL.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
     def test_oauth_callback(self, requests):
         expected = OauthCallbackRequest(
@@ -492,6 +519,8 @@ class TestParseRequest:
         j = requests["OAUTH_CALLBACK.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
     def test_event_device(self, requests):
         expected = EventRequest(
@@ -507,7 +536,6 @@ class TestParseRequest:
                     config={
                         "contactSensor": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="e457978e-5e37-43e6-979d-18112e12c961",
                                     component_id="main",
@@ -516,7 +544,6 @@ class TestParseRequest:
                         ],
                         "lightSwitch": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
                                     component_id="main",
@@ -525,7 +552,6 @@ class TestParseRequest:
                         ],
                         "minutes": [
                             StringConfigValue(
-                                value_type=ConfigValueType.STRING,
                                 string_config=StringValue(value="5"),
                             )
                         ],
@@ -562,6 +588,8 @@ class TestParseRequest:
         j = requests["EVENT-DEVICE.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
 
     def test_event_timer(self, requests):
         expected = EventRequest(
@@ -577,7 +605,6 @@ class TestParseRequest:
                     config={
                         "contactSensor": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="e457978e-5e37-43e6-979d-18112e12c961",
                                     component_id="main",
@@ -586,7 +613,6 @@ class TestParseRequest:
                         ],
                         "lightSwitch": [
                             DeviceConfigValue(
-                                value_type=ConfigValueType.DEVICE,
                                 device_config=DeviceValue(
                                     device_id="74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
                                     component_id="main",
@@ -595,7 +621,6 @@ class TestParseRequest:
                         ],
                         "minutes": [
                             StringConfigValue(
-                                value_type=ConfigValueType.STRING,
                                 string_config=StringValue(value="5"),
                             )
                         ],
@@ -627,3 +652,5 @@ class TestParseRequest:
         j = requests["EVENT-TIMER.json"]
         r = CONVERTER.from_json(j, LifecycleRequest)
         assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
