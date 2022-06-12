@@ -27,6 +27,8 @@ classifiers=[
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
+humps = "^0.2.2"
+pydantic-yaml = "^0.7.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
