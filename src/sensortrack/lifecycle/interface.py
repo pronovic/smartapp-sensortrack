@@ -288,7 +288,6 @@ class InstalledApp:
     installed_app_id: str
     location_id: str
     config: Dict[str, List[ConfigValue]]
-    previous_config: Optional[Dict[str, List[ConfigValue]]] = None
     permissions: List[str] = field(factory=list)
 
 
@@ -460,6 +459,8 @@ class UpdateData:
     auth_token: str
     refresh_token: str
     installed_app: InstalledApp
+    previous_config: Optional[Dict[str, List[ConfigValue]]] = None
+    previous_permissions: List[str] = field(factory=list)
 
 
 @frozen
@@ -470,7 +471,7 @@ class UninstallData:
 
 
 @frozen
-class CallbackData:
+class OauthCallbackData:
     installed_app_id: str
     url_path: str
 
@@ -501,7 +502,7 @@ class ConfirmationResponse:
 
 
 @frozen
-class ConfigRequest(AbstractRequest):
+class ConfigurationRequest(AbstractRequest):
     """Request for CONFIGURATION phase"""
 
     configuration_data: ConfigData
@@ -509,14 +510,14 @@ class ConfigRequest(AbstractRequest):
 
 
 @frozen
-class ConfigInitResponse:
+class ConfigurationInitResponse:
     """Response for CONFIGURATION/INITIALIZE phase"""
 
     initialize: ConfigInit
 
 
 @frozen
-class ConfigPageResponse:
+class ConfigurationPageResponse:
     """Response for CONFIGURATION/PAGE phase"""
 
     page: ConfigPage
@@ -571,7 +572,7 @@ class UninstallResponse:
 class OauthCallbackRequest(AbstractRequest):
     """Request for OAUTH_CALLBACK phase"""
 
-    o_auth_callback_data: CallbackData
+    o_auth_callback_data: OauthCallbackData
 
 
 @frozen
@@ -597,7 +598,7 @@ class EventResponse:
 
 
 LifecycleRequest = Union[
-    ConfigRequest,
+    ConfigurationRequest,
     ConfirmationRequest,
     InstallRequest,
     UpdateRequest,
@@ -607,7 +608,7 @@ LifecycleRequest = Union[
 ]
 
 REQUEST_BY_PHASE = {
-    LifecyclePhase.CONFIGURATION: ConfigRequest,
+    LifecyclePhase.CONFIGURATION: ConfigurationRequest,
     LifecyclePhase.CONFIRMATION: ConfirmationRequest,
     LifecyclePhase.INSTALL: InstallRequest,
     LifecyclePhase.UPDATE: UpdateRequest,
