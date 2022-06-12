@@ -3,63 +3,213 @@
 # pylint: disable=redefined-outer-name,invalid-name:
 
 import os
+from typing import Dict
 
 import pendulum
 import pytest
 
 from sensortrack.lifecycle.converter import CONVERTER
 from sensortrack.lifecycle.interface import (
-    ConfigData,
+    ConfigInit,
+    ConfigInitData,
+    ConfigPage,
+    ConfigPageData,
     ConfigPhase,
+    ConfigRequestData,
+    ConfigSection,
+    ConfigurationInitResponse,
+    ConfigurationPageResponse,
     ConfigurationRequest,
     ConfigValueType,
     ConfirmationData,
     ConfirmationRequest,
+    ConfirmationResponse,
     DeviceConfigValue,
     DeviceEvent,
+    DeviceSetting,
     DeviceValue,
     Event,
     EventData,
     EventRequest,
+    EventResponse,
     EventType,
     InstallData,
     InstalledApp,
     InstallRequest,
+    InstallResponse,
     LifecyclePhase,
     LifecycleRequest,
     OauthCallbackData,
     OauthCallbackRequest,
+    OauthCallbackResponse,
     StringConfigValue,
     StringValue,
     TimerEvent,
     UninstallData,
     UninstallRequest,
+    UninstallResponse,
     UpdateData,
     UpdateRequest,
+    UpdateResponse,
 )
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")
+RESPONSE_DIR = os.path.join(FIXTURE_DIR, "response")
 
 
-@pytest.fixture
-def requests():
+def load_data(path: str) -> Dict[str, str]:
     data = {}
-    for f in os.listdir(REQUEST_DIR):
-        p = os.path.join(REQUEST_DIR, f)
+    for f in os.listdir(path):
+        p = os.path.join(path, f)
         if os.path.isfile(p):
             with open(p, encoding="utf-8") as r:
                 data[f] = r.read()
     return data
 
 
-class TestParseRequestRoundTrip:
+@pytest.fixture
+def requests():
+    return load_data(REQUEST_DIR)
+
+
+@pytest.fixture
+def responses():
+    return load_data(RESPONSE_DIR)
+
+
+class TestResponseRoundTrip:
+    @pytest.mark.parametrize(
+        "source,obj",
+        [
+            ("INSTALL", InstallResponse),
+            ("UPDATE", UpdateResponse),
+            ("UNINSTALL", UninstallResponse),
+            ("OAUTH_CALLBACK", OauthCallbackResponse),
+            ("EVENT", EventResponse),
+        ],
+    )
+    def test_empty(self, source, obj, responses):
+        # Most responses are empty, so we're just that we can generate and round-trip JSON as expected
+        o = obj()
+        j = responses["%s.json" % source]
+        assert CONVERTER.from_json(j, obj) == o
+        assert CONVERTER.from_json(CONVERTER.to_json(o), obj) == o
+
+    def test_confirmation(self, responses):
+        # Confirmation takes a single argument, which the example shows as "{TARGET_URL}"
+        o = ConfirmationResponse("{TARGET_URL}")
+        j = responses["CONFIRMATION.json"]
+        assert CONVERTER.from_json(j, ConfirmationResponse) == o
+        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfirmationResponse) == o
+
+    def test_configration_initialize(self, responses):
+        # Response for INITIALIZE is different than for PAGE
+        o = ConfigurationInitResponse(
+            configuration_data=ConfigInitData(
+                initialize=ConfigInit(
+                    name="On When Open/Off When Shut WebHook App",
+                    description="On When Open/Off When Shut WebHook App",
+                    id="app",
+                    permissions=[],
+                    first_page_id="1",
+                )
+            )
+        )
+        j = responses["CONFIGURATION-INITIALIZE.json"]
+        assert CONVERTER.from_json(j, ConfigurationInitResponse) == o
+        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfigurationInitResponse) == o
+
+    def test_configuration_page_only(self, responses):
+        # Response for PAGE is different than for INITIALIZE
+        # This tests the example for an only page (1 of 1)
+        o = ConfigurationPageResponse(
+            configuration_data=ConfigPageData(
+                page=ConfigPage(
+                    page_id="1",
+                    name="On When Open/Off When Shut WebHook App",
+                    next_page_id=None,
+                    previous_page_id=None,
+                    complete=True,
+                    sections=[
+                        ConfigSection(
+                            name="When this opens/closes...",
+                            settings=[
+                                DeviceSetting(
+                                    id="contactSensor",
+                                    name="Which contact sensor?",
+                                    description="Tap to set",
+                                    required=True,
+                                    multiple=False,
+                                    capabilities=["contactSensor"],
+                                    permissions=["r"],
+                                )
+                            ],
+                        ),
+                        ConfigSection(
+                            name="Turn on/off this light...",
+                            settings=[
+                                DeviceSetting(
+                                    id="lightSwitch",
+                                    name="Which switch?",
+                                    description="Tap to set",
+                                    required=True,
+                                    multiple=False,
+                                    capabilities=["switch"],
+                                    permissions=["r", "x"],
+                                )
+                            ],
+                        ),
+                    ],
+                )
+            )
+        )
+        j = responses["CONFIGURATION-PAGE-only.json"]
+        assert CONVERTER.from_json(j, ConfigurationPageResponse) == o
+        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfigurationPageResponse) == o
+
+    def test_configuration_page_1of2(self, responses):
+        # Response for PAGE is different than for INITIALIZE
+        # This tests the example for page 1 of 2
+        o = ConfigurationPageResponse(
+            configuration_data=ConfigPageData(
+                page=ConfigPage(
+                    page_id="1",
+                    name="On When Open/Off When Shut WebHook App",
+                    next_page_id="2",
+                    previous_page_id=None,
+                    complete=False,
+                    sections=[
+                        ConfigSection(
+                            name="When this opens/closes...",
+                            settings=[
+                                DeviceSetting(
+                                    id="contactSensor",
+                                    name="Which contact sensor?",
+                                    description="Tap to set",
+                                    required=True,
+                                    multiple=False,
+                                    capabilities=["contactSensor"],
+                                    permissions=["r"],
+                                )
+                            ],
+                        ),
+                    ],
+                )
+            )
+        )
+        j = responses["CONFIGURATION-PAGE-1of2.json"]
+        assert CONVERTER.from_json(j, ConfigurationPageResponse) == o
+        assert CONVERTER.from_json(CONVERTER.to_json(o), ConfigurationPageResponse) == o
+
+
+class TestRequestRoundTrip:
 
     # This spot-checks that we get the right type from each example file and that we can round-trip it succesfully
     # Other tests below confirm that we are actually parsing each file properly
 
     @pytest.mark.parametrize(
-        "source,expected",
+        "source,obj",
         [
             ("CONFIRMATION", ConfirmationRequest),
             ("CONFIGURATION", ConfigurationRequest),
@@ -71,15 +221,15 @@ class TestParseRequestRoundTrip:
             ("EVENT-TIMER", EventRequest),
         ],
     )
-    def test_round_trip(self, source, expected, requests):
+    def test_round_trip(self, source, obj, requests):
         j = requests["%s.json" % source]
         r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, expected)
+        assert isinstance(r, obj)
         c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
         assert c == r and c is not r
 
 
-class TestParseRequestValues:
+class TestParseRequest:
     def test_confirmation(self, requests):
         expected = ConfirmationRequest(
             lifecycle=LifecyclePhase.CONFIRMATION,
@@ -105,7 +255,7 @@ class TestParseRequestValues:
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
             locale="en",
             version="1.0.0",
-            configuration_data=ConfigData(
+            configuration_data=ConfigRequestData(
                 installed_app_id="string",
                 phase=ConfigPhase.INITIALIZE,
                 page_id="string",

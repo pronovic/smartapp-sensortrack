@@ -1,0 +1,11 @@
+{
+  "configurationData": {
+    "initialize": {
+      "name": "On When Open\/Off When Shut WebHook App",
+      "description": "On When Open\/Off When Shut WebHook App",
+      "id": "app",
+      "permissions": [],
+      "firstPageId": "1"
+    }
+  }
+}

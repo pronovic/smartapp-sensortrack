@@ -1,0 +1,52 @@
+{
+  "configurationData": {
+    "page": {
+      "pageId": "1",
+      "name": "On When Open\/Off When Shut WebHook App",
+      "nextPageId": null,
+      "previousPageId": null,
+      "complete": true,
+      "sections": [
+        {
+          "name": "When this opens\/closes...",
+          "settings": [
+            {
+              "id": "contactSensor",
+              "name": "Which contact sensor?",
+              "description": "Tap to set",
+              "type": "DEVICE",
+              "required": true,
+              "multiple": false,
+              "capabilities": [
+                "contactSensor"
+              ],
+              "permissions": [
+                "r"
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Turn on\/off this light...",
+          "settings": [
+            {
+              "id": "lightSwitch",
+              "name": "Which switch?",
+              "description": "Tap to set",
+              "type": "DEVICE",
+              "required": true,
+              "multiple": false,
+              "capabilities": [
+                "switch"
+              ],
+              "permissions": [
+                "r",
+                "x"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

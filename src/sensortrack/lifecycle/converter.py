@@ -13,7 +13,17 @@ from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, overrid
 from pendulum import from_format
 from pendulum.datetime import DateTime
 
-from .interface import CONFIG_VALUE_BY_TYPE, REQUEST_BY_PHASE, ConfigValue, ConfigValueType, LifecyclePhase, LifecycleRequest
+from .interface import (
+    CONFIG_SETTING_BY_TYPE,
+    CONFIG_VALUE_BY_TYPE,
+    REQUEST_BY_PHASE,
+    ConfigSetting,
+    ConfigSettingType,
+    ConfigValue,
+    ConfigValueType,
+    LifecyclePhase,
+    LifecycleRequest,
+)
 
 TIMESTAMP_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]"  # example: "2017-09-13T04:18:12.469Z"
 TIMESTAMP_ZONE = "UTC"
@@ -37,6 +47,7 @@ class LifecycleConverter(GenConverter):
         self.register_unstructure_hook(DateTime, self._unstructure_datetime)
         self.register_structure_hook(DateTime, self._structure_datetime)
         self.register_structure_hook(ConfigValue, self._structure_config_value)
+        self.register_structure_hook(ConfigSetting, self._structure_config_setting)
         self.register_structure_hook(LifecycleRequest, self._structure_request)
         self.register_unstructure_hook_factory(has, self._unstructure_camel_case)
         self.register_structure_hook_factory(has, self._structure_camel_case)
@@ -77,6 +88,14 @@ class LifecycleConverter(GenConverter):
             return self.structure(data, CONFIG_VALUE_BY_TYPE[value_type])  # type: ignore
         except KeyError as e:
             raise ValueError("Unknown config value type") from e
+
+    def _structure_config_setting(self, data: Dict[str, Any], _: Type[ConfigSetting]) -> ConfigSetting:
+        """Deserialize input data into a ConfigValue of the proper type."""
+        try:
+            value_type = ConfigSettingType[data["type"]]
+            return self.structure(data, CONFIG_SETTING_BY_TYPE[value_type])  # type: ignore
+        except KeyError as e:
+            raise ValueError("Unknown config setting type") from e
 
     def _structure_request(self, data: Dict[str, Any], _: Type[LifecycleRequest]) -> LifecycleRequest:
         """Deserialize input data into a LifecycleRequest of the proper type."""

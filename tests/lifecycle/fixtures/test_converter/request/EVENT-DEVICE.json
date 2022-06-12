@@ -18,7 +18,7 @@
             }
           }
         ],
-        "lightSwitch":[
+        "lightSwitch": [
           {
             "valueType": "DEVICE",
             "deviceConfig": {
@@ -27,7 +27,7 @@
             }
           }
         ],
-        "minutes":[
+        "minutes": [
           {
             "valueType": "STRING",
             "stringConfig": {
@@ -53,7 +53,7 @@
           "componentId": "main",
           "capability": "motionSensor",
           "attribute": "motion",
-          "value" :"active",
+          "value": "active",
           "stateChange": true
         }
       }

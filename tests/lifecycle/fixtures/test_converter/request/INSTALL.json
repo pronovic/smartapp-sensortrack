@@ -37,10 +37,10 @@
           }
         ]
       },
-        "permissions": [
-          "r:devices:e457978e-5e37-43e6-979d-18112e12c961",
-          "r:devices:74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
-          "x:devices:74aac3bb-91f2-4a88-8c49-ae5e0a234d76"
+      "permissions": [
+        "r:devices:e457978e-5e37-43e6-979d-18112e12c961",
+        "r:devices:74aac3bb-91f2-4a88-8c49-ae5e0a234d76",
+        "x:devices:74aac3bb-91f2-4a88-8c49-ae5e0a234d76"
       ]
     }
   },

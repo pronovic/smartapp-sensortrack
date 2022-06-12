@@ -105,7 +105,6 @@ class AbstractSetting(ABC):
     id: str
     name: str
     description: str
-    type: ConfigSettingType
     required: bool
 
 
@@ -116,6 +115,7 @@ class DeviceSetting(AbstractSetting):
     multiple: bool
     capabilities: List[str]
     permissions: List[str]
+    type: ConfigSettingType = ConfigSettingType.DEVICE
 
 
 @frozen
@@ -123,6 +123,7 @@ class TextSetting(AbstractSetting):
     """A TEXT setting."""
 
     defaultValue: str
+    type: ConfigSettingType = ConfigSettingType.TEXT
 
 
 @frozen
@@ -130,6 +131,7 @@ class BooleanSetting(AbstractSetting):
     """A BOOLEAN setting."""
 
     defaultValue: BooleanValue
+    type: ConfigSettingType = ConfigSettingType.BOOLEAN
 
 
 @frozen
@@ -155,6 +157,7 @@ class EnumSetting(AbstractSetting):
     multiple: bool
     options: List[EnumOption]
     grouped_options: Optional[List[EnumOptionGroup]] = None
+    type: ConfigSettingType = ConfigSettingType.ENUM
 
 
 @frozen
@@ -163,6 +166,7 @@ class LinkSetting(AbstractSetting):
 
     url: str
     image: str
+    type: ConfigSettingType = ConfigSettingType.LINK
 
 
 @frozen
@@ -171,6 +175,7 @@ class PageSetting(AbstractSetting):
 
     page: str
     image: str
+    type: ConfigSettingType = ConfigSettingType.PAGE
 
 
 @frozen
@@ -178,6 +183,7 @@ class ImageSetting(AbstractSetting):
     """An IMAGE setting."""
 
     image: str
+    type: ConfigSettingType = ConfigSettingType.IMAGE
 
 
 @frozen
@@ -185,11 +191,14 @@ class IconSetting(AbstractSetting):
     """An ICON setting."""
 
     image: str
+    type: ConfigSettingType = ConfigSettingType.ICON
 
 
 @frozen
 class TimeSetting(AbstractSetting):
     """A TIME setting."""
+
+    type: ConfigSettingType = ConfigSettingType.TIME
 
 
 @frozen
@@ -197,26 +206,35 @@ class ParagraphSetting(AbstractSetting):
     """A PARAGRAPH setting."""
 
     defaultValue: str
+    type: ConfigSettingType = ConfigSettingType.PARAGRAPH
 
 
 @frozen
 class EmailSetting(AbstractSetting):
     """An EMAIL setting."""
 
+    type: ConfigSettingType = ConfigSettingType.EMAIL
+
 
 @frozen
 class DecimalSetting(AbstractSetting):
     """A DECIMAL setting."""
+
+    type: ConfigSettingType = ConfigSettingType.DECIMAL
 
 
 @frozen
 class NumberSetting(AbstractSetting):
     """A NUMBER setting."""
 
+    type: ConfigSettingType = ConfigSettingType.NUMBER
+
 
 @frozen
 class PhoneSetting(AbstractSetting):
     """A PHONE setting."""
+
+    type: ConfigSettingType = ConfigSettingType.PHONE
 
 
 @frozen
@@ -225,6 +243,7 @@ class OauthSetting(AbstractSetting):
 
     browser: bool
     url_template: str
+    type: ConfigSettingType = ConfigSettingType.OAUTH
 
 
 ConfigSetting = Union[
@@ -278,7 +297,10 @@ class StringConfigValue(AbstractConfigValue):
     string_config: StringValue
 
 
-ConfigValue = Union[DeviceConfigValue, StringConfigValue]
+ConfigValue = Union[
+    DeviceConfigValue,
+    StringConfigValue,
+]
 
 
 @frozen
@@ -413,14 +435,21 @@ class ConfigInit:
 
 
 @frozen
-class ConfigData:
-    """Configuration data."""
+class ConfigRequestData:
+    """Configuration data provided on the request."""
 
     installed_app_id: str
     phase: ConfigPhase
     page_id: str
     previous_page_id: str
     config: Dict[str, List[ConfigValue]]
+
+
+@frozen
+class ConfigInitData:
+    """Configuration data provided in an INITIALIZATION response."""
+
+    initialize: ConfigInit
 
 
 @frozen
@@ -437,10 +466,17 @@ class ConfigPage:
 
     page_id: str
     name: str
-    next_page_id: str
-    previous_page_id: str
+    next_page_id: Optional[str]
+    previous_page_id: Optional[str]
     complete: bool
     sections: List[ConfigSection]
+
+
+@frozen
+class ConfigPageData:
+    """Configuration data provided in an PAGE response."""
+
+    page: ConfigPage
 
 
 @frozen
@@ -505,7 +541,7 @@ class ConfirmationResponse:
 class ConfigurationRequest(AbstractRequest):
     """Request for CONFIGURATION phase"""
 
-    configuration_data: ConfigData
+    configuration_data: ConfigRequestData
     settings: Dict[str, Any]
 
 
@@ -513,14 +549,14 @@ class ConfigurationRequest(AbstractRequest):
 class ConfigurationInitResponse:
     """Response for CONFIGURATION/INITIALIZE phase"""
 
-    initialize: ConfigInit
+    configuration_data: ConfigInitData
 
 
 @frozen
 class ConfigurationPageResponse:
     """Response for CONFIGURATION/PAGE phase"""
 
-    page: ConfigPage
+    configuration_data: ConfigPageData
 
 
 @frozen
@@ -607,6 +643,7 @@ LifecycleRequest = Union[
     EventRequest,
 ]
 
+
 REQUEST_BY_PHASE = {
     LifecyclePhase.CONFIGURATION: ConfigurationRequest,
     LifecyclePhase.CONFIRMATION: ConfirmationRequest,
@@ -620,4 +657,22 @@ REQUEST_BY_PHASE = {
 CONFIG_VALUE_BY_TYPE = {
     ConfigValueType.DEVICE: DeviceConfigValue,
     ConfigValueType.STRING: StringConfigValue,
+}
+
+CONFIG_SETTING_BY_TYPE = {
+    ConfigSettingType.DEVICE: DeviceSetting,
+    ConfigSettingType.TEXT: TextSetting,
+    ConfigSettingType.BOOLEAN: BooleanSetting,
+    ConfigSettingType.ENUM: EnumSetting,
+    ConfigSettingType.LINK: LinkSetting,
+    ConfigSettingType.PAGE: PageSetting,
+    ConfigSettingType.IMAGE: ImageSetting,
+    ConfigSettingType.ICON: IconSetting,
+    ConfigSettingType.TIME: TimeSetting,
+    ConfigSettingType.PARAGRAPH: ParagraphSetting,
+    ConfigSettingType.EMAIL: EmailSetting,
+    ConfigSettingType.DECIMAL: DecimalSetting,
+    ConfigSettingType.NUMBER: NumberSetting,
+    ConfigSettingType.PHONE: PhoneSetting,
+    ConfigSettingType.OAUTH: OauthSetting,
 }
