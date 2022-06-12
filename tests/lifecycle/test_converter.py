@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
+# pylint: disable=redefined-outer-name:
+
 import os
 
 import pytest
 
 from sensortrack.lifecycle.converter import parse_json_request
-from sensortrack.lifecycle.interface import ConfirmationRequest, ConfigRequest, InstallRequest, UpdateRequest, \
-    EventRequest, OauthCallbackRequest, UninstallRequest
+from sensortrack.lifecycle.interface import (
+    ConfigRequest,
+    ConfirmationRequest,
+    EventRequest,
+    InstallRequest,
+    OauthCallbackRequest,
+    UninstallRequest,
+    UpdateRequest,
+)
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")
@@ -24,7 +33,6 @@ def requests():
 
 
 class TestParseJsonRequest:
-
     def test_confirmation(self, requests):
         j = requests["CONFIRMATION.json"]
         r = parse_json_request(j)

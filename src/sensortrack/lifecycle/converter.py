@@ -6,7 +6,7 @@ Converter to serialize and deserialize lifecycle objects to various formats.
 """
 
 import json
-from typing import Any, Dict, Type, TypeVar, Union
+from typing import Any, Dict, TypeVar, Union
 
 from attrs import fields, has
 from cattrs import GenConverter
@@ -71,30 +71,6 @@ class LifecycleConverter(GenConverter):
         self.register_unstructure_hook_factory(has, self._to_camel_case_unstructure)
         self.register_structure_hook_factory(has, self._to_camel_case_structure)
 
-    # def to_dict(self, obj: Any) -> Dict[str, Any]:
-    #     """Serialize an object to a dict."""
-    #     return self.unstructure(obj)  # type: ignore
-    #
-    # def from_dict(self, data: Dict[str, Any], cls: Type) -> LifecycleRequest:  # type: ignore
-    #     """Deserialize an object from a dict."""
-    #     return self.structure(data, cls)  # type: ignore
-    #
-    # def to_json(self, obj: Any) -> str:
-    #     """Serialize an object to JSON."""
-    #     return json.dumps(self.to_dict(obj), indent="  ")
-    #
-    # def from_json(self, data: str, cls: Type[T]) -> T:
-    #     """Deserialize an object from JSON."""
-    #     return self.from_dict(json.loads(data), cls)
-    #
-    # def to_yaml(self, obj: Any) -> str:
-    #     """Serialize an object to YAML."""
-    #     return yaml.safe_dump(self.to_dict(obj), sort_keys=False)  # type: ignore
-    #
-    # def from_yaml(self, data: str, cls: Type[T]) -> T:
-    #     """Deserialize an object from YAML."""
-    #     return self.from_dict(yaml.safe_load(data), cls)
-
     @staticmethod
     def _to_camel_case(snake_str: str) -> str:
         components = snake_str.split("_")
@@ -127,4 +103,4 @@ def parse_json_request(
     """Parse a SmartApp lifecycle request request from JSON."""
     d = json.loads(j)
     phase = _phase(d)
-    return CONVERTER.structure(d, REQUEST_BY_PHASE[phase]) # type: ignore
+    return CONVERTER.structure(d, REQUEST_BY_PHASE[phase])  # type: ignore
