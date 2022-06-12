@@ -8,8 +8,8 @@ from typing import Dict
 import pendulum
 import pytest
 
-from sensortrack.lifecycle.converter import CONVERTER
-from sensortrack.lifecycle.interface import *  # pylint: disable=wildcard-import:
+from sensortrack.smartapp.converter import CONVERTER
+from sensortrack.smartapp.interface import *  # pylint: disable=wildcard-import:
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")

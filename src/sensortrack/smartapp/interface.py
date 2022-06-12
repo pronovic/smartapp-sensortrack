@@ -638,6 +638,16 @@ LifecycleRequest = Union[
     EventRequest,
 ]
 
+LifecycleResponse = Union[
+    ConfigurationInitResponse,
+    ConfigurationPageResponse,
+    ConfirmationResponse,
+    InstallResponse,
+    UpdateResponse,
+    UninstallResponse,
+    OauthCallbackResponse,
+    EventResponse,
+]
 
 REQUEST_BY_PHASE = {
     LifecyclePhase.CONFIGURATION: ConfigurationRequest,
