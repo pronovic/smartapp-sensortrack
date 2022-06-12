@@ -16,7 +16,7 @@ The SmartApp lifecycle interface.
 
 from abc import ABC
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Union
 
 from attrs import frozen
 from pendulum.datetime import DateTime
@@ -32,9 +32,9 @@ class LifecyclePhase(Enum):
     UNINSTALL = "UNINSTALL"
 
 
-class ConfigValueType(str, Enum):
-    DEVICE = "deviceConfig"
-    STRING = "stringConfig"
+class ConfigValueType(Enum):
+    DEVICE = "DEVICE"
+    STRING = "STRING"
 
 
 class ConfigPhase(Enum):
@@ -251,14 +251,17 @@ class StringConfigValue(AbstractConfigValue):
     string_config: StringValue
 
 
+ConfigValue = Union[DeviceConfigValue, StringConfigValue]
+
+
 @frozen
 class InstalledApp:
     """Installed application."""
 
     installed_app_id: str
     location_id: str
-    config: Dict[str, List[AbstractConfigValue]]
-    previous_config: Optional[Dict[str, List[AbstractConfigValue]]] = None
+    config: Dict[str, List[ConfigValue]]
+    previous_config: Optional[Dict[str, List[ConfigValue]]] = None
     permissions: List[str] = []
 
 
@@ -266,17 +269,16 @@ class InstalledApp:
 class DeviceEvent:
     """A device event."""
 
+    subscription_name: str
     event_id: str
     location_id: str
     device_id: str
     component_id: str
     capability: str
     attribute: str
-    value: Any  # TODO: exactly what do we get here?  Seems like this is too generic?
-    value_type: str
+    value: str
     state_change: bool
-    data: Dict[str, Any]
-    subscription_name: str
+    data: Optional[Dict[str, Any]] = None
 
 
 class DeviceLifecycleEvent:
@@ -354,8 +356,8 @@ class SecurityArmStateEvent:
 class Event:
     """Holds the triggered event, one of several different attributes depending on event type."""
 
-    event_time: DateTime
     event_type: EventType
+    event_time: Optional[DateTime] = None
     device_event: Optional[DeviceEvent] = None
     device_lifecycle_event: Optional[DeviceLifecycleEvent] = None
     device_health_event: Optional[DeviceHealthEvent] = None
@@ -392,7 +394,7 @@ class ConfigData:
     phase: ConfigPhase
     page_id: str
     previous_page_id: str
-    config: Dict[str, List[AbstractConfigValue]]
+    config: Dict[str, List[ConfigValue]]
 
 
 @frozen
@@ -565,3 +567,29 @@ class EventResponse:
     """Response for EVENT phase"""
 
     event_data: Dict[str, Any] = {}  # always empty in the response
+
+
+LifecycleRequest = Union[
+    ConfigRequest,
+    ConfirmationRequest,
+    InstallRequest,
+    UpdateRequest,
+    UninstallRequest,
+    OauthCallbackRequest,
+    EventRequest,
+]
+
+REQUEST_BY_PHASE = {
+    LifecyclePhase.CONFIGURATION: ConfigRequest,
+    LifecyclePhase.CONFIRMATION: ConfirmationRequest,
+    LifecyclePhase.INSTALL: InstallRequest,
+    LifecyclePhase.UPDATE: UpdateRequest,
+    LifecyclePhase.UNINSTALL: UninstallRequest,
+    LifecyclePhase.OAUTH_CALLBACK: OauthCallbackRequest,
+    LifecyclePhase.EVENT: EventRequest,
+}
+
+CONFIG_VALUE_BY_TYPE = {
+    ConfigValueType.DEVICE: DeviceConfigValue,
+    ConfigValueType.STRING: StringConfigValue,
+}

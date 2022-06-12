@@ -6,7 +6,7 @@ Converter to serialize and deserialize lifecycle objects to various formats.
 """
 
 import json
-from typing import Any, Dict, TypeVar, Union
+from typing import Any, Dict, Type
 
 from attrs import fields, has
 from cattrs import GenConverter
@@ -14,45 +14,13 @@ from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, overrid
 from pendulum import from_format
 from pendulum.datetime import DateTime
 
-from .interface import (
-    ConfigRequest,
-    ConfirmationRequest,
-    EventRequest,
-    InstallRequest,
-    LifecyclePhase,
-    OauthCallbackRequest,
-    UninstallRequest,
-    UpdateRequest,
-)
+from .interface import CONFIG_VALUE_BY_TYPE, REQUEST_BY_PHASE, ConfigValue, ConfigValueType, LifecyclePhase, LifecycleRequest
 
 TIMESTAMP_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]"  # example: "2017-09-13T04:18:12.469Z"
 TIMESTAMP_ZONE = "UTC"
 
 
-T = TypeVar("T")  # pylint: disable=invalid-name
-"""Generic type"""
-
-REQUEST_BY_PHASE = {
-    LifecyclePhase.CONFIGURATION: ConfigRequest,
-    LifecyclePhase.CONFIRMATION: ConfirmationRequest,
-    LifecyclePhase.INSTALL: InstallRequest,
-    LifecyclePhase.UPDATE: UpdateRequest,
-    LifecyclePhase.EVENT: EventRequest,
-    LifecyclePhase.OAUTH_CALLBACK: OauthCallbackRequest,
-    LifecyclePhase.UNINSTALL: UninstallRequest,
-}
-
-LifecycleRequest = Union[
-    ConfigRequest,
-    ConfirmationRequest,
-    EventRequest,
-    InstallRequest,
-    OauthCallbackRequest,
-    UninstallRequest,
-    UpdateRequest,
-]
-
-
+# noinspection PyMethodMayBeStatic
 class LifecycleConverter(GenConverter):
     """
     Cattrs converter to serialize/deserialize the lifestyle class structure, supporting both JSON and YAML.
@@ -66,25 +34,39 @@ class LifecycleConverter(GenConverter):
 
     def __init__(self) -> None:
         super().__init__()
-        self.register_unstructure_hook(DateTime, lambda d: d.format(TIMESTAMP_FORMAT) if d else None)  # type: ignore
-        self.register_structure_hook(DateTime, lambda s, _: from_format(s, TIMESTAMP_FORMAT, tz=TIMESTAMP_ZONE) if s else None)
-        self.register_unstructure_hook_factory(has, self._to_camel_case_unstructure)
-        self.register_structure_hook_factory(has, self._to_camel_case_structure)
+        self.register_unstructure_hook(DateTime, self._unstructure_datetime)
+        self.register_structure_hook(DateTime, self._structure_datetime)
+        self.register_structure_hook(ConfigValue, self._structure_config_value)
+        self.register_unstructure_hook_factory(has, self._unstructure_camel_case)
+        self.register_structure_hook_factory(has, self._structure_camel_case)
 
-    @staticmethod
-    def _to_camel_case(snake_str: str) -> str:
-        components = snake_str.split("_")
+    def _to_camel_case(self, name: str) -> str:
+        """Convert a snake_case attribute name to camelCase instead."""
+        components = name.split("_")
         return components[0] + "".join(x.title() for x in components[1:])
 
-    def _to_camel_case_unstructure(self, cls):  # type: ignore
-        return make_dict_unstructure_fn(
-            cls, self, **{a.name: override(rename=LifecycleConverter._to_camel_case(a.name)) for a in fields(cls)}
-        )
+    def _unstructure_camel_case(self, cls):  # type: ignore
+        """Automatic snake_case to camelCase conversion when serializing any class."""
+        return make_dict_unstructure_fn(cls, self, **{a.name: override(rename=self._to_camel_case(a.name)) for a in fields(cls)})
 
-    def _to_camel_case_structure(self, cls):  # type: ignore
-        return make_dict_structure_fn(
-            cls, self, **{a.name: override(rename=LifecycleConverter._to_camel_case(a.name)) for a in fields(cls)}
-        )
+    def _structure_camel_case(self, cls):  # type: ignore
+        """Automatic snake_case to camelCase conversion when deserializing any class."""
+        return make_dict_structure_fn(cls, self, **{a.name: override(rename=self._to_camel_case(a.name)) for a in fields(cls)})
+
+    def _unstructure_datetime(self, value: DateTime) -> str:
+        """Serialize a DateTime to a string."""
+        return value.format(TIMESTAMP_FORMAT)  # type: ignore
+
+    def _structure_datetime(self, value: str, _: Type[DateTime]) -> DateTime:
+        """Deserialize input data into a DateTime."""
+        return from_format(value, TIMESTAMP_FORMAT, tz=TIMESTAMP_ZONE)
+
+    def _structure_config_value(self, value: Dict[str, Any], _: Type[ConfigValue]) -> ConfigValue:
+        """Deserialize input data into a ConfigValue of the proper type."""
+        if "valueType" in value and ConfigValueType[value["valueType"]]:
+            value_type = ConfigValueType[value["valueType"]]
+            return self.structure(value, CONFIG_VALUE_BY_TYPE[value_type])  # type: ignore
+        raise ValueError("Unknown config value type")
 
 
 CONVERTER = LifecycleConverter()
