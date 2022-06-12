@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from attrs import frozen
 
-from sensortrack.lifecycle.common import LifecyclePhase, LifecycleRequest
+from sensortrack.lifecycle.interface.lifecycle import AbstractRequest, LifecyclePhase
 
 PHASE = LifecyclePhase.CONFIRMATION
 
@@ -22,7 +22,7 @@ class ConfirmationData:
 
 
 @frozen
-class ConfirmationRequest(LifecycleRequest):
+class ConfirmationRequest(AbstractRequest):
     """Request for CONFIRMATION phase"""
 
     app_id: str

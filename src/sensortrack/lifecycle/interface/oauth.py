@@ -8,7 +8,7 @@ from typing import Any, Dict
 
 from attrs import frozen
 
-from sensortrack.lifecycle.common import LifecyclePhase, LifecycleRequest
+from sensortrack.lifecycle.interface.lifecycle import AbstractRequest, LifecyclePhase
 
 PHASE = LifecyclePhase.OAUTH_CALLBACK
 
@@ -24,7 +24,7 @@ class CallbackData:
 
 
 @frozen
-class OauthCallbackRequest(LifecycleRequest):
+class OauthCallbackRequest(AbstractRequest):
     """Request for OAUTH_CALLBACK phase"""
 
     o_auth_callback_data: CallbackData

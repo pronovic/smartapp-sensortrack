@@ -1,0 +1,36 @@
+{
+  "lifecycle": "CONFIGURATION",
+  "executionId": "b328f242-c602-4204-8d73-33c48ae180af",
+  "locale": "en",
+  "version": "1.0.0",
+  "configurationData": {
+    "installedAppId": "string",
+    "phase": "INITIALIZE",
+    "pageId": "string",
+    "previousPageId": "string",
+    "config": {
+      "property1": [
+        {
+          "valueType": "DEVICE",
+          "deviceConfig": {
+            "deviceId": "31192dc9-eb45-4d90-b606-21e9b66d8c2b",
+            "componentId": "main"
+          }
+        }
+      ],
+      "property2": [
+        {
+          "valueType": "DEVICE",
+          "deviceConfig": {
+            "deviceId": "31192dc9-eb45-4d90-b606-21e9b66d8c2b",
+            "componentId": "main"
+          }
+        }
+      ]
+    }
+  },
+  "settings": {
+    "property1": "string",
+    "property2": "string"
+  }
+}

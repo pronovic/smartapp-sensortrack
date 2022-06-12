@@ -8,8 +8,8 @@ from typing import Any, Dict
 
 from attrs import frozen
 
-from sensortrack.lifecycle.common import LifecyclePhase, LifecycleRequest
-from sensortrack.lifecycle.installedapp import InstalledApp
+from sensortrack.lifecycle.interface.installedapp import InstalledApp
+from sensortrack.lifecycle.interface.lifecycle import AbstractRequest, LifecyclePhase
 
 PHASE = LifecyclePhase.UNINSTALL
 
@@ -22,10 +22,10 @@ class UninstallData:
 
 
 @frozen
-class UninstallRequest(LifecycleRequest):
+class UninstallRequest(AbstractRequest):
     """Request for UNINSTALL phase"""
 
-    update_data: UninstallData
+    uninstall_data: UninstallData
     settings: Dict[str, Any]
 
 

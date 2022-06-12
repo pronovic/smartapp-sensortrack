@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from attrs import frozen
 
-from sensortrack.lifecycle.common import LifecycleRequest
+from sensortrack.lifecycle.interface.lifecycle import AbstractRequest
 
 
 class ConfigPhase(Enum):
@@ -191,7 +191,7 @@ class ConfigData:
     phase: ConfigPhase
     page_id: str
     previous_page_id: str
-    config: Dict[str, Any]
+    config: Dict[str, Any]  # TODO: should be Dict[str, List[ConfigValue]], same as installedapp
 
 
 @frozen
@@ -215,7 +215,7 @@ class ConfigPage:
 
 
 @frozen
-class ConfigRequest(LifecycleRequest):
+class ConfigRequest(AbstractRequest):
     """Request for CONFIGURATION phase"""
 
     configuration_data: ConfigData

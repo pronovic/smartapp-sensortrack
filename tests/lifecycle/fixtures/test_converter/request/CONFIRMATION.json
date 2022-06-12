@@ -1,0 +1,15 @@
+{
+  "lifecycle": "CONFIRMATION",
+  "executionId": "8F8FA33E-2A5B-4BC5-826C-4B2AB73FE9DD",
+  "appId": "fd9949ee-a3bf-4069-b4b3-3e9c1c922e29",
+  "locale": "en",
+  "version": "0.1.0",
+  "confirmationData": {
+    "appId": "fd9949ee-a3bf-4069-b4b3-3e9c1c922e29",
+    "confirmationUrl": "{CONFIRMATION_URL}"
+  },
+  "settings": {
+    "property1": "string",
+    "property2": "string"
+  }
+}

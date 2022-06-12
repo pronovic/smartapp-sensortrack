@@ -8,8 +8,8 @@ from typing import Any, Dict
 
 from attrs import frozen
 
-from sensortrack.lifecycle.common import LifecyclePhase, LifecycleRequest
-from sensortrack.lifecycle.installedapp import InstalledApp
+from sensortrack.lifecycle.interface.installedapp import InstalledApp
+from sensortrack.lifecycle.interface.lifecycle import AbstractRequest, LifecyclePhase
 
 PHASE = LifecyclePhase.INSTALL
 
@@ -24,7 +24,7 @@ class InstallData:
 
 
 @frozen
-class InstallRequest(LifecycleRequest):
+class InstallRequest(AbstractRequest):
     """Request for INSTALL phase"""
 
     install_data: InstallData
