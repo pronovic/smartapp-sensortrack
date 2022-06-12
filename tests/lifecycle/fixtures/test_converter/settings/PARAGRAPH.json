@@ -1,0 +1,7 @@
+{
+  "id": "myParagraphSetting",
+  "name": "Some information title",
+  "description": "Some description",
+  "type": "PARAGRAPH",
+  "defaultValue": "This is the information to display."
+}

@@ -1,0 +1,8 @@
+{
+  "id": "myLinkSetting",
+  "name": "Visit the following link",
+  "description": "Tap to visit",
+  "type": "LINK",
+  "url": "https://some-site-url",
+  "image": "https://some-image-url"
+}

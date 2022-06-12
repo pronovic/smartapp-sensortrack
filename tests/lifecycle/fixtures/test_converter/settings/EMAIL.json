@@ -1,0 +1,6 @@
+{
+  "id": "myEmailSetting",
+  "name": "Enter an email address",
+  "description": "Tap to set",
+  "type": "EMAIL"
+}

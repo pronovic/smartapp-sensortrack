@@ -1,0 +1,7 @@
+{
+  "id": "myImageInput",
+  "name": "Choose what applies",
+  "description": "Tap to set",
+  "type": "IMAGE",
+  "image": "https://some-image-url"
+}

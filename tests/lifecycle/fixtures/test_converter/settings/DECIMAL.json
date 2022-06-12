@@ -1,0 +1,6 @@
+{
+  "id": "myDecimalSetting",
+  "name": "Enter a decimal value",
+  "description": "Tap to set",
+  "type": "DECIMAL"
+}

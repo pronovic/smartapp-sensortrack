@@ -1,0 +1,40 @@
+{
+  "id": "myGroupedEnumSetting",
+  "name": "Choose what applies",
+  "description": "Tap to set",
+  "type": "ENUM",
+  "required": true,
+  "multiple": true,
+  "groupedOptions": [
+    {
+      "name": "Group 1",
+      "options": [
+        {
+          "id": "option-1",
+          "name": "Option 1"
+        },
+        {
+          "id": "option-2",
+          "name": "Option 2"
+        }
+      ]
+    },
+    {
+      "name": "Group 2",
+      "options": [
+        {
+          "id": "option-3",
+          "name": "Option 3"
+        },
+        {
+          "id": "option-4",
+          "name": "Option 4"
+        },
+        {
+          "id": "option-5",
+          "name": "Option 5"
+        }
+      ]
+    }
+  ]
+}

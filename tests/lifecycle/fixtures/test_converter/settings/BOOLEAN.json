@@ -1,0 +1,8 @@
+{
+  "id": "myBooleanSetting",
+  "name": "True or false?",
+  "description": "Tap to set",
+  "type": "BOOLEAN",
+  "required": true,
+  "defaultValue": "true"
+}

@@ -1,0 +1,8 @@
+{
+  "id": "myPageSetting",
+  "name": "Choose what applies",
+  "description": "Tap to set",
+  "type": "PAGE",
+  "page": "page-id",
+  "image": "https://some-image-url"
+}

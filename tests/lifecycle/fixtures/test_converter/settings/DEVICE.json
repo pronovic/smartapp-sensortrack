@@ -1,0 +1,14 @@
+{
+  "id": "contactSensor",
+  "name": "Which contact sensor?",
+  "description": "Tap to set",
+  "type": "DEVICE",
+  "required": true,
+  "multiple": false,
+  "capabilities": [
+    "contactSensor"
+  ],
+  "permissions": [
+    "r"
+  ]
+}

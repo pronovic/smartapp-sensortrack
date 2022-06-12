@@ -1,0 +1,8 @@
+{
+  "id": "myOauthSetting",
+  "name": "Authenticate with the third party service",
+  "description": "Tap to set",
+  "type": "OAUTH",
+  "browser": false,
+  "urlTemplate": "http://www.some-third-party.com/oauth?param1=1&param2=2&callback=https%3A%2F%2Fapi.smartthings.com%2Foauth%2Fcallback"
+}

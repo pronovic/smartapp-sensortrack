@@ -1,0 +1,22 @@
+{
+  "lifecycle": "CONFIGURATION",
+  "executionId": "ce3975c1-0d03-3777-5250-0e61b15ad1d4",
+  "locale": "en",
+  "version": "0.1.0",
+  "configurationData": {
+    "installedAppId": "58065067-52b9-49a5-a378-ce3871bc710b",
+    "phase": "PAGE",
+    "pageId": "2",
+    "previousPageId": "1",
+    "config": {
+      "minutes": [
+        {
+          "valueType": "STRING",
+          "stringConfig": {
+            "value": "3"
+          }
+        }
+      ]
+    }
+  }
+}

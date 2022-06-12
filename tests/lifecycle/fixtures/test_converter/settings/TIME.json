@@ -1,0 +1,6 @@
+{
+  "id": "myTimeInput",
+  "name": "Choose a time",
+  "description": "Tap to set",
+  "type": "TIME"
+}

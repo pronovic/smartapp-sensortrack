@@ -85,7 +85,7 @@ class LifecycleConverter(GenConverter):
         """Deserialize input data into a ConfigValue of the proper type."""
         try:
             value_type = ConfigValueType[data["valueType"]]
-            return self.structure(data, CONFIG_VALUE_BY_TYPE[value_type])  # type: ignore
+            return self.structure(data, CONFIG_VALUE_BY_TYPE[value_type])
         except KeyError as e:
             raise ValueError("Unknown config value type") from e
 

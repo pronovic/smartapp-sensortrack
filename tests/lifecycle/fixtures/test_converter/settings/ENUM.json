@@ -1,0 +1,18 @@
+{
+  "id": "myEnumSetting",
+  "name": "Choose what applies",
+  "description": "Tap to set",
+  "type": "ENUM",
+  "required": true,
+  "multiple": true,
+  "options": [
+    {
+      "id": "option-1",
+      "name": "Option 1"
+    },
+    {
+      "id": "option-2",
+      "name": "Option 2"
+    }
+  ]
+}

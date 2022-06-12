@@ -105,7 +105,6 @@ class AbstractSetting(ABC):
     id: str
     name: str
     description: str
-    required: bool
 
 
 @frozen
@@ -116,22 +115,25 @@ class DeviceSetting(AbstractSetting):
     capabilities: List[str]
     permissions: List[str]
     type: ConfigSettingType = ConfigSettingType.DEVICE
+    required: Optional[bool] = False
 
 
 @frozen
 class TextSetting(AbstractSetting):
     """A TEXT setting."""
 
-    defaultValue: str
+    default_value: str
     type: ConfigSettingType = ConfigSettingType.TEXT
+    required: Optional[bool] = False
 
 
 @frozen
 class BooleanSetting(AbstractSetting):
     """A BOOLEAN setting."""
 
-    defaultValue: BooleanValue
+    default_value: BooleanValue
     type: ConfigSettingType = ConfigSettingType.BOOLEAN
+    required: Optional[bool] = False
 
 
 @frozen
@@ -155,9 +157,10 @@ class EnumSetting(AbstractSetting):
     """An ENUM setting."""
 
     multiple: bool
-    options: List[EnumOption]
+    options: Optional[List[EnumOption]] = None
     grouped_options: Optional[List[EnumOptionGroup]] = None
     type: ConfigSettingType = ConfigSettingType.ENUM
+    required: Optional[bool] = False
 
 
 @frozen
@@ -167,6 +170,7 @@ class LinkSetting(AbstractSetting):
     url: str
     image: str
     type: ConfigSettingType = ConfigSettingType.LINK
+    required: Optional[bool] = False
 
 
 @frozen
@@ -176,6 +180,7 @@ class PageSetting(AbstractSetting):
     page: str
     image: str
     type: ConfigSettingType = ConfigSettingType.PAGE
+    required: Optional[bool] = False
 
 
 @frozen
@@ -184,6 +189,7 @@ class ImageSetting(AbstractSetting):
 
     image: str
     type: ConfigSettingType = ConfigSettingType.IMAGE
+    required: Optional[bool] = False
 
 
 @frozen
@@ -192,6 +198,7 @@ class IconSetting(AbstractSetting):
 
     image: str
     type: ConfigSettingType = ConfigSettingType.ICON
+    required: Optional[bool] = False
 
 
 @frozen
@@ -199,14 +206,16 @@ class TimeSetting(AbstractSetting):
     """A TIME setting."""
 
     type: ConfigSettingType = ConfigSettingType.TIME
+    required: Optional[bool] = False
 
 
 @frozen
 class ParagraphSetting(AbstractSetting):
     """A PARAGRAPH setting."""
 
-    defaultValue: str
+    default_value: str
     type: ConfigSettingType = ConfigSettingType.PARAGRAPH
+    required: Optional[bool] = False
 
 
 @frozen
@@ -214,6 +223,7 @@ class EmailSetting(AbstractSetting):
     """An EMAIL setting."""
 
     type: ConfigSettingType = ConfigSettingType.EMAIL
+    required: Optional[bool] = False
 
 
 @frozen
@@ -221,6 +231,7 @@ class DecimalSetting(AbstractSetting):
     """A DECIMAL setting."""
 
     type: ConfigSettingType = ConfigSettingType.DECIMAL
+    required: Optional[bool] = False
 
 
 @frozen
@@ -228,6 +239,7 @@ class NumberSetting(AbstractSetting):
     """A NUMBER setting."""
 
     type: ConfigSettingType = ConfigSettingType.NUMBER
+    required: Optional[bool] = False
 
 
 @frozen
@@ -235,6 +247,7 @@ class PhoneSetting(AbstractSetting):
     """A PHONE setting."""
 
     type: ConfigSettingType = ConfigSettingType.PHONE
+    required: Optional[bool] = False
 
 
 @frozen
@@ -244,6 +257,7 @@ class OauthSetting(AbstractSetting):
     browser: bool
     url_template: str
     type: ConfigSettingType = ConfigSettingType.OAUTH
+    required: Optional[bool] = False
 
 
 ConfigSetting = Union[

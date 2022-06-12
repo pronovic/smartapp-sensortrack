@@ -9,52 +9,12 @@ import pendulum
 import pytest
 
 from sensortrack.lifecycle.converter import CONVERTER
-from sensortrack.lifecycle.interface import (
-    ConfigInit,
-    ConfigInitData,
-    ConfigPage,
-    ConfigPageData,
-    ConfigPhase,
-    ConfigRequestData,
-    ConfigSection,
-    ConfigurationInitResponse,
-    ConfigurationPageResponse,
-    ConfigurationRequest,
-    ConfirmationData,
-    ConfirmationRequest,
-    ConfirmationResponse,
-    DeviceConfigValue,
-    DeviceEvent,
-    DeviceSetting,
-    DeviceValue,
-    Event,
-    EventData,
-    EventRequest,
-    EventResponse,
-    EventType,
-    InstallData,
-    InstalledApp,
-    InstallRequest,
-    InstallResponse,
-    LifecyclePhase,
-    LifecycleRequest,
-    OauthCallbackData,
-    OauthCallbackRequest,
-    OauthCallbackResponse,
-    StringConfigValue,
-    StringValue,
-    TimerEvent,
-    UninstallData,
-    UninstallRequest,
-    UninstallResponse,
-    UpdateData,
-    UpdateRequest,
-    UpdateResponse,
-)
+from sensortrack.lifecycle.interface import *  # pylint: disable=wildcard-import:
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")
 RESPONSE_DIR = os.path.join(FIXTURE_DIR, "response")
+SETTINGS_DIR = os.path.join(FIXTURE_DIR, "settings")
 
 
 def load_data(path: str) -> Dict[str, str]:
@@ -75,6 +35,241 @@ def requests():
 @pytest.fixture
 def responses():
     return load_data(RESPONSE_DIR)
+
+
+@pytest.fixture
+def settings():
+    return load_data(SETTINGS_DIR)
+
+
+class TestParseSettings:
+    def test_boolean(self, settings):
+        expected = BooleanSetting(
+            id="myBooleanSetting",
+            name="True or false?",
+            description="Tap to set",
+            required=True,
+            default_value="true",
+        )
+        j = settings["BOOLEAN.json"]
+        r = CONVERTER.from_json(j, BooleanSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), BooleanSetting)
+        assert c == r and c is not r
+
+    def test_decimal(self, settings):
+        expected = DecimalSetting(
+            id="myDecimalSetting",
+            name="Enter a decimal value",
+            description="Tap to set",
+        )
+        j = settings["DECIMAL.json"]
+        r = CONVERTER.from_json(j, DecimalSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), DecimalSetting)
+        assert c == r and c is not r
+
+    def test_device(self, settings):
+        expected = DeviceSetting(
+            id="contactSensor",
+            name="Which contact sensor?",
+            description="Tap to set",
+            required=True,
+            multiple=False,
+            capabilities=["contactSensor"],
+            permissions=["r"],
+        )
+        j = settings["DEVICE.json"]
+        r = CONVERTER.from_json(j, DeviceSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), DeviceSetting)
+        assert c == r and c is not r
+
+    def test_email(self, settings):
+        expected = EmailSetting(
+            id="myEmailSetting",
+            name="Enter an email address",
+            description="Tap to set",
+        )
+        j = settings["EMAIL.json"]
+        r = CONVERTER.from_json(j, EmailSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), EmailSetting)
+        assert c == r and c is not r
+
+    def test_enum(self, settings):
+        expected = EnumSetting(
+            id="myEnumSetting",
+            name="Choose what applies",
+            description="Tap to set",
+            required=True,
+            multiple=True,
+            options=[EnumOption(id="option-1", name="Option 1"), EnumOption(id="option-2", name="Option 2")],
+        )
+        j = settings["ENUM.json"]
+        r = CONVERTER.from_json(j, EnumSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), EnumSetting)
+        assert c == r and c is not r
+
+    def test_enum_group(self, settings):
+        expected = EnumSetting(
+            id="myGroupedEnumSetting",
+            name="Choose what applies",
+            description="Tap to set",
+            required=True,
+            multiple=True,
+            grouped_options=[
+                EnumOptionGroup(
+                    name="Group 1", options=[EnumOption(id="option-1", name="Option 1"), EnumOption(id="option-2", name="Option 2")]
+                ),
+                EnumOptionGroup(
+                    name="Group 2",
+                    options=[
+                        EnumOption(id="option-3", name="Option 3"),
+                        EnumOption(id="option-4", name="Option 4"),
+                        EnumOption(id="option-5", name="Option 5"),
+                    ],
+                ),
+            ],
+        )
+        j = settings["ENUM-GROUP.json"]
+        r = CONVERTER.from_json(j, EnumSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), EnumSetting)
+        assert c == r and c is not r
+
+    def test_icon(self, settings):
+        expected = IconSetting(
+            id="myIconInput",
+            name="Some icon information",
+            description="Some description",
+            image="https://some-image-url",
+        )
+        j = settings["ICON.json"]
+        r = CONVERTER.from_json(j, IconSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), IconSetting)
+        assert c == r and c is not r
+
+    def test_image(self, settings):
+        expected = ImageSetting(
+            id="myImageInput",
+            name="Choose what applies",
+            description="Tap to set",
+            image="https://some-image-url",
+        )
+        j = settings["IMAGE.json"]
+        r = CONVERTER.from_json(j, ImageSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), ImageSetting)
+        assert c == r and c is not r
+
+    def test_link(self, settings):
+        expected = LinkSetting(
+            id="myLinkSetting",
+            name="Visit the following link",
+            description="Tap to visit",
+            url="https://some-site-url",
+            image="https://some-image-url",
+        )
+        j = settings["LINK.json"]
+        r = CONVERTER.from_json(j, LinkSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LinkSetting)
+        assert c == r and c is not r
+
+    def test_number(self, settings):
+        expected = NumberSetting(
+            id="myNumberSetting",
+            name="Enter a number",
+            description="Tap to set",
+        )
+        j = settings["NUMBER.json"]
+        r = CONVERTER.from_json(j, NumberSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), NumberSetting)
+        assert c == r and c is not r
+
+    # pylint: disable=line-too-long:
+    def test_oauth(self, settings):
+        expected = OauthSetting(
+            id="myOauthSetting",
+            name="Authenticate with the third party service",
+            description="Tap to set",
+            browser=False,
+            url_template="http://www.some-third-party.com/oauth?param1=1&param2=2&callback=https%3A%2F%2Fapi.smartthings.com%2Foauth%2Fcallback",
+        )
+        j = settings["OAUTH.json"]
+        r = CONVERTER.from_json(j, OauthSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), OauthSetting)
+        assert c == r and c is not r
+
+    def test_page(self, settings):
+        expected = PageSetting(
+            id="myPageSetting",
+            name="Choose what applies",
+            description="Tap to set",
+            page="page-id",
+            image="https://some-image-url",
+        )
+        j = settings["PAGE.json"]
+        r = CONVERTER.from_json(j, PageSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), PageSetting)
+        assert c == r and c is not r
+
+    def test_paragraph(self, settings):
+        expected = ParagraphSetting(
+            id="myParagraphSetting",
+            name="Some information title",
+            description="Some description",
+            default_value="This is the information to display.",
+        )
+        j = settings["PARAGRAPH.json"]
+        r = CONVERTER.from_json(j, ParagraphSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), ParagraphSetting)
+        assert c == r and c is not r
+
+    def test_phone(self, settings):
+        expected = PhoneSetting(
+            id="myPhoneSetting",
+            name="Enter a phone number",
+            description="Tap to set",
+        )
+        j = settings["PHONE.json"]
+        r = CONVERTER.from_json(j, PhoneSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), PhoneSetting)
+        assert c == r and c is not r
+
+    def test_text(self, settings):
+        expected = TextSetting(
+            id="myTextSetting",
+            name="Enter some text",
+            description="Tap to set",
+            required=True,
+            default_value="Some default value",
+        )
+        j = settings["TEXT.json"]
+        r = CONVERTER.from_json(j, TextSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), TextSetting)
+        assert c == r and c is not r
+
+    def test_time(self, settings):
+        expected = TimeSetting(
+            id="myTimeInput",
+            name="Choose a time",
+            description="Tap to set",
+        )
+        j = settings["TIME.json"]
+        r = CONVERTER.from_json(j, TimeSetting)
+        assert expected == r
+        c = CONVERTER.from_json(CONVERTER.to_json(r), TimeSetting)
+        assert c == r and c is not r
 
 
 class TestParseResponse:

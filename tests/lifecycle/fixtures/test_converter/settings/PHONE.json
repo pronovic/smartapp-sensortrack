@@ -1,0 +1,6 @@
+{
+  "id": "myPhoneSetting",
+  "name": "Enter a phone number",
+  "description": "Tap to set",
+  "type": "PHONE"
+}

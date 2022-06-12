@@ -1,0 +1,8 @@
+{
+  "id": "myTextSetting",
+  "name": "Enter some text",
+  "description": "Tap to set",
+  "type": "TEXT",
+  "required": true,
+  "defaultValue": "Some default value"
+}
