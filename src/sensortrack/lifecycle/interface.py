@@ -9,7 +9,7 @@ The SmartApp lifecycle interface.
 # See: https://developer-preview.smartthings.com/docs/connected-services/lifecycles/
 #      https://developer-preview.smartthings.com/docs/connected-services/configuration/
 
-# I can't find any official documentation about the event structure, only the code referenced below.
+# I can't find any official documentation about the event structure, only the Javascript code referenced below.
 # So, the structure below mostly mirrors the definitions within the AppEvent namespace, except I've excluded most enums.
 # Also, there is a scene lifecycle class (but no event id), and an installed app event id (but no class), so I've ignored those.
 # See: https://github.com/SmartThingsCommunity/smartapp-sdk-nodejs/blob/f1ef97ec9c6dc270ba744197b842c6632c778987/lib/lifecycle-events.d.ts
@@ -18,11 +18,13 @@ from abc import ABC
 from enum import Enum
 from typing import Any, Dict, List, Optional, Union
 
-from attrs import frozen
+from attrs import field, frozen
 from pendulum.datetime import DateTime
 
 
 class LifecyclePhase(Enum):
+    """Lifecycle phases."""
+
     CONFIRMATION = "CONFIRMATION"
     CONFIGURATION = "CONFIGURATION"
     INSTALL = "INSTALL"
@@ -33,16 +35,22 @@ class LifecyclePhase(Enum):
 
 
 class ConfigValueType(Enum):
+    """Types of config values."""
+
     DEVICE = "DEVICE"
     STRING = "STRING"
 
 
 class ConfigPhase(Enum):
+    """Sub-phases within the CONFIGURATION phase."""
+
     INITIALIZE = "INITIALIZE"
     PAGE = "PAGE"
 
 
 class ConfigSettingType(Enum):
+    """Types of config settings."""
+
     DEVICE = "DEVICE"
     TEXT = "TEXT"
     BOOLEAN = "BOOLEAN"
@@ -61,7 +69,7 @@ class ConfigSettingType(Enum):
 
 
 class EventType(Enum):
-    """Event types."""
+    """Supported event types."""
 
     DEVICE_EVENT = "DEVICE_EVENT"
     DEVICE_LIFECYCLE_EVENT = "DEVICE_LIFECYCLE_EVENT"
@@ -133,8 +141,8 @@ class EnumOption:
 
 
 @frozen
-class GroupedEnumOption:
-    """A grouped of options within an ENUM setting"""
+class EnumOptionGroup:
+    """A group of options within an ENUM setting"""
 
     name: str
     options: List[EnumOption]
@@ -146,7 +154,7 @@ class EnumSetting(AbstractSetting):
 
     multiple: bool
     options: List[EnumOption]
-    grouped_options: Optional[List[GroupedEnumOption]] = None
+    grouped_options: Optional[List[EnumOptionGroup]] = None
 
 
 @frozen
@@ -219,6 +227,25 @@ class OauthSetting(AbstractSetting):
     url_template: str
 
 
+ConfigSetting = Union[
+    DeviceSetting,
+    TextSetting,
+    BooleanSetting,
+    EnumSetting,
+    LinkSetting,
+    PageSetting,
+    ImageSetting,
+    IconSetting,
+    TimeSetting,
+    ParagraphSetting,
+    EmailSetting,
+    DecimalSetting,
+    NumberSetting,
+    PhoneSetting,
+    OauthSetting,
+]
+
+
 @frozen
 class AbstractConfigValue(ABC):
     """Abstract parent class for all types of config values."""
@@ -262,7 +289,7 @@ class InstalledApp:
     location_id: str
     config: Dict[str, List[ConfigValue]]
     previous_config: Optional[Dict[str, List[ConfigValue]]] = None
-    permissions: List[str] = []
+    permissions: List[str] = field(factory=list)
 
 
 @frozen
@@ -402,7 +429,7 @@ class ConfigSection:
     """A section within a configuration page."""
 
     name: str
-    settings: List[AbstractSetting]
+    settings: List[ConfigSetting]
 
 
 @frozen
@@ -507,7 +534,7 @@ class InstallRequest(AbstractRequest):
 class InstallResponse:
     """Response for INSTALL phase"""
 
-    install_data: Dict[str, Any] = {}  # always empty in the response
+    install_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
 @frozen
@@ -522,7 +549,7 @@ class UpdateRequest(AbstractRequest):
 class UpdateResponse:
     """Response for UPDATE phase"""
 
-    update_data: Dict[str, Any] = {}  # always empty in the response
+    update_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
 @frozen
@@ -537,7 +564,7 @@ class UninstallRequest(AbstractRequest):
 class UninstallResponse:
     """Response for UNINSTALL phase"""
 
-    uninstall_data: Dict[str, Any] = {}  # always empty in the response
+    uninstall_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
 @frozen
@@ -551,7 +578,7 @@ class OauthCallbackRequest(AbstractRequest):
 class OauthCallbackResponse:
     """Response for OAUTH_CALLBACK phase"""
 
-    o_auth_callback_data: Dict[str, Any] = {}  # always empty in the response
+    o_auth_callback_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
 @frozen
@@ -566,7 +593,7 @@ class EventRequest(AbstractRequest):
 class EventResponse:
     """Response for EVENT phase"""
 
-    event_data: Dict[str, Any] = {}  # always empty in the response
+    event_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
 LifecycleRequest = Union[

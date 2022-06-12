@@ -4,9 +4,8 @@
 """
 Converter to serialize and deserialize lifecycle objects to various formats.
 """
-
 import json
-from typing import Any, Dict, Type
+from typing import Any, Dict, Type, TypeVar
 
 from attrs import fields, has
 from cattrs import GenConverter
@@ -19,6 +18,7 @@ from .interface import CONFIG_VALUE_BY_TYPE, REQUEST_BY_PHASE, ConfigValue, Conf
 TIMESTAMP_FORMAT = "YYYY-MM-DD[T]HH:mm:ss.SSS[Z]"  # example: "2017-09-13T04:18:12.469Z"
 TIMESTAMP_ZONE = "UTC"
 
+T = TypeVar("T")  # pylint: disable=invalid-name:
 
 # noinspection PyMethodMayBeStatic
 class LifecycleConverter(GenConverter):
@@ -37,8 +37,17 @@ class LifecycleConverter(GenConverter):
         self.register_unstructure_hook(DateTime, self._unstructure_datetime)
         self.register_structure_hook(DateTime, self._structure_datetime)
         self.register_structure_hook(ConfigValue, self._structure_config_value)
+        self.register_structure_hook(LifecycleRequest, self._structure_request)
         self.register_unstructure_hook_factory(has, self._unstructure_camel_case)
         self.register_structure_hook_factory(has, self._structure_camel_case)
+
+    def to_json(self, obj: Any) -> str:
+        """Serialize an object to JSON."""
+        return json.dumps(self.unstructure(obj), indent="  ")
+
+    def from_json(self, data: str, cls: Type[T]) -> T:
+        """Deserialize an object from JSON."""
+        return self.structure(json.loads(data), cls)
 
     def _to_camel_case(self, name: str) -> str:
         """Convert a snake_case attribute name to camelCase instead."""
@@ -53,36 +62,29 @@ class LifecycleConverter(GenConverter):
         """Automatic snake_case to camelCase conversion when deserializing any class."""
         return make_dict_structure_fn(cls, self, **{a.name: override(rename=self._to_camel_case(a.name)) for a in fields(cls)})
 
-    def _unstructure_datetime(self, value: DateTime) -> str:
+    def _unstructure_datetime(self, datetime: DateTime) -> str:
         """Serialize a DateTime to a string."""
-        return value.format(TIMESTAMP_FORMAT)  # type: ignore
+        return datetime.format(TIMESTAMP_FORMAT)  # type: ignore
 
-    def _structure_datetime(self, value: str, _: Type[DateTime]) -> DateTime:
+    def _structure_datetime(self, datetime: str, _: Type[DateTime]) -> DateTime:
         """Deserialize input data into a DateTime."""
-        return from_format(value, TIMESTAMP_FORMAT, tz=TIMESTAMP_ZONE)
+        return from_format(datetime, TIMESTAMP_FORMAT, tz=TIMESTAMP_ZONE)
 
-    def _structure_config_value(self, value: Dict[str, Any], _: Type[ConfigValue]) -> ConfigValue:
+    def _structure_config_value(self, data: Dict[str, Any], _: Type[ConfigValue]) -> ConfigValue:
         """Deserialize input data into a ConfigValue of the proper type."""
-        if "valueType" in value and ConfigValueType[value["valueType"]]:
-            value_type = ConfigValueType[value["valueType"]]
-            return self.structure(value, CONFIG_VALUE_BY_TYPE[value_type])  # type: ignore
-        raise ValueError("Unknown config value type")
+        try:
+            value_type = ConfigValueType[data["valueType"]]
+            return self.structure(data, CONFIG_VALUE_BY_TYPE[value_type])  # type: ignore
+        except KeyError as e:
+            raise ValueError("Unknown config value type") from e
+
+    def _structure_request(self, data: Dict[str, Any], _: Type[LifecycleRequest]) -> LifecycleRequest:
+        """Deserialize input data into a LifecycleRequest of the proper type."""
+        try:
+            phase = LifecyclePhase[data["lifecycle"]]
+            return self.structure(data, REQUEST_BY_PHASE[phase])  # type: ignore
+        except KeyError as e:
+            raise ValueError("Unknown lifecycle phase") from e
 
 
 CONVERTER = LifecycleConverter()
-
-
-def _phase(d: Dict[str, Any]) -> LifecyclePhase:
-    """Determine the phase associated with a request in dict form."""
-    if "lifecycle" in d and LifecyclePhase[d["lifecycle"]]:
-        return LifecyclePhase[d["lifecycle"]]
-    raise ValueError("Could not determine lifecycle phase for request")
-
-
-def parse_json_request(
-    j: str,
-) -> LifecycleRequest:
-    """Parse a SmartApp lifecycle request request from JSON."""
-    d = json.loads(j)
-    phase = _phase(d)
-    return CONVERTER.structure(d, REQUEST_BY_PHASE[phase])  # type: ignore

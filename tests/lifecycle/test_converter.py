@@ -6,12 +6,13 @@ import os
 
 import pytest
 
-from sensortrack.lifecycle.converter import parse_json_request
+from sensortrack.lifecycle.converter import CONVERTER
 from sensortrack.lifecycle.interface import (
     ConfigRequest,
     ConfirmationRequest,
     EventRequest,
     InstallRequest,
+    LifecycleRequest,
     OauthCallbackRequest,
     UninstallRequest,
     UpdateRequest,
@@ -35,40 +36,40 @@ def requests():
 class TestParseJsonRequest:
     def test_confirmation(self, requests):
         j = requests["CONFIRMATION.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, ConfirmationRequest)
 
     def test_configuration(self, requests):
         j = requests["CONFIGURATION.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, ConfigRequest)
 
     def test_install(self, requests):
         j = requests["INSTALL.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, InstallRequest)
 
     def test_update(self, requests):
         j = requests["UPDATE.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, UpdateRequest)
 
     def test_event_device(self, requests):
         j = requests["EVENT-DEVICE.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, EventRequest)
 
     def test_event_timer(self, requests):
         j = requests["EVENT-TIMER.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, EventRequest)
 
     def test_oauth_callback(self, requests):
         j = requests["OAUTH_CALLBACK.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, OauthCallbackRequest)
 
     def test_uninstall(self, requests):
         j = requests["UNINSTALL.json"]
-        r = parse_json_request(j)
+        r = CONVERTER.from_json(j, LifecycleRequest)
         assert isinstance(r, UninstallRequest)
