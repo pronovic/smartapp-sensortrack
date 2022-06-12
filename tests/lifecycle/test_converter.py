@@ -16,6 +16,7 @@ from sensortrack.lifecycle.interface import (
     OauthCallbackRequest,
     UninstallRequest,
     UpdateRequest,
+    LifecyclePhase,
 )
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
@@ -33,43 +34,27 @@ def requests():
     return data
 
 
-class TestParseJsonRequest:
-    def test_confirmation(self, requests):
-        j = requests["CONFIRMATION.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, ConfirmationRequest)
+class TestParseJsonRoundTrip:
 
-    def test_configuration(self, requests):
-        j = requests["CONFIGURATION.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, ConfigRequest)
+    # This spot-checks that we get the right type from each example file and that we can round-trip it succesfully
+    # Other tests below confirm that we are actually parsing each file properly
 
-    def test_install(self, requests):
-        j = requests["INSTALL.json"]
+    @pytest.mark.parametrize(
+        "source,expected",
+        [
+            ("CONFIRMATION", ConfirmationRequest),
+            ("CONFIGURATION", ConfigRequest),
+            ("INSTALL", InstallRequest),
+            ("UPDATE", UpdateRequest),
+            ("UNINSTALL", UninstallRequest),
+            ("OAUTH_CALLBACK", OauthCallbackRequest),
+            ("EVENT-DEVICE", EventRequest),
+            ("EVENT-TIMER", EventRequest),
+        ],
+    )
+    def test_round_trip(self, source, expected, requests):
+        j = requests["%s.json" % source]
         r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, InstallRequest)
-
-    def test_update(self, requests):
-        j = requests["UPDATE.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, UpdateRequest)
-
-    def test_event_device(self, requests):
-        j = requests["EVENT-DEVICE.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, EventRequest)
-
-    def test_event_timer(self, requests):
-        j = requests["EVENT-TIMER.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, EventRequest)
-
-    def test_oauth_callback(self, requests):
-        j = requests["OAUTH_CALLBACK.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, OauthCallbackRequest)
-
-    def test_uninstall(self, requests):
-        j = requests["UNINSTALL.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert isinstance(r, UninstallRequest)
+        assert isinstance(r, expected)
+        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
+        assert c == r and c is not r
