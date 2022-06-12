@@ -88,7 +88,7 @@ class BooleanValue(str, Enum):
     FALSE = "false"
 
 
-@frozen
+@frozen(kw_only=True)
 class AbstractRequest(ABC):
     """Abstract parent class for all types of lifecycle requests."""
 
@@ -98,45 +98,43 @@ class AbstractRequest(ABC):
     version: str
 
 
-@frozen
+@frozen(kw_only=True)
 class AbstractSetting(ABC):
     """Abstract parent class for all types of config settings."""
 
     id: str
     name: str
     description: str
+    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceSetting(AbstractSetting):
     """A DEVICE setting."""
 
+    type: ConfigSettingType = ConfigSettingType.DEVICE
     multiple: bool
     capabilities: List[str]
     permissions: List[str]
-    type: ConfigSettingType = ConfigSettingType.DEVICE
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class TextSetting(AbstractSetting):
     """A TEXT setting."""
 
-    default_value: str
     type: ConfigSettingType = ConfigSettingType.TEXT
-    required: Optional[bool] = False
+    default_value: str
 
 
-@frozen
+@frozen(kw_only=True)
 class BooleanSetting(AbstractSetting):
     """A BOOLEAN setting."""
 
-    default_value: BooleanValue
     type: ConfigSettingType = ConfigSettingType.BOOLEAN
-    required: Optional[bool] = False
+    default_value: BooleanValue
 
 
-@frozen
+@frozen(kw_only=True)
 class EnumOption:
     """An option within an ENUM setting"""
 
@@ -144,7 +142,7 @@ class EnumOption:
     name: str
 
 
-@frozen
+@frozen(kw_only=True)
 class EnumOptionGroup:
     """A group of options within an ENUM setting"""
 
@@ -152,112 +150,100 @@ class EnumOptionGroup:
     options: List[EnumOption]
 
 
-@frozen
+@frozen(kw_only=True)
 class EnumSetting(AbstractSetting):
     """An ENUM setting."""
 
+    type: ConfigSettingType = ConfigSettingType.ENUM
     multiple: bool
     options: Optional[List[EnumOption]] = None
     grouped_options: Optional[List[EnumOptionGroup]] = None
-    type: ConfigSettingType = ConfigSettingType.ENUM
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class LinkSetting(AbstractSetting):
     """A LINK setting."""
 
+    type: ConfigSettingType = ConfigSettingType.LINK
     url: str
     image: str
-    type: ConfigSettingType = ConfigSettingType.LINK
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class PageSetting(AbstractSetting):
     """A PAGE setting."""
 
+    type: ConfigSettingType = ConfigSettingType.PAGE
     page: str
     image: str
-    type: ConfigSettingType = ConfigSettingType.PAGE
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class ImageSetting(AbstractSetting):
     """An IMAGE setting."""
 
-    image: str
     type: ConfigSettingType = ConfigSettingType.IMAGE
-    required: Optional[bool] = False
+    image: str
 
 
-@frozen
+@frozen(kw_only=True)
 class IconSetting(AbstractSetting):
     """An ICON setting."""
 
-    image: str
     type: ConfigSettingType = ConfigSettingType.ICON
-    required: Optional[bool] = False
+    image: str
 
 
-@frozen
+@frozen(kw_only=True)
 class TimeSetting(AbstractSetting):
     """A TIME setting."""
 
     type: ConfigSettingType = ConfigSettingType.TIME
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class ParagraphSetting(AbstractSetting):
     """A PARAGRAPH setting."""
 
-    default_value: str
     type: ConfigSettingType = ConfigSettingType.PARAGRAPH
-    required: Optional[bool] = False
+    default_value: str
 
 
-@frozen
+@frozen(kw_only=True)
 class EmailSetting(AbstractSetting):
     """An EMAIL setting."""
 
     type: ConfigSettingType = ConfigSettingType.EMAIL
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class DecimalSetting(AbstractSetting):
     """A DECIMAL setting."""
 
     type: ConfigSettingType = ConfigSettingType.DECIMAL
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class NumberSetting(AbstractSetting):
     """A NUMBER setting."""
 
     type: ConfigSettingType = ConfigSettingType.NUMBER
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class PhoneSetting(AbstractSetting):
     """A PHONE setting."""
 
     type: ConfigSettingType = ConfigSettingType.PHONE
-    required: Optional[bool] = False
 
 
-@frozen
+@frozen(kw_only=True)
 class OauthSetting(AbstractSetting):
     """An OAUTH setting."""
 
+    type: ConfigSettingType = ConfigSettingType.OAUTH
     browser: bool
     url_template: str
-    type: ConfigSettingType = ConfigSettingType.OAUTH
-    required: Optional[bool] = False
 
 
 ConfigSetting = Union[
@@ -279,13 +265,13 @@ ConfigSetting = Union[
 ]
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceValue:
     device_id: str
     component_id: str
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceConfigValue:
     """DEVICE configuration value."""
 
@@ -293,12 +279,12 @@ class DeviceConfigValue:
     value_type: ConfigValueType = ConfigValueType.DEVICE
 
 
-@frozen
+@frozen(kw_only=True)
 class StringValue:
     value: str
 
 
-@frozen
+@frozen(kw_only=True)
 class StringConfigValue:
     """STRING configuration value."""
 
@@ -312,7 +298,7 @@ ConfigValue = Union[
 ]
 
 
-@frozen
+@frozen(kw_only=True)
 class InstalledApp:
     """Installed application."""
 
@@ -322,7 +308,7 @@ class InstalledApp:
     permissions: List[str] = field(factory=list)
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceEvent:
     """A device event."""
 
@@ -349,7 +335,7 @@ class DeviceLifecycleEvent:
     principal: str
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceHealthEvent:
     event_id: str
     location_id: str
@@ -359,7 +345,7 @@ class DeviceHealthEvent:
     reason: str
 
 
-@frozen
+@frozen(kw_only=True)
 class HubHealthEvent:
     event_id: str
     location_id: str
@@ -368,7 +354,7 @@ class HubHealthEvent:
     reason: str
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceCommand:
     component_id: str
     capability: str
@@ -376,7 +362,7 @@ class DeviceCommand:
     arguments: List[Any]  # TODO: exactly what do we get here?  Seems like this is too generic?
 
 
-@frozen
+@frozen(kw_only=True)
 class DeviceCommandsEvent:
     event_id: str
     device_id: str
@@ -385,14 +371,14 @@ class DeviceCommandsEvent:
     commands: List[DeviceCommand]
 
 
-@frozen
+@frozen(kw_only=True)
 class ModeEvent:
     event_id: str
     location_id: str
     mode_id: str
 
 
-@frozen
+@frozen(kw_only=True)
 class TimerEvent:
     event_id: str
     name: str
@@ -401,7 +387,7 @@ class TimerEvent:
     expression: str
 
 
-@frozen
+@frozen(kw_only=True)
 class SecurityArmStateEvent:
     event_id: str
     location_id: str
@@ -409,7 +395,7 @@ class SecurityArmStateEvent:
     optional_arguments: Dict[str, Any]
 
 
-@frozen
+@frozen(kw_only=True)
 class Event:
     """Holds the triggered event, one of several different attributes depending on event type."""
 
@@ -424,7 +410,7 @@ class Event:
     security_arm_state_event: Optional[SecurityArmStateEvent] = None
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfirmationData:
     """Confirmation data."""
 
@@ -432,7 +418,7 @@ class ConfirmationData:
     confirmation_url: str
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigInit:
     """Initialization data."""
 
@@ -443,7 +429,7 @@ class ConfigInit:
     first_page_id: str
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigRequestData:
     """Configuration data provided on the request."""
 
@@ -454,14 +440,14 @@ class ConfigRequestData:
     config: Dict[str, List[ConfigValue]]
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigInitData:
     """Configuration data provided in an INITIALIZATION response."""
 
     initialize: ConfigInit
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigSection:
     """A section within a configuration page."""
 
@@ -469,7 +455,7 @@ class ConfigSection:
     settings: List[ConfigSetting]
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigPage:
     """A page of configuration data for the CONFIGURATION phase."""
 
@@ -481,14 +467,14 @@ class ConfigPage:
     sections: List[ConfigSection]
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigPageData:
     """Configuration data provided in an PAGE response."""
 
     page: ConfigPage
 
 
-@frozen
+@frozen(kw_only=True)
 class InstallData:
     """Install data."""
 
@@ -497,7 +483,7 @@ class InstallData:
     installed_app: InstalledApp
 
 
-@frozen
+@frozen(kw_only=True)
 class UpdateData:
     """Update data."""
 
@@ -508,20 +494,20 @@ class UpdateData:
     previous_permissions: List[str] = field(factory=list)
 
 
-@frozen
+@frozen(kw_only=True)
 class UninstallData:
     """Install data."""
 
     installed_app: InstalledApp
 
 
-@frozen
+@frozen(kw_only=True)
 class OauthCallbackData:
     installed_app_id: str
     url_path: str
 
 
-@frozen
+@frozen(kw_only=True)
 class EventData:
     """Event data."""
 
@@ -530,7 +516,7 @@ class EventData:
     events: List[Event]
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfirmationRequest(AbstractRequest):
     """Request for CONFIRMATION phase"""
 
@@ -539,14 +525,14 @@ class ConfirmationRequest(AbstractRequest):
     settings: Dict[str, Any] = field(factory=dict)
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfirmationResponse:
     """Response for CONFIRMATION phase"""
 
     target_url: str
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigurationRequest(AbstractRequest):
     """Request for CONFIGURATION phase"""
 
@@ -554,21 +540,21 @@ class ConfigurationRequest(AbstractRequest):
     settings: Dict[str, Any] = field(factory=dict)
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigurationInitResponse:
     """Response for CONFIGURATION/INITIALIZE phase"""
 
     configuration_data: ConfigInitData
 
 
-@frozen
+@frozen(kw_only=True)
 class ConfigurationPageResponse:
     """Response for CONFIGURATION/PAGE phase"""
 
     configuration_data: ConfigPageData
 
 
-@frozen
+@frozen(kw_only=True)
 class InstallRequest(AbstractRequest):
     """Request for INSTALL phase"""
 
@@ -576,14 +562,14 @@ class InstallRequest(AbstractRequest):
     settings: Dict[str, Any] = field(factory=dict)
 
 
-@frozen
+@frozen(kw_only=True)
 class InstallResponse:
     """Response for INSTALL phase"""
 
     install_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
-@frozen
+@frozen(kw_only=True)
 class UpdateRequest(AbstractRequest):
     """Request for UPDATE phase"""
 
@@ -591,14 +577,14 @@ class UpdateRequest(AbstractRequest):
     settings: Dict[str, Any] = field(factory=dict)
 
 
-@frozen
+@frozen(kw_only=True)
 class UpdateResponse:
     """Response for UPDATE phase"""
 
     update_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
-@frozen
+@frozen(kw_only=True)
 class UninstallRequest(AbstractRequest):
     """Request for UNINSTALL phase"""
 
@@ -606,28 +592,28 @@ class UninstallRequest(AbstractRequest):
     settings: Dict[str, Any] = field(factory=dict)
 
 
-@frozen
+@frozen(kw_only=True)
 class UninstallResponse:
     """Response for UNINSTALL phase"""
 
     uninstall_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
-@frozen
+@frozen(kw_only=True)
 class OauthCallbackRequest(AbstractRequest):
     """Request for OAUTH_CALLBACK phase"""
 
     o_auth_callback_data: OauthCallbackData
 
 
-@frozen
+@frozen(kw_only=True)
 class OauthCallbackResponse:
     """Response for OAUTH_CALLBACK phase"""
 
     o_auth_callback_data: Dict[str, Any] = field(factory=dict)  # always empty in the response
 
 
-@frozen
+@frozen(kw_only=True)
 class EventRequest(AbstractRequest):
     """Request for EVENT phase"""
 
@@ -635,7 +621,7 @@ class EventRequest(AbstractRequest):
     settings: Dict[str, Any] = field(factory=dict)
 
 
-@frozen
+@frozen(kw_only=True)
 class EventResponse:
     """Response for EVENT phase"""
 

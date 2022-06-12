@@ -274,7 +274,7 @@ class TestParseSettings:
 
 class TestParseResponse:
     def test_confirmation(self, responses):
-        expected = ConfirmationResponse("{TARGET_URL}")
+        expected = ConfirmationResponse(target_url="{TARGET_URL}")
         j = responses["CONFIRMATION.json"]
         r = CONVERTER.from_json(j, ConfirmationResponse)
         assert expected == r
