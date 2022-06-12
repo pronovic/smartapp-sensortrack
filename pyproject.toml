@@ -1,0 +1,70 @@
+[tool.poetry]
+name = "sensor-track"
+version = "0.1.0"
+description = "Historically track sensor data from SmartThings"
+authors = ["Kenneth J. Pronovici <pronovic@ieee.org>"]
+license = "Apache-2.0"
+readme = "PyPI.md"
+homepage = "https://pypi.org/project/sensor-track/"
+repository = "https://github.com/pronovic/sensor-track"
+include = [
+   { path = 'Changelog', format = 'sdist' },
+   { path = 'LICENSE', format = 'sdist' },
+   { path = 'README.md', format = 'sdist' },
+   { path = 'docs', format = 'sdist' },
+   { path = 'tests', format = 'sdist' },
+]
+packages = [ { include = "sensortrack", from = "src" } ]
+classifiers=[
+   "Programming Language :: Python :: 3",
+   "License :: OSI Approved :: Apache Software License",
+   "Operating System :: OS Independent",
+   "Environment :: Console",
+   "Intended Audience :: Developers",
+   "Natural Language :: English",
+   "Topic :: Home Automation",
+]
+
+[tool.poetry.dependencies]
+python = ">=3.7,<4"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.1.2"
+pytest-testdox = "^3.0.1"
+coverage = "^6.3.2"
+tox = "^3.25.0"
+pylint = "~2.12"  # versions after 2.12 get into an infinite loop on Windows
+toml = "^0.10.2"
+pre-commit = "^2.18.1"
+black = "^22.3.0"
+mypy = "^0.950"
+isort = "^5.10.1"
+sphinx-autoapi = "^1.8.4"
+coveralls = "^3.3.1"
+Sphinx = "^4.5.0"
+
+[tool.black]
+line-length = 132
+target-version = ['py37', 'py38', 'py39', 'py310' ]
+include = '(src\/scripts\/.*$|\.pyi?$)'
+exclude = '''
+/(
+    \.git
+  | __pycache__
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | docs
+  | notes
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 132
+skip_glob = [ "docs", "notes" ]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
