@@ -12,6 +12,7 @@ from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module:
 
 from smartapp.dispatcher import SmartAppRequestContext
+from smartapp.interface import BadRequestError, SignatureError, SmartAppError
 
 from .dispatcher import DISPATCHER
 
@@ -30,6 +31,30 @@ class Version(BaseModel):
 
     package: str = Field(...)
     api: str = Field(...)
+
+
+@API.exception_handler(BadRequestError)
+async def bad_request_handler(_: Request, e: BadRequestError) -> Response:
+    logging.error("[%s] Bad request: %s", e.correlation_id, e)
+    return Response(status_code=400)
+
+
+@API.exception_handler(SignatureError)
+async def signature_error_handler(_: Request, e: SignatureError) -> Response:
+    logging.error("[%s] Signature error: %s", e.correlation_id, e)
+    return Response(status_code=401)
+
+
+@API.exception_handler(SmartAppError)
+async def internal_error_handler(_: Request, e: SmartAppError) -> Response:
+    logging.error("[%s] Internal error: %s", e.correlation_id, e)
+    return Response(status_code=500)
+
+
+@API.exception_handler(Exception)
+async def exception_handler(_: Request, e: Exception) -> Response:
+    logging.error("Internal error: %s", e)
+    return Response(status_code=500)
 
 
 @API.on_event("startup")
@@ -62,5 +87,5 @@ async def smartapp(request: Request) -> Response:
     body = await request.body()
     request_json = codecs.decode(body, "UTF-8")
     context = SmartAppRequestContext(headers=headers, request_json=request_json)
-    status, response_json = DISPATCHER.dispatch(context=context)
-    return Response(content=response_json, status_code=status, media_type="application/json")
+    response_json = DISPATCHER.dispatch(context=context)
+    return Response(status_code=200, content=response_json, media_type="application/json")

@@ -6,13 +6,14 @@ Manage the requests and responses that are part of the SmartApp lifecycle.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Mapping, Optional, Tuple, Union
+from typing import List, Mapping, Optional, Union
 
 from attr import frozen
 
 from .converter import CONVERTER
 from .interface import (
     AbstractRequest,
+    BadRequestError,
     ConfigInit,
     ConfigInitData,
     ConfigPage,
@@ -28,10 +29,12 @@ from .interface import (
     EventResponse,
     InstallRequest,
     InstallResponse,
+    InternalError,
     LifecycleRequest,
     LifecycleResponse,
     OauthCallbackRequest,
     OauthCallbackResponse,
+    SmartAppError,
     UninstallRequest,
     UninstallResponse,
     UpdateRequest,
@@ -188,7 +191,7 @@ class SmartAppDispatcher:
     definition: SmartAppDefinition
     event_handler: SmartAppEventHandler
 
-    def dispatch(self, context: SmartAppRequestContext) -> Tuple[int, str]:
+    def dispatch(self, context: SmartAppRequestContext) -> str:
         """
         Dispatch a request, responding to SmartThings and invoking callbacks as needed.
 
@@ -196,16 +199,22 @@ class SmartAppDispatcher:
             context(SmartAppRequestContet): Request context, including headers and JSON body
 
         Returns:
-            (int, str): HTTP status code and response JSON payload that to be returned to the POST caller
+            str: Response JSON payload that to be returned to the POST caller
+
+        Raises:
+            SmartAppError: If processing fails
         """
         try:
-            # TODO: check signature and return 401 if it's not valid (but this is a relatively large effort)
+            # TODO: check signature and raise SignatureError if not valid
             request: LifecycleRequest = CONVERTER.from_json(context.request_json, LifecycleRequest)  # type: ignore
             response = self._handle_request(context.correlation_id, request)
-            return 200, CONVERTER.to_json(response)
-        except Exception:  # pylint: disable=broad-except:
-            logging.exception("[%s] Error handling lifecycle request, returning 500 response", context.correlation_id)
-            return 500, ""
+            return CONVERTER.to_json(response)
+        except SmartAppError as e:
+            raise e
+        except ValueError as e:
+            raise BadRequestError("%s" % e, correlation_id=context.correlation_id) from e
+        except Exception as e:  # pylint: disable=broad-except:
+            raise InternalError("%s" % e, correlation_id=context.correlation_id) from e
 
     def _handle_request(self, correlation_id: Optional[str], request: AbstractRequest) -> LifecycleResponse:
         """Handle a lifecycle request, returning the appropriate response."""
@@ -213,7 +222,7 @@ class SmartAppDispatcher:
         logging.debug("[%s] Request: %s", correlation_id, request)  # this is safe because secrets are not shown
         if isinstance(request, ConfirmationRequest):
             self.event_handler.handle_confirmation(correlation_id, request)
-            return self._handle_confirmation_request(correlation_id, request)
+            return self._handle_confirmation_request(request)
         elif isinstance(request, ConfigurationRequest):
             self.event_handler.handle_configuration(correlation_id, request)
             return self._handle_config_request(request)
@@ -235,9 +244,9 @@ class SmartAppDispatcher:
         else:
             raise ValueError("Unknown lifecycle event")
 
-    def _handle_confirmation_request(self, correlation_id: Optional[str], request: ConfirmationRequest) -> ConfirmationResponse:
+    def _handle_confirmation_request(self, request: ConfirmationRequest) -> ConfirmationResponse:
         """Handle a CONFIRMATION lifecycle request, logging data and returning an appropriate response."""
-        logging.info("[%s] CONFIRMATION [%s]: [%s]", correlation_id, request.app_id, request.confirmation_data.confirmation_url)
+        logging.info("CONFIRMATION [%s]: [%s]", request.app_id, request.confirmation_data.confirmation_url)
         return ConfirmationResponse(target_url=self.definition.target_url)
 
     def _handle_config_request(self, request: ConfigurationRequest) -> Union[ConfigurationInitResponse, ConfigurationPageResponse]:
