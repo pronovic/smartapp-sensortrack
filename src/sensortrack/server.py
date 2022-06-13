@@ -69,13 +69,13 @@ async def shutdown_event() -> None:
 
 
 @API.get("/health")
-def health() -> Health:
+async def health() -> Health:
     """Return an API health indicator."""
     return Health()
 
 
 @API.get("/version")
-def version() -> Version:
+async def version() -> Version:
     """Return the API version, including both the package version and the API version"""
     return Version(package=metadata_version("sensor-track"), api=API.version)
 
