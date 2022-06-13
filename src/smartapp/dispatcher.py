@@ -6,7 +6,7 @@ Manage the requests and responses that are part of the SmartApp lifecycle.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Tuple, Union
+from typing import List, Mapping, Tuple, Union
 
 from attr import frozen
 
@@ -157,11 +157,12 @@ class SmartAppDispatcher:
     definition: SmartAppDefinition
     event_handler: SmartAppEventHandler
 
-    def dispatch(self, request_json: str) -> Tuple[int, str]:
+    def dispatch(self, headers: Mapping[str, str], request_json: str) -> Tuple[int, str]:  # pylint: disable=unused-argument:
         """
         Dispatch a request, responding to SmartThings and invoking callbacks as needed.
 
         Args:
+            headers(Mapping[str, str]): HTTP headers associated with the request
             request_json(str): Request JSON payload received from the POST
 
         Returns:

@@ -85,7 +85,7 @@ class TestSmartAppDispatcher:
 
     def test_json_exception(self, dispatcher):
         # We only need to test this for one case, since error handling is the same everywhere
-        status, response_json = dispatcher.dispatch("bogus")
+        status, response_json = dispatcher.dispatch(headers={}, request_json="bogus")
         assert status == 500
         assert response_json == ""
 
@@ -93,14 +93,14 @@ class TestSmartAppDispatcher:
         # We only need to test this for one case, since error handling is the same everywhere
         request_json = requests["CONFIRMATION.json"]
         dispatcher.event_handler.handle_confirmation.side_effect = Exception("Hello")
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 500
         assert response_json == ""
 
     def test_confirmation(self, requests, dispatcher):
         request_json = requests["CONFIRMATION.json"]
         request = CONVERTER.from_json(request_json, ConfirmationRequest)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(ConfirmationResponse(target_url="target_url"))
         dispatcher.event_handler.handle_confirmation.assert_called_once_with(request)
@@ -108,7 +108,7 @@ class TestSmartAppDispatcher:
     def test_install(self, requests, dispatcher):
         request_json = requests["INSTALL.json"]
         request = CONVERTER.from_json(request_json, InstallRequest)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(InstallResponse())
         dispatcher.event_handler.handle_install.assert_called_once_with(request)
@@ -116,7 +116,7 @@ class TestSmartAppDispatcher:
     def test_update(self, requests, dispatcher):
         request_json = requests["UPDATE.json"]
         request = CONVERTER.from_json(request_json, UpdateRequest)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(UpdateResponse())
         dispatcher.event_handler.handle_update.assert_called_once_with(request)
@@ -124,7 +124,7 @@ class TestSmartAppDispatcher:
     def test_uninstall(self, requests, dispatcher):
         request_json = requests["UNINSTALL.json"]
         request = CONVERTER.from_json(request_json, UninstallRequest)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(UninstallResponse())
         dispatcher.event_handler.handle_uninstall.assert_called_once_with(request)
@@ -132,7 +132,7 @@ class TestSmartAppDispatcher:
     def test_oauth_callback(self, requests, dispatcher):
         request_json = requests["OAUTH_CALLBACK.json"]
         request = CONVERTER.from_json(request_json, OauthCallbackRequest)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(OauthCallbackResponse())
         dispatcher.event_handler.handle_oauth_callback.assert_called_once_with(request)
@@ -140,7 +140,7 @@ class TestSmartAppDispatcher:
     def test_event(self, requests, dispatcher):
         request_json = requests["EVENT-DEVICE.json"]
         request = CONVERTER.from_json(request_json, EventRequest)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(EventResponse())
         dispatcher.event_handler.handle_event.assert_called_once_with(request)
@@ -171,7 +171,7 @@ class TestSmartAppDispatcherConfig:
             )
         )
         request_json = CONVERTER.to_json(request)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(response)
         dispatcher.event_handler.handle_configuration.assert_called_once_with(request)
@@ -216,7 +216,7 @@ class TestSmartAppDispatcherConfig:
             )
         )
         request_json = CONVERTER.to_json(request)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(response)
         dispatcher.event_handler.handle_configuration.assert_called_once_with(request)
@@ -261,7 +261,7 @@ class TestSmartAppDispatcherConfig:
             )
         )
         request_json = CONVERTER.to_json(request)
-        status, response_json = dispatcher.dispatch(request_json)
+        status, response_json = dispatcher.dispatch(headers={}, request_json=request_json)
         assert status == 200
         assert response_json == CONVERTER.to_json(response)
         dispatcher.event_handler.handle_configuration.assert_called_once_with(request)

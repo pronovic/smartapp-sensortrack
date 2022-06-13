@@ -1,0 +1,25 @@
+name: name
+description: description
+targetUrl: target_url
+permissions:
+- permission
+configPages:
+- pageName: First page
+  sections:
+  - name: Section 1
+    settings:
+    - id: paragraph-id
+      name: paragraph-name
+      description: paragraph-description
+      required: false
+      type: PARAGRAPH
+      defaultValue: paragraph-text
+- pageName: Second page
+  sections:
+  - name: Section 2
+    settings:
+    - id: decimal-id
+      name: decimal-name
+      description: decimal-description
+      required: false
+      type: DECIMAL
