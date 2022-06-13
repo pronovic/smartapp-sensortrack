@@ -1,7 +1,7 @@
 id: sensor-track
 name: Sensor Tracking
 description: Track historical data for SmartThings temperature and humidity sensors
-targetUrl: https://daystrom.cedar-solutions.com/smartthings/sensor-track
+targetUrl: https://daystrom.cedar-solutions.com/smartthings/sensortrack/smartapp
 permissions:
 - r:devices
 configPages:

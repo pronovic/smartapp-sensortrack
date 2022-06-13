@@ -204,8 +204,10 @@ run_server() {
       run_install
    fi
 
+   # using host 0.0.0.0 makes the server available on the local network
    poetry run uvicorn sensortrack.server:API \
       --port 8080 \
+      --host 0.0.0.0 \
       --app-dir src --reload \
       --log-config config/local/sensortrack/server/logging.yaml
 }
