@@ -6,7 +6,7 @@ Manage the requests and responses that are part of the SmartApp lifecycle.
 """
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Mapping, Tuple, Union
+from typing import List, Mapping, Optional, Tuple, Union
 
 from attr import frozen
 
@@ -47,6 +47,9 @@ class SmartAppEventHandler(ABC):
     The application-specific event handler is always called first, before any default
     event handler logic in the dispatcher itself.
 
+    The correlation id is an optional value that you can associate with your log messages.
+    It may aid in debugging if you need to contact SmartThings for support.
+
     Some lifecycle events do not require you to implement any custom event handler logic:
 
     - CONFIRMATION: normally no callback needed, since the dispatcher logs the app id and confirmation URL
@@ -70,31 +73,31 @@ class SmartAppEventHandler(ABC):
     """
 
     @abstractmethod
-    def handle_confirmation(self, request: ConfirmationRequest) -> None:
+    def handle_confirmation(self, correlation_id: Optional[str], request: ConfirmationRequest) -> None:
         """Handle a CONFIRMATION lifecycle request"""
 
     @abstractmethod
-    def handle_configuration(self, request: ConfigurationRequest) -> None:
+    def handle_configuration(self, correlation_id: Optional[str], request: ConfigurationRequest) -> None:
         """Handle a CONFIGURATION lifecycle request."""
 
     @abstractmethod
-    def handle_install(self, request: InstallRequest) -> None:
+    def handle_install(self, correlation_id: Optional[str], request: InstallRequest) -> None:
         """Handle an INSTALL lifecycle request."""
 
     @abstractmethod
-    def handle_update(self, request: UpdateRequest) -> None:
+    def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
         """Handle an UPDATE lifecycle request."""
 
     @abstractmethod
-    def handle_uninstall(self, request: UninstallRequest) -> None:
+    def handle_uninstall(self, correlation_id: Optional[str], request: UninstallRequest) -> None:
         """Handle an UNINSTALL lifecycle request."""
 
     @abstractmethod
-    def handle_oauth_callback(self, request: OauthCallbackRequest) -> None:
+    def handle_oauth_callback(self, correlation_id: Optional[str], request: OauthCallbackRequest) -> None:
         """Handle an OAUTH_CALLBACK lifecycle request."""
 
     @abstractmethod
-    def handle_event(self, request: EventRequest) -> None:
+    def handle_event(self, correlation_id: Optional[str], request: EventRequest) -> None:
         """Handle an EVENT lifecycle request."""
 
 
@@ -139,6 +142,34 @@ class SmartAppDefinition:
 
 
 @frozen(kw_only=True)
+class SmartAppRequestContext:
+
+    # noinspection PyUnresolvedReferences
+    """
+    SmartApp request context.
+
+    Attributes:
+        headers(Mapping[str, str]): The request headers, assumed to be accessible in case-insenstive fashion
+        request_json(str): The request JSON from the POST body
+    """
+
+    headers: Mapping[str, str]
+    request_json: str
+
+    def header(self, header: str) -> Optional[str]:
+        """Return a named header or None if it does not exist."""
+        return self.headers[header] if header in self.headers else None
+
+    @property
+    def authorization(self) -> Optional[str]:
+        return self.header("authorization")
+
+    @property
+    def correlation_id(self) -> Optional[str]:
+        return self.header("x-st-correlation")
+
+
+@frozen(kw_only=True)
 class SmartAppDispatcher:
 
     # noinspection PyUnresolvedReferences
@@ -157,57 +188,56 @@ class SmartAppDispatcher:
     definition: SmartAppDefinition
     event_handler: SmartAppEventHandler
 
-    def dispatch(self, headers: Mapping[str, str], request_json: str) -> Tuple[int, str]:  # pylint: disable=unused-argument:
+    def dispatch(self, context: SmartAppRequestContext) -> Tuple[int, str]:
         """
         Dispatch a request, responding to SmartThings and invoking callbacks as needed.
 
         Args:
-            headers(Mapping[str, str]): HTTP headers associated with the request
-            request_json(str): Request JSON payload received from the POST
+            context(SmartAppRequestContet): Request context, including headers and JSON body
 
         Returns:
             (int, str): HTTP status code and response JSON payload that to be returned to the POST caller
         """
         try:
             # TODO: check signature and return 401 if it's not valid (but this is a relatively large effort)
-            request: LifecycleRequest = CONVERTER.from_json(request_json, LifecycleRequest)  # type: ignore
-            response = self._handle_request(request)
+            request: LifecycleRequest = CONVERTER.from_json(context.request_json, LifecycleRequest)  # type: ignore
+            response = self._handle_request(context.correlation_id, request)
             return 200, CONVERTER.to_json(response)
         except Exception:  # pylint: disable=broad-except:
-            logging.exception("Error handling lifecycle request, returning 500 response")
+            logging.exception("[%s] Error handling lifecycle request, returning 500 response", context.correlation_id)
             return 500, ""
 
-    def _handle_request(self, request: AbstractRequest) -> LifecycleResponse:
+    def _handle_request(self, correlation_id: Optional[str], request: AbstractRequest) -> LifecycleResponse:
         """Handle a lifecycle request, returning the appropriate response."""
-        logging.info("Handling %s request [%s]", request.lifecycle, request.execution_id)
-        logging.debug("Request: %s", request)  # this is safe because secrets are not shown in the string output
+        logging.info("[%s] Handling %s request executionId=%s", correlation_id, request.lifecycle, request.execution_id)
+        logging.debug("[%s] Request: %s", correlation_id, request)  # this is safe because secrets are not shown
         if isinstance(request, ConfirmationRequest):
-            self.event_handler.handle_confirmation(request)
-            return self._handle_confirmation_request(request)
+            self.event_handler.handle_confirmation(correlation_id, request)
+            return self._handle_confirmation_request(correlation_id, request)
         elif isinstance(request, ConfigurationRequest):
-            self.event_handler.handle_configuration(request)
+            self.event_handler.handle_configuration(correlation_id, request)
             return self._handle_config_request(request)
         elif isinstance(request, InstallRequest):
-            self.event_handler.handle_install(request)
+            self.event_handler.handle_install(correlation_id, request)
             return InstallResponse()
         elif isinstance(request, UpdateRequest):
-            self.event_handler.handle_update(request)
+            self.event_handler.handle_update(correlation_id, request)
             return UpdateResponse()
         elif isinstance(request, UninstallRequest):
-            self.event_handler.handle_uninstall(request)
+            self.event_handler.handle_uninstall(correlation_id, request)
             return UninstallResponse()
         elif isinstance(request, OauthCallbackRequest):
-            self.event_handler.handle_oauth_callback(request)
+            self.event_handler.handle_oauth_callback(correlation_id, request)
             return OauthCallbackResponse()
         elif isinstance(request, EventRequest):
-            self.event_handler.handle_event(request)
+            self.event_handler.handle_event(correlation_id, request)
             return EventResponse()
         else:
             raise ValueError("Unknown lifecycle event")
 
-    def _handle_confirmation_request(self, request: ConfirmationRequest) -> ConfirmationResponse:
+    def _handle_confirmation_request(self, correlation_id: Optional[str], request: ConfirmationRequest) -> ConfirmationResponse:
         """Handle a CONFIRMATION lifecycle request, logging data and returning an appropriate response."""
-        logging.info("CONFIRMATION request for [%s]: [%s]", request.app_id, request.confirmation_data.confirmation_url)
+        logging.info("[%s] CONFIRMATION [%s]: [%s]", correlation_id, request.app_id, request.confirmation_data.confirmation_url)
         return ConfirmationResponse(target_url=self.definition.target_url)
 
     def _handle_config_request(self, request: ConfigurationRequest) -> Union[ConfigurationInitResponse, ConfigurationPageResponse]:

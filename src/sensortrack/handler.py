@@ -4,6 +4,8 @@
 """
 SmartApp event handler.
 """
+from typing import Optional
+
 from smartapp.dispatcher import SmartAppEventHandler
 from smartapp.interface import (
     ConfigurationRequest,
@@ -20,23 +22,23 @@ class EventHandler(SmartAppEventHandler):
 
     """SmartApp event handler."""
 
-    def handle_confirmation(self, request: ConfirmationRequest) -> None:
+    def handle_confirmation(self, correlation_id: Optional[str], request: ConfirmationRequest) -> None:
         pass
 
-    def handle_configuration(self, request: ConfigurationRequest) -> None:
+    def handle_configuration(self, correlation_id: Optional[str], request: ConfigurationRequest) -> None:
         pass
 
-    def handle_install(self, request: InstallRequest) -> None:
+    def handle_install(self, correlation_id: Optional[str], request: InstallRequest) -> None:
         pass
 
-    def handle_update(self, request: UpdateRequest) -> None:
+    def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
         pass
 
-    def handle_uninstall(self, request: UninstallRequest) -> None:
+    def handle_uninstall(self, correlation_id: Optional[str], request: UninstallRequest) -> None:
         pass
 
-    def handle_oauth_callback(self, request: OauthCallbackRequest) -> None:
+    def handle_oauth_callback(self, correlation_id: Optional[str], request: OauthCallbackRequest) -> None:
         pass
 
-    def handle_event(self, request: EventRequest) -> None:
+    def handle_event(self, correlation_id: Optional[str], request: EventRequest) -> None:
         pass
