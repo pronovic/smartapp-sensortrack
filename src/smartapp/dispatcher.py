@@ -37,13 +37,12 @@ from .interface import (
 )
 
 
-class SmartAppHandler(ABC):
+class SmartAppEventHandler(ABC):
     """
     Application event handler for SmartApp lifecycle events.
 
-    Inherit from this class to implement your own application-specific event
-    handler.  By default, all events are no-ops.  Simply override the events
-    that you need to handle.
+    Inherit from this class to implement your own application-specific event handler.  In
+    most cases, your implementation can be empty.  See notes below.
 
     - CONFIRMATION: normally no callback needed, since the dispatcher logs the app id and confirmation URL
     - CONFIGURATION: normally no callback needed, since the dispatcher has the information it needs to respond
@@ -59,9 +58,10 @@ class SmartAppHandler(ABC):
     probably is not any need to persist any of the data returned in the INSTALL or UPDATE
     lifecycle events into your own data store.
 
-    Note that this is a synchronous interface.  The assumption is that if you need
-    high-volume asynchronous or multi-threaded processing, you will implement that at the
-    tier above this where the actual POST requests are accepted from remote callers.
+    Note that SmartAppHandler is a synchronous and single-threaded interface.  The
+    assumption is that if you need high-volume asynchronous or multi-threaded processing,
+    you will implement that at the tier above this where the actual POST requests are
+    accepted from remote callers.
     """
 
     @abstractmethod
@@ -146,18 +146,17 @@ class SmartAppDispatcher:
 
     Attributes:
         definition(SmartAppDefinition): The static definition for the SmartApp
-        event_handler(SmartAppHandler): Application event handler for SmartApp lifecycle events
+        event_handler(SmartAppEventHandler): Application event handler for SmartApp lifecycle events
     """
 
     definition: SmartAppDefinition
-    event_handler: SmartAppHandler
+    event_handler: SmartAppEventHandler
 
     def dispatch(self, request_json: str) -> Tuple[int, str]:
         """
         Dispatch a request, responding to SmartThings and invoking callbacks as needed.
 
         Args:
-            authorization(str): Contents of the Authorization header received with the POST
             request_json(str): Request JSON payload received from the POST
 
         Returns:

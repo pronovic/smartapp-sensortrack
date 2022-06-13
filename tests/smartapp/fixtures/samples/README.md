@@ -1,4 +1,4 @@
-These request and response sample files were taken
+These sample JSON files were taken
 from the [SmartApp Lifecycles](https://developer-preview.smartthings.com/docs/connected-services/lifecycles/) page
 and the [Configuration](https://developer-preview.smartthings.com/docs/connected-services/configuration/) page.
 

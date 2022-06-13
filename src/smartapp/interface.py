@@ -29,9 +29,9 @@ class LifecyclePhase(Enum):
     CONFIGURATION = "CONFIGURATION"
     INSTALL = "INSTALL"
     UPDATE = "UPDATE"
-    EVENT = "EVENT"
-    OAUTH_CALLBACK = "OAUTH_CALLBACK"
     UNINSTALL = "UNINSTALL"
+    OAUTH_CALLBACK = "OAUTH_CALLBACK"
+    EVENT = "EVENT"
 
 
 class ConfigValueType(Enum):
@@ -422,9 +422,9 @@ class ConfirmationData:
 class ConfigInit:
     """Initialization data."""
 
+    id: str
     name: str
     description: str
-    id: str
     permissions: List[str]
     first_page_id: str
 
@@ -461,8 +461,8 @@ class ConfigPage:
 
     page_id: str
     name: str
-    next_page_id: Optional[str]
     previous_page_id: Optional[str]
+    next_page_id: Optional[str]
     complete: bool
     sections: List[ConfigSection]
 

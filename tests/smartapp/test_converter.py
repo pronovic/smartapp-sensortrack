@@ -3,28 +3,18 @@
 # pylint: disable=redefined-outer-name,invalid-name,wildcard-import:
 
 import os
-from typing import Dict
 
 import pendulum
 import pytest
 
 from smartapp.converter import CONVERTER
 from smartapp.interface import *
+from tests.testutil import load_data
 
-FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
+FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/samples")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")
 RESPONSE_DIR = os.path.join(FIXTURE_DIR, "response")
 SETTINGS_DIR = os.path.join(FIXTURE_DIR, "settings")
-
-
-def load_data(path: str) -> Dict[str, str]:
-    data = {}
-    for f in os.listdir(path):
-        p = os.path.join(path, f)
-        if os.path.isfile(p):
-            with open(p, encoding="utf-8") as r:
-                data[f] = r.read()
-    return data
 
 
 @pytest.fixture
