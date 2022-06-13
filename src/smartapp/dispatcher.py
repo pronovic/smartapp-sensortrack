@@ -8,7 +8,7 @@ import logging
 from abc import ABC, abstractmethod
 from typing import List, Mapping, Optional, Union
 
-from attr import frozen
+from attr import field, frozen
 
 from .converter import CONVERTER
 from .interface import (
@@ -40,6 +40,26 @@ from .interface import (
     UpdateRequest,
     UpdateResponse,
 )
+from .signature import check_signature
+
+
+@frozen(kw_only=True)
+class SmartAppDispatcherConfig:
+
+    # noinspection PyUnresolvedReferences
+    """
+    Configuration for the SmartAppDispatcher.
+
+    Any production SmartApp should always check signatures.  We support disabling that feature
+    to make local testing easier during development.
+
+    Attributes:
+        check_signatures(bool): Whether to check the digital signature on lifecycle requests
+        clock_skew_sec(int): Amount of clock skew allowed when verifying digital signatures
+    """
+
+    check_signatures: bool = True
+    clock_skew_sec: int = 300
 
 
 class SmartAppEventHandler(ABC):
@@ -190,6 +210,7 @@ class SmartAppDispatcher:
 
     definition: SmartAppDefinition
     event_handler: SmartAppEventHandler
+    config: SmartAppDispatcherConfig = field(factory=SmartAppDispatcherConfig)
 
     def dispatch(self, context: SmartAppRequestContext) -> str:
         """
@@ -205,7 +226,12 @@ class SmartAppDispatcher:
             SmartAppError: If processing fails
         """
         try:
-            # TODO: check signature and raise SignatureError if not valid
+            if self.config.check_signatures:
+                check_signature(
+                    headers=context.headers,
+                    request_json=context.request_json,
+                    clock_skew_sec=self.config.clock_skew_sec,
+                )
             request: LifecycleRequest = CONVERTER.from_json(context.request_json, LifecycleRequest)  # type: ignore
             response = self._handle_request(context.correlation_id, request)
             return CONVERTER.to_json(response)

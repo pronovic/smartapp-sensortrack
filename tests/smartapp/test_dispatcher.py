@@ -12,6 +12,7 @@ from smartapp.dispatcher import (
     SmartAppConfigPage,
     SmartAppDefinition,
     SmartAppDispatcher,
+    SmartAppDispatcherConfig,
     SmartAppEventHandler,
     SmartAppRequestContext,
 )
@@ -82,7 +83,11 @@ def event_handler() -> SmartAppEventHandler:
 
 @pytest.fixture
 def dispatcher(definition: SmartAppDefinition, event_handler: SmartAppEventHandler) -> SmartAppDispatcher:
-    return SmartAppDispatcher(definition=definition, event_handler=event_handler)
+    return SmartAppDispatcher(
+        definition=definition,
+        event_handler=event_handler,
+        config=SmartAppDispatcherConfig(check_signatures=False),
+    )
 
 
 # noinspection PyUnresolvedReferences
