@@ -4,6 +4,7 @@
 """
 Manage the requests and responses that are part of the SmartApp lifecycle.
 """
+import logging
 from abc import ABC, abstractmethod
 from typing import List, Tuple, Union
 
@@ -11,6 +12,7 @@ from attr import frozen
 
 from .converter import CONVERTER
 from .interface import (
+    AbstractRequest,
     ConfigInit,
     ConfigInitData,
     ConfigPage,
@@ -41,8 +43,11 @@ class SmartAppEventHandler(ABC):
     """
     Application event handler for SmartApp lifecycle events.
 
-    Inherit from this class to implement your own application-specific event handler.  In
-    most cases, your implementation can be empty.  See notes below.
+    Inherit from this class to implement your own application-specific event handler.
+    The application-specific event handler is always called first, before any default
+    event handler logic in the dispatcher itself.
+
+    Some lifecycle events do not require you to implement any custom event handler logic:
 
     - CONFIRMATION: normally no callback needed, since the dispatcher logs the app id and confirmation URL
     - CONFIGURATION: normally no callback needed, since the dispatcher has the information it needs to respond
@@ -140,9 +145,9 @@ class SmartAppDispatcher:
     """
     Dispatcher to manage the requests and responses that are part of the SmartApp lifecycle.
 
-    You must provide both a definition and an event handler, but you do not necessarily need
-    to implement a handler method for every lifecycle event.  For more information, see
-    `SmartAppHandler`.
+    You must provide both a definition and an event handler, but in some cases the handler
+    methods will probably be no-ops without any custom logic.  For more information, see
+    `SmartAppEventHandler`.
 
     Attributes:
         definition(SmartAppDefinition): The static definition for the SmartApp
@@ -168,19 +173,19 @@ class SmartAppDispatcher:
             response = self._handle_request(request)
             return 200, CONVERTER.to_json(response)
         except Exception:  # pylint: disable=broad-except:
-            # TODO: should have some logging in here
-            return 500, ""  # at this point, any exception is a server error
+            logging.exception("Error handling lifecycle request, returning 500 response")
+            return 500, ""
 
-    def _handle_request(self, request: LifecycleRequest) -> LifecycleResponse:
+    def _handle_request(self, request: AbstractRequest) -> LifecycleResponse:
         """Handle a lifecycle request, returning the appropriate response."""
+        logging.info("Handling %s request [%s]", request.lifecycle, request.execution_id)
+        logging.debug("Request: %s", request)  # this is safe because secrets are not shown in the string output
         if isinstance(request, ConfirmationRequest):
-            # TODO: if we log this, then the caller doesn't need to implement the event handler
             self.event_handler.handle_confirmation(request)
-            return ConfirmationResponse(target_url=self.definition.target_url)
+            return self._handle_confirmation_request(request)
         elif isinstance(request, ConfigurationRequest):
-            response = self._handle_config_request(request)
             self.event_handler.handle_configuration(request)
-            return response
+            return self._handle_config_request(request)
         elif isinstance(request, InstallRequest):
             self.event_handler.handle_install(request)
             return InstallResponse()
@@ -198,6 +203,11 @@ class SmartAppDispatcher:
             return EventResponse()
         else:
             raise ValueError("Unknown lifecycle event")
+
+    def _handle_confirmation_request(self, request: ConfirmationRequest) -> ConfirmationResponse:
+        """Handle a CONFIRMATION lifecycle request, logging data and returning an appropriate response."""
+        logging.info("CONFIRMATION request for [%s]: [%s]", request.app_id, request.confirmation_data.confirmation_url)
+        return ConfirmationResponse(target_url=self.definition.target_url)
 
     def _handle_config_request(self, request: ConfigurationRequest) -> Union[ConfigurationInitResponse, ConfigurationPageResponse]:
         """Handle a CONFIGURATION lifecycle request, returning an appropriate response."""

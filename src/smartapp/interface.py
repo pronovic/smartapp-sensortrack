@@ -478,8 +478,10 @@ class ConfigPageData:
 class InstallData:
     """Install data."""
 
-    auth_token: str
-    refresh_token: str
+    # note: auth_token and refresh_token are secrets, so we don't include them in string output
+
+    auth_token: str = field(repr=False)
+    refresh_token: str = field(repr=False)
     installed_app: InstalledApp
 
 
@@ -487,8 +489,10 @@ class InstallData:
 class UpdateData:
     """Update data."""
 
-    auth_token: str
-    refresh_token: str
+    # note: auth_token and refresh_token are secrets, so we don't include them in string output
+
+    auth_token: str = field(repr=False)
+    refresh_token: str = field(repr=False)
     installed_app: InstalledApp
     previous_config: Optional[Dict[str, List[ConfigValue]]] = None
     previous_permissions: List[str] = field(factory=list)
@@ -511,7 +515,9 @@ class OauthCallbackData:
 class EventData:
     """Event data."""
 
-    auth_token: str
+    # note: auth_token is a secret, so we don't include it in string output
+
+    auth_token: str = field(repr=False)
     installed_app: InstalledApp
     events: List[Event]
 

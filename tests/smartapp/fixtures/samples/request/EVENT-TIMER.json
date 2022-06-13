@@ -4,7 +4,7 @@
   "locale": "en",
   "version": "1.0.0",
   "eventData": {
-    "authToken": "string",
+    "authToken": "authTokenValue",
     "installedApp": {
       "installedAppId": "d692699d-e7a6-400d-a0b7-d5be96e7a564",
       "locationId": "e675a3d9-2499-406c-86dc-8a492a886494",

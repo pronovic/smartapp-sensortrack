@@ -249,6 +249,29 @@ class TestConvertSettings:
         validate_yaml_roundtrip(None, expected, TimeSetting)
 
 
+class TestStringSecrets:
+
+    # Some requests contain secret tokens in the auth_token or refresh_token fields
+    # These must not be included when turning the object into a string, which attrs handles with field(repr=False)
+
+    @pytest.mark.parametrize(
+        "source",
+        [
+            "INSTALL.json",
+            "UPDATE.json",
+            "EVENT-TIMER.json",
+            "EVENT-DEVICE.json",
+        ],
+    )
+    def test_secrets(self, requests, source):
+        json = requests[source]
+        request = CONVERTER.from_json(json, LifecycleRequest)
+        for string in ["%s" % request, str(request), request.__repr__()]:
+            print(string)
+            assert "auth_token" not in string and "authTokenValue" not in string
+            assert "refresh_token" not in string and "refreshTokenValue" not in string
+
+
 class TestConvertResponses:
     def test_confirmation(self, responses):
         json = responses["CONFIRMATION.json"]
@@ -479,8 +502,8 @@ class TestConvertRequests:
             locale="en",
             version="1.0.0",
             install_data=InstallData(
-                auth_token="string",
-                refresh_token="string",
+                auth_token="authTokenValue",
+                refresh_token="refreshTokenValue",
                 installed_app=InstalledApp(
                     installed_app_id="d692699d-e7a6-400d-a0b7-d5be96e7a564",
                     location_id="e675a3d9-2499-406c-86dc-8a492a886494",
@@ -530,8 +553,8 @@ class TestConvertRequests:
             locale="en",
             version="1.0.0",
             update_data=UpdateData(
-                auth_token="string",
-                refresh_token="string",
+                auth_token="authTokenValue",
+                refresh_token="refreshTokenValue",
                 installed_app=InstalledApp(
                     installed_app_id="d692699d-e7a6-400d-a0b7-d5be96e7a564",
                     location_id="e675a3d9-2499-406c-86dc-8a492a886494",
@@ -670,7 +693,7 @@ class TestConvertRequests:
             locale="en",
             version="1.0.0",
             event_data=EventData(
-                auth_token="string",
+                auth_token="authTokenValue",
                 installed_app=InstalledApp(
                     installed_app_id="d692699d-e7a6-400d-a0b7-d5be96e7a564",
                     location_id="e675a3d9-2499-406c-86dc-8a492a886494",
@@ -737,7 +760,7 @@ class TestConvertRequests:
             locale="en",
             version="1.0.0",
             event_data=EventData(
-                auth_token="string",
+                auth_token="authTokenValue",
                 installed_app=InstalledApp(
                     installed_app_id="d692699d-e7a6-400d-a0b7-d5be96e7a564",
                     location_id="e675a3d9-2499-406c-86dc-8a492a886494",
