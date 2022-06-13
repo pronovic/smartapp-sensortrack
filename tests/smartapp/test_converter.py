@@ -8,6 +8,7 @@ import pendulum
 import pytest
 
 from smartapp.converter import CONVERTER
+from smartapp.dispatcher import SmartAppConfigPage, SmartAppDefinition
 from smartapp.interface import *
 from tests.testutil import load_data
 
@@ -34,19 +35,23 @@ def settings():
 
 def validate_json_roundtrip(json, expected, cls):
     """Validate a JSON round trip."""
-    obj = CONVERTER.from_json(json, cls)
-    assert expected == obj
-    converted = CONVERTER.from_json(CONVERTER.to_json(obj), cls)
-    assert converted == obj and converted is not obj
+    if json:
+        obj = CONVERTER.from_json(json, cls)
+        assert obj == expected
+    converted = CONVERTER.from_json(CONVERTER.to_json(expected), cls)
+    assert converted == expected and converted is not expected
 
 
-def validate_yaml_roundtrip(obj, cls):
-    """Validate a YAML round trip; we don't have YAML samples, so that part isn't checked."""
-    converted = CONVERTER.from_yaml(CONVERTER.to_yaml(obj), cls)
-    assert converted == obj and converted is not obj
+def validate_yaml_roundtrip(yaml, expected, cls):
+    """Validate a YAML round trip."""
+    if yaml:
+        obj = CONVERTER.from_yaml(yaml, cls)
+        assert obj == expected
+    converted = CONVERTER.from_yaml(CONVERTER.to_yaml(expected), cls)
+    assert converted == expected and converted is not expected
 
 
-class TestParseSettings:
+class TestConvertSettings:
     def test_boolean(self, settings):
         json = settings["BOOLEAN.json"]
         expected = BooleanSetting(
@@ -57,7 +62,7 @@ class TestParseSettings:
             default_value="true",
         )
         validate_json_roundtrip(json, expected, BooleanSetting)
-        validate_yaml_roundtrip(expected, BooleanSetting)
+        validate_yaml_roundtrip(None, expected, BooleanSetting)
 
     def test_decimal(self, settings):
         json = settings["DECIMAL.json"]
@@ -67,7 +72,7 @@ class TestParseSettings:
             description="Tap to set",
         )
         validate_json_roundtrip(json, expected, DecimalSetting)
-        validate_yaml_roundtrip(expected, DecimalSetting)
+        validate_yaml_roundtrip(None, expected, DecimalSetting)
 
     def test_device(self, settings):
         json = settings["DEVICE.json"]
@@ -81,7 +86,7 @@ class TestParseSettings:
             permissions=["r"],
         )
         validate_json_roundtrip(json, expected, DeviceSetting)
-        validate_yaml_roundtrip(expected, DeviceSetting)
+        validate_yaml_roundtrip(None, expected, DeviceSetting)
 
     def test_email(self, settings):
         json = settings["EMAIL.json"]
@@ -91,7 +96,7 @@ class TestParseSettings:
             description="Tap to set",
         )
         validate_json_roundtrip(json, expected, EmailSetting)
-        validate_yaml_roundtrip(expected, EmailSetting)
+        validate_yaml_roundtrip(None, expected, EmailSetting)
 
     def test_enum(self, settings):
         json = settings["ENUM.json"]
@@ -104,7 +109,7 @@ class TestParseSettings:
             options=[EnumOption(id="option-1", name="Option 1"), EnumOption(id="option-2", name="Option 2")],
         )
         validate_json_roundtrip(json, expected, EnumSetting)
-        validate_yaml_roundtrip(expected, EnumSetting)
+        validate_yaml_roundtrip(None, expected, EnumSetting)
 
     def test_enum_group(self, settings):
         json = settings["ENUM-GROUP.json"]
@@ -129,7 +134,7 @@ class TestParseSettings:
             ],
         )
         validate_json_roundtrip(json, expected, EnumSetting)
-        validate_yaml_roundtrip(expected, EnumSetting)
+        validate_yaml_roundtrip(None, expected, EnumSetting)
 
     def test_icon(self, settings):
         json = settings["ICON.json"]
@@ -140,7 +145,7 @@ class TestParseSettings:
             image="https://some-image-url",
         )
         validate_json_roundtrip(json, expected, IconSetting)
-        validate_yaml_roundtrip(expected, IconSetting)
+        validate_yaml_roundtrip(None, expected, IconSetting)
 
     def test_image(self, settings):
         json = settings["IMAGE.json"]
@@ -151,7 +156,7 @@ class TestParseSettings:
             image="https://some-image-url",
         )
         validate_json_roundtrip(json, expected, ImageSetting)
-        validate_yaml_roundtrip(expected, ImageSetting)
+        validate_yaml_roundtrip(None, expected, ImageSetting)
 
     def test_link(self, settings):
         json = settings["LINK.json"]
@@ -163,7 +168,7 @@ class TestParseSettings:
             image="https://some-image-url",
         )
         validate_json_roundtrip(json, expected, LinkSetting)
-        validate_yaml_roundtrip(expected, LinkSetting)
+        validate_yaml_roundtrip(None, expected, LinkSetting)
 
     def test_number(self, settings):
         json = settings["NUMBER.json"]
@@ -173,7 +178,7 @@ class TestParseSettings:
             description="Tap to set",
         )
         validate_json_roundtrip(json, expected, NumberSetting)
-        validate_yaml_roundtrip(expected, NumberSetting)
+        validate_yaml_roundtrip(None, expected, NumberSetting)
 
     # pylint: disable=line-too-long:
     def test_oauth(self, settings):
@@ -186,7 +191,7 @@ class TestParseSettings:
             url_template="http://www.some-third-party.com/oauth?param1=1&param2=2&callback=https%3A%2F%2Fapi.smartthings.com%2Foauth%2Fcallback",
         )
         validate_json_roundtrip(json, expected, OauthSetting)
-        validate_yaml_roundtrip(expected, OauthSetting)
+        validate_yaml_roundtrip(None, expected, OauthSetting)
 
     def test_page(self, settings):
         json = settings["PAGE.json"]
@@ -198,7 +203,7 @@ class TestParseSettings:
             image="https://some-image-url",
         )
         validate_json_roundtrip(json, expected, PageSetting)
-        validate_yaml_roundtrip(expected, PageSetting)
+        validate_yaml_roundtrip(None, expected, PageSetting)
 
     def test_paragraph(self, settings):
         json = settings["PARAGRAPH.json"]
@@ -209,7 +214,7 @@ class TestParseSettings:
             default_value="This is the information to display.",
         )
         validate_json_roundtrip(json, expected, ParagraphSetting)
-        validate_yaml_roundtrip(expected, ParagraphSetting)
+        validate_yaml_roundtrip(None, expected, ParagraphSetting)
 
     def test_phone(self, settings):
         json = settings["PHONE.json"]
@@ -219,7 +224,7 @@ class TestParseSettings:
             description="Tap to set",
         )
         validate_json_roundtrip(json, expected, PhoneSetting)
-        validate_yaml_roundtrip(expected, PhoneSetting)
+        validate_yaml_roundtrip(None, expected, PhoneSetting)
 
     def test_text(self, settings):
         json = settings["TEXT.json"]
@@ -231,7 +236,7 @@ class TestParseSettings:
             default_value="Some default value",
         )
         validate_json_roundtrip(json, expected, TextSetting)
-        validate_yaml_roundtrip(expected, TextSetting)
+        validate_yaml_roundtrip(None, expected, TextSetting)
 
     def test_time(self, settings):
         json = settings["TIME.json"]
@@ -241,15 +246,15 @@ class TestParseSettings:
             description="Tap to set",
         )
         validate_json_roundtrip(json, expected, TimeSetting)
-        validate_yaml_roundtrip(expected, TimeSetting)
+        validate_yaml_roundtrip(None, expected, TimeSetting)
 
 
-class TestParseResponse:
+class TestConvertResponses:
     def test_confirmation(self, responses):
         json = responses["CONFIRMATION.json"]
         expected = ConfirmationResponse(target_url="{TARGET_URL}")
         validate_json_roundtrip(json, expected, ConfirmationResponse)
-        validate_yaml_roundtrip(expected, ConfirmationResponse)
+        validate_yaml_roundtrip(None, expected, ConfirmationResponse)
 
     def test_configuration_initialize(self, responses):
         # Response for INITIALIZE is different than for PAGE
@@ -266,7 +271,7 @@ class TestParseResponse:
             )
         )
         validate_json_roundtrip(json, expected, ConfigurationInitResponse)
-        validate_yaml_roundtrip(expected, ConfigurationInitResponse)
+        validate_yaml_roundtrip(None, expected, ConfigurationInitResponse)
 
     def test_configuration_page_only(self, responses):
         # Response for PAGE is different than for INITIALIZE
@@ -314,7 +319,7 @@ class TestParseResponse:
             )
         )
         validate_json_roundtrip(json, expected, ConfigurationPageResponse)
-        validate_yaml_roundtrip(expected, ConfigurationPageResponse)
+        validate_yaml_roundtrip(None, expected, ConfigurationPageResponse)
 
     def test_configuration_page_1of2(self, responses):
         # Response for PAGE is different than for INITIALIZE
@@ -348,40 +353,40 @@ class TestParseResponse:
             )
         )
         validate_json_roundtrip(json, expected, ConfigurationPageResponse)
-        validate_yaml_roundtrip(expected, ConfigurationPageResponse)
+        validate_yaml_roundtrip(None, expected, ConfigurationPageResponse)
 
     def test_install(self, responses):
         json = responses["INSTALL.json"]
         expected = InstallResponse()
         validate_json_roundtrip(json, expected, InstallResponse)
-        validate_yaml_roundtrip(expected, InstallResponse)
+        validate_yaml_roundtrip(None, expected, InstallResponse)
 
     def test_update(self, responses):
         json = responses["UPDATE.json"]
         expected = UpdateResponse()
         validate_json_roundtrip(json, expected, UpdateResponse)
-        validate_yaml_roundtrip(expected, UpdateResponse)
+        validate_yaml_roundtrip(None, expected, UpdateResponse)
 
     def test_uninstall(self, responses):
         json = responses["UNINSTALL.json"]
         expected = UninstallResponse()
         validate_json_roundtrip(json, expected, UninstallResponse)
-        validate_yaml_roundtrip(expected, UninstallResponse)
+        validate_yaml_roundtrip(None, expected, UninstallResponse)
 
     def test_oauth_callback(self, responses):
         json = responses["OAUTH_CALLBACK.json"]
         expected = OauthCallbackResponse()
         validate_json_roundtrip(json, expected, OauthCallbackResponse)
-        validate_yaml_roundtrip(expected, OauthCallbackResponse)
+        validate_yaml_roundtrip(None, expected, OauthCallbackResponse)
 
     def test_event(self, responses):
         json = responses["EVENT.json"]
         expected = EventResponse()
         validate_json_roundtrip(json, expected, EventResponse)
-        validate_yaml_roundtrip(expected, EventResponse)
+        validate_yaml_roundtrip(None, expected, EventResponse)
 
 
-class TestParseRequest:
+class TestConvertRequests:
     def test_confirmation(self, requests):
         json = requests["CONFIRMATION.json"]
         expected = ConfirmationRequest(
@@ -399,7 +404,7 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_configuration_initialize(self, requests):
         json = requests["CONFIGURATION-INITIALIZE.json"]
@@ -438,7 +443,7 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_configuration_page(self, requests):
         # Note that the invalid "app" config item is ignored when we deserialize
@@ -464,7 +469,7 @@ class TestParseRequest:
             settings={},
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_install(self, requests):
         json = requests["INSTALL.json"]
@@ -515,7 +520,7 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_update(self, requests):
         json = requests["UPDATE.json"]
@@ -594,7 +599,7 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_uninstall(self, requests):
         json = requests["UNINSTALL.json"]
@@ -643,7 +648,7 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_oauth_callback(self, requests):
         json = requests["OAUTH_CALLBACK.json"]
@@ -655,7 +660,7 @@ class TestParseRequest:
             o_auth_callback_data=OauthCallbackData(installed_app_id="string", url_path="string"),
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_event_device(self, requests):
         json = requests["EVENT-DEVICE.json"]
@@ -722,7 +727,7 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
     def test_event_timer(self, requests):
         json = requests["EVENT-TIMER.json"]
@@ -784,4 +789,52 @@ class TestParseRequest:
             },
         )
         validate_json_roundtrip(json, expected, LifecycleRequest)
-        validate_yaml_roundtrip(expected, LifecycleRequest)
+        validate_yaml_roundtrip(None, expected, LifecycleRequest)
+
+
+class TestConvertSmartAppDefinition:
+    def test_definition(self):
+        # SmartAppDefinition isn't part of the SmartThings interface, but we support serializing/deserializing it
+        expected = SmartAppDefinition(
+            id="id",
+            name="name",
+            description="description",
+            target_url="target_url",
+            permissions=["permission"],
+            config_pages=[
+                SmartAppConfigPage(
+                    page_name="First page",
+                    sections=[
+                        ConfigSection(
+                            name="Section 1",
+                            settings=[
+                                ParagraphSetting(
+                                    id="paragraph-id",
+                                    name="paragraph-name",
+                                    description="paragraph-description",
+                                    default_value="paragraph-text",
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+                SmartAppConfigPage(
+                    page_name="Second page",
+                    sections=[
+                        ConfigSection(
+                            name="Section 2",
+                            settings=[
+                                DecimalSetting(
+                                    id="decimal-id",
+                                    name="decimal-name",
+                                    description="decimal-description",
+                                    required=False,
+                                ),
+                            ],
+                        )
+                    ],
+                ),
+            ],
+        )
+        validate_json_roundtrip(None, expected, SmartAppDefinition)
+        validate_yaml_roundtrip(None, expected, SmartAppDefinition)
