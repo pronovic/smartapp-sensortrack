@@ -11,7 +11,6 @@ from importlib.metadata import version as metadata_version
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module:
 
-from smartapp.dispatcher import SmartAppRequestContext
 from smartapp.interface import BadRequestError, SignatureError, SmartAppError
 
 from .dispatcher import DISPATCHER
@@ -86,6 +85,5 @@ async def smartapp(request: Request) -> Response:
     headers = request.headers
     body = await request.body()
     request_json = codecs.decode(body, "UTF-8")
-    context = SmartAppRequestContext(headers=headers, request_json=request_json)
-    response_json = DISPATCHER.dispatch(context=context)
+    response_json = DISPATCHER.dispatch(headers=headers, request_json=request_json)
     return Response(status_code=200, content=response_json, media_type="application/json")

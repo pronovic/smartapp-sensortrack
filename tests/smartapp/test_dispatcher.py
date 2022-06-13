@@ -3,7 +3,7 @@
 # pylint: disable=redefined-outer-name,wildcard-import:
 
 import os
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,7 +14,6 @@ from smartapp.dispatcher import (
     SmartAppDispatcher,
     SmartAppDispatcherConfig,
     SmartAppEventHandler,
-    SmartAppRequestContext,
 )
 from smartapp.interface import *
 from tests.testutil import load_data
@@ -22,6 +21,7 @@ from tests.testutil import load_data
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/samples")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")
 
+CLOCK_SKEW_SEC = 555
 CORRELATION = "AAAA"
 HEADERS = {"x-st-correlation": CORRELATION}
 
@@ -86,74 +86,98 @@ def dispatcher(definition: SmartAppDefinition, event_handler: SmartAppEventHandl
     return SmartAppDispatcher(
         definition=definition,
         event_handler=event_handler,
-        config=SmartAppDispatcherConfig(check_signatures=False),
+        config=SmartAppDispatcherConfig(check_signatures=False, clock_skew_sec=CLOCK_SKEW_SEC),
+    )
+
+
+@pytest.fixture
+def dispatcher_with_check(definition: SmartAppDefinition, event_handler: SmartAppEventHandler) -> SmartAppDispatcher:
+    return SmartAppDispatcher(
+        definition=definition,
+        event_handler=event_handler,
+        config=SmartAppDispatcherConfig(check_signatures=True, clock_skew_sec=CLOCK_SKEW_SEC),
     )
 
 
 # noinspection PyUnresolvedReferences
 class TestSmartAppDispatcher:
-
-    # Most of the lifecycle events are very similar and don't do much, so they're
-    # grouped together in a single test.  Configuration is more complicated and is
-    # tested separately.
-
     def test_json_exception(self, dispatcher):
-        # We only need to test this for one case, since error handling is the same everywhere
+        # all of the requests have the same behavior, so we just check it once
         with pytest.raises(BadRequestError):
-            dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json="bogus"))
+            dispatcher.dispatch(headers=HEADERS, request_json="bogus")
 
-    def test_handler_exception(self, requests, dispatcher):
-        # We only need to test this for one case, since error handling is the same everywhere
+    def test_handler_internal_error(self, requests, dispatcher):
+        # all of the requests have the same behavior, so we just check it once
         request_json = requests["CONFIRMATION.json"]
         dispatcher.event_handler.handle_confirmation.side_effect = Exception("Hello")
         with pytest.raises(InternalError):
-            dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+            dispatcher.dispatch(headers=HEADERS, request_json=request_json)
+
+    @patch("smartapp.dispatcher.check_signature")
+    def test_disabled_signature(self, check_signature, requests, dispatcher):
+        # all of the requests have the same behavior, so we just check it once
+        request_json = requests["CONFIRMATION.json"]
+        dispatcher.dispatch(headers=HEADERS, request_json=request_json)
+        check_signature.assert_not_called()
+
+    @patch("smartapp.dispatcher.check_signature")
+    def test_enabled_signature(self, check_signature, requests, dispatcher_with_check):
+        # all of the requests have the same behavior, so we just check it once
+        request_json = requests["CONFIRMATION.json"]
+        dispatcher_with_check.dispatch(headers=HEADERS, request_json=request_json)
+        check_signature.assert_called_once_with(CORRELATION, HEADERS, request_json, CLOCK_SKEW_SEC)
+
+    @patch("smartapp.dispatcher.check_signature")
+    def test_bad_signature(self, check_signature, requests, dispatcher_with_check):
+        # all of the requests have the same behavior, so we just check it once
+        request_json = requests["CONFIRMATION.json"]
+        check_signature.side_effect = SignatureError("Hello")  # this what would be thrown, so make sure it comes through
+        with pytest.raises(SignatureError):
+            dispatcher_with_check.dispatch(headers=HEADERS, request_json=request_json)
+        check_signature.assert_called_once_with(CORRELATION, HEADERS, request_json, CLOCK_SKEW_SEC)
 
     def test_confirmation(self, requests, dispatcher):
         request_json = requests["CONFIRMATION.json"]
         request = CONVERTER.from_json(request_json, ConfirmationRequest)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(ConfirmationResponse(target_url="target_url"))
         dispatcher.event_handler.handle_confirmation.assert_called_once_with(CORRELATION, request)
 
     def test_install(self, requests, dispatcher):
         request_json = requests["INSTALL.json"]
         request = CONVERTER.from_json(request_json, InstallRequest)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(InstallResponse())
         dispatcher.event_handler.handle_install.assert_called_once_with(CORRELATION, request)
 
     def test_update(self, requests, dispatcher):
         request_json = requests["UPDATE.json"]
         request = CONVERTER.from_json(request_json, UpdateRequest)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(UpdateResponse())
         dispatcher.event_handler.handle_update.assert_called_once_with(CORRELATION, request)
 
     def test_uninstall(self, requests, dispatcher):
         request_json = requests["UNINSTALL.json"]
         request = CONVERTER.from_json(request_json, UninstallRequest)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(UninstallResponse())
         dispatcher.event_handler.handle_uninstall.assert_called_once_with(CORRELATION, request)
 
     def test_oauth_callback(self, requests, dispatcher):
         request_json = requests["OAUTH_CALLBACK.json"]
         request = CONVERTER.from_json(request_json, OauthCallbackRequest)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(OauthCallbackResponse())
         dispatcher.event_handler.handle_oauth_callback.assert_called_once_with(CORRELATION, request)
 
     def test_event(self, requests, dispatcher):
         request_json = requests["EVENT-DEVICE.json"]
         request = CONVERTER.from_json(request_json, EventRequest)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(EventResponse())
         dispatcher.event_handler.handle_event.assert_called_once_with(CORRELATION, request)
 
-
-# noinspection PyUnresolvedReferences
-class TestSmartAppDispatcherConfig:
     def test_configuration_initialize(self, dispatcher):
         request = ConfigurationRequest(
             lifecycle=LifecyclePhase.CONFIGURATION,
@@ -181,7 +205,7 @@ class TestSmartAppDispatcherConfig:
             )
         )
         request_json = CONVERTER.to_json(request)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(response)
         dispatcher.event_handler.handle_configuration.assert_called_once_with(CORRELATION, request)
 
@@ -225,7 +249,7 @@ class TestSmartAppDispatcherConfig:
             )
         )
         request_json = CONVERTER.to_json(request)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(response)
         dispatcher.event_handler.handle_configuration.assert_called_once_with(CORRELATION, request)
 
@@ -269,6 +293,6 @@ class TestSmartAppDispatcherConfig:
             )
         )
         request_json = CONVERTER.to_json(request)
-        response_json = dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, request_json=request_json))
+        response_json = dispatcher.dispatch(headers=HEADERS, request_json=request_json)
         assert response_json == CONVERTER.to_json(response)
         dispatcher.event_handler.handle_configuration.assert_called_once_with(CORRELATION, request)
