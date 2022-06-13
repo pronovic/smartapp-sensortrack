@@ -49,7 +49,7 @@ run_pylint() {
       run_install
    fi
 
-   poetry run pylint -j 0 src/sensortrack tests
+   poetry run pylint -j 0 src/sensortrack src/smartapp tests
    if [ $? != 0 ]; then
       exit 1
    fi
@@ -292,36 +292,6 @@ run_publish() {
    git push --follow-tags
 }
 
-# Run a game with simulated players, displaying output on the terminal
-run_demo() {
-   poetry run python -c "from sensortrack.cli import cli" >/dev/null 2>&1
-   if [ $? != 0 ]; then
-      run_install
-   fi
-
-   poetry run python src/scripts/demo $*
-}
-
-# Run a simulation to see how well different character input sources behave
-run_sim() {
-   poetry run python -c "from sensortrack.cli import cli" >/dev/null 2>&1
-   if [ $? != 0 ]; then
-      run_install
-   fi
-
-   poetry run python src/scripts/simulation $*
-}
-
-# Render a board via the render script
-run_render() {
-   poetry run python -c "from sensortrack.cli import cli" >/dev/null 2>&1
-   if [ $? != 0 ]; then
-      run_install
-   fi
-
-   poetry run python src/scripts/render
-}
-
 # Execute one of the developer tasks
 case $1 in
    install|setup)
@@ -376,15 +346,6 @@ case $1 in
       ;;
    publish)
       run_publish
-      ;;
-   demo)
-      run_demo $*
-      ;;
-   sim*)
-      run_sim $*
-      ;;
-   render)
-      run_render
       ;;
    *)
       echo ""

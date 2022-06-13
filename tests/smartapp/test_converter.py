@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
-# pylint: disable=redefined-outer-name,invalid-name:
+# pylint: disable=redefined-outer-name,invalid-name,wildcard-import:
 
 import os
 from typing import Dict
@@ -8,8 +8,8 @@ from typing import Dict
 import pendulum
 import pytest
 
-from sensortrack.smartapp.converter import CONVERTER
-from sensortrack.smartapp.interface import *  # pylint: disable=wildcard-import:
+from smartapp.converter import CONVERTER
+from smartapp.interface import *
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/test_converter")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")

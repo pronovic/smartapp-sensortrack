@@ -9,8 +9,8 @@ from typing import List, Tuple, Union
 
 from attr import frozen
 
-from sensortrack.smartapp.converter import CONVERTER
-from sensortrack.smartapp.interface import (
+from .converter import CONVERTER
+from .interface import (
     ConfigInit,
     ConfigInitData,
     ConfigPage,

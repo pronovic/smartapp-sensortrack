@@ -46,6 +46,6 @@ repos:
     hooks:
       - id: system
         name: Pylint
-        entry: poetry run pylint -j 0 src/sensortrack tests
+        entry: poetry run pylint -j 0 src/sensortrack src/smartapp tests
         pass_filenames: false
         language: system

@@ -27,7 +27,7 @@ Switch ($command)
 
     pylint {
       Write-Output "Running pylint checks..." 
-      poetry run pylint -j 0 src/sensortrack tests
+      poetry run pylint -j 0 src/sensortrack src/smartapp tests
     }
 }
 

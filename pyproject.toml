@@ -14,7 +14,10 @@ include = [
    { path = 'docs', format = 'sdist' },
    { path = 'tests', format = 'sdist' },
 ]
-packages = [ { include = "sensortrack", from = "src" } ]
+packages = [ 
+   { include = "sensortrack", from = "src" },
+   { include = "smartapp", from = "src" }, # will eventually be refactored out
+]
 classifiers=[
    "Programming Language :: Python :: 3",
    "License :: OSI Approved :: Apache Software License",
