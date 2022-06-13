@@ -114,7 +114,7 @@ class DeviceSetting(AbstractSetting):
 
     type: ConfigSettingType = ConfigSettingType.DEVICE
     multiple: bool
-    capabilities: List[str]
+    capabilities: List[str]  # note that this is treated as AND - you'll get devices that have all capabilities
     permissions: List[str]
 
 
