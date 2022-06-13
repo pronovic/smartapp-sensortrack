@@ -7,6 +7,7 @@ Converter to serialize and deserialize lifecycle objects to various formats.
 import json
 from typing import Any, Dict, Type, TypeVar
 
+import yaml
 from attrs import fields, has
 from cattrs import GenConverter
 from cattrs.gen import make_dict_structure_fn, make_dict_unstructure_fn, override
@@ -59,6 +60,14 @@ class LifecycleConverter(GenConverter):
     def from_json(self, data: str, cls: Type[T]) -> T:
         """Deserialize an object from JSON."""
         return self.structure(json.loads(data), cls)
+
+    def to_yaml(self, obj: Any) -> str:
+        """Serialize an object to YAML."""
+        return yaml.safe_dump(self.unstructure(obj), sort_keys=False)  # type: ignore
+
+    def from_yaml(self, data: str, cls: Type[T]) -> T:
+        """Deserialize an object from YAML."""
+        return self.structure(yaml.safe_load(data), cls)
 
     def _to_camel_case(self, name: str) -> str:
         """Convert a snake_case attribute name to camelCase instead."""

@@ -1,7 +1,7 @@
 # TODO:
 
-- [ ] Unit test code in `dispatcher.py`
-- [ ] Add to_yaml() and from_yaml() on `LifecycleConverter`
+- [x] Unit test code in `dispatcher.py`
+- [x] Add to_yaml() and from_yaml() on `LifecycleConverter`
 - [ ] Unit tests for serializing and deserializating `SmartAppDefinition`
 - [ ] Figure out where to add Python logging under `smartapp`
 - [ ] Wire up FastAPI to accept requests and forward to dispatcher

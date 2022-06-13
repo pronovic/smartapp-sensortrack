@@ -32,8 +32,23 @@ def settings():
     return load_data(SETTINGS_DIR)
 
 
+def validate_json_roundtrip(json, expected, cls):
+    """Validate a JSON round trip."""
+    obj = CONVERTER.from_json(json, cls)
+    assert expected == obj
+    converted = CONVERTER.from_json(CONVERTER.to_json(obj), cls)
+    assert converted == obj and converted is not obj
+
+
+def validate_yaml_roundtrip(obj, cls):
+    """Validate a YAML round trip; we don't have YAML samples, so that part isn't checked."""
+    converted = CONVERTER.from_yaml(CONVERTER.to_yaml(obj), cls)
+    assert converted == obj and converted is not obj
+
+
 class TestParseSettings:
     def test_boolean(self, settings):
+        json = settings["BOOLEAN.json"]
         expected = BooleanSetting(
             id="myBooleanSetting",
             name="True or false?",
@@ -41,25 +56,21 @@ class TestParseSettings:
             required=True,
             default_value="true",
         )
-        j = settings["BOOLEAN.json"]
-        r = CONVERTER.from_json(j, BooleanSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), BooleanSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, BooleanSetting)
+        validate_yaml_roundtrip(expected, BooleanSetting)
 
     def test_decimal(self, settings):
+        json = settings["DECIMAL.json"]
         expected = DecimalSetting(
             id="myDecimalSetting",
             name="Enter a decimal value",
             description="Tap to set",
         )
-        j = settings["DECIMAL.json"]
-        r = CONVERTER.from_json(j, DecimalSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), DecimalSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, DecimalSetting)
+        validate_yaml_roundtrip(expected, DecimalSetting)
 
     def test_device(self, settings):
+        json = settings["DEVICE.json"]
         expected = DeviceSetting(
             id="contactSensor",
             name="Which contact sensor?",
@@ -69,25 +80,21 @@ class TestParseSettings:
             capabilities=["contactSensor"],
             permissions=["r"],
         )
-        j = settings["DEVICE.json"]
-        r = CONVERTER.from_json(j, DeviceSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), DeviceSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, DeviceSetting)
+        validate_yaml_roundtrip(expected, DeviceSetting)
 
     def test_email(self, settings):
+        json = settings["EMAIL.json"]
         expected = EmailSetting(
             id="myEmailSetting",
             name="Enter an email address",
             description="Tap to set",
         )
-        j = settings["EMAIL.json"]
-        r = CONVERTER.from_json(j, EmailSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), EmailSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, EmailSetting)
+        validate_yaml_roundtrip(expected, EmailSetting)
 
     def test_enum(self, settings):
+        json = settings["ENUM.json"]
         expected = EnumSetting(
             id="myEnumSetting",
             name="Choose what applies",
@@ -96,13 +103,11 @@ class TestParseSettings:
             multiple=True,
             options=[EnumOption(id="option-1", name="Option 1"), EnumOption(id="option-2", name="Option 2")],
         )
-        j = settings["ENUM.json"]
-        r = CONVERTER.from_json(j, EnumSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), EnumSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, EnumSetting)
+        validate_yaml_roundtrip(expected, EnumSetting)
 
     def test_enum_group(self, settings):
+        json = settings["ENUM-GROUP.json"]
         expected = EnumSetting(
             id="myGroupedEnumSetting",
             name="Choose what applies",
@@ -123,39 +128,33 @@ class TestParseSettings:
                 ),
             ],
         )
-        j = settings["ENUM-GROUP.json"]
-        r = CONVERTER.from_json(j, EnumSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), EnumSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, EnumSetting)
+        validate_yaml_roundtrip(expected, EnumSetting)
 
     def test_icon(self, settings):
+        json = settings["ICON.json"]
         expected = IconSetting(
             id="myIconInput",
             name="Some icon information",
             description="Some description",
             image="https://some-image-url",
         )
-        j = settings["ICON.json"]
-        r = CONVERTER.from_json(j, IconSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), IconSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, IconSetting)
+        validate_yaml_roundtrip(expected, IconSetting)
 
     def test_image(self, settings):
+        json = settings["IMAGE.json"]
         expected = ImageSetting(
             id="myImageInput",
             name="Choose what applies",
             description="Tap to set",
             image="https://some-image-url",
         )
-        j = settings["IMAGE.json"]
-        r = CONVERTER.from_json(j, ImageSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), ImageSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, ImageSetting)
+        validate_yaml_roundtrip(expected, ImageSetting)
 
     def test_link(self, settings):
+        json = settings["LINK.json"]
         expected = LinkSetting(
             id="myLinkSetting",
             name="Visit the following link",
@@ -163,26 +162,22 @@ class TestParseSettings:
             url="https://some-site-url",
             image="https://some-image-url",
         )
-        j = settings["LINK.json"]
-        r = CONVERTER.from_json(j, LinkSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LinkSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LinkSetting)
+        validate_yaml_roundtrip(expected, LinkSetting)
 
     def test_number(self, settings):
+        json = settings["NUMBER.json"]
         expected = NumberSetting(
             id="myNumberSetting",
             name="Enter a number",
             description="Tap to set",
         )
-        j = settings["NUMBER.json"]
-        r = CONVERTER.from_json(j, NumberSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), NumberSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, NumberSetting)
+        validate_yaml_roundtrip(expected, NumberSetting)
 
     # pylint: disable=line-too-long:
     def test_oauth(self, settings):
+        json = settings["OAUTH.json"]
         expected = OauthSetting(
             id="myOauthSetting",
             name="Authenticate with the third party service",
@@ -190,13 +185,11 @@ class TestParseSettings:
             browser=False,
             url_template="http://www.some-third-party.com/oauth?param1=1&param2=2&callback=https%3A%2F%2Fapi.smartthings.com%2Foauth%2Fcallback",
         )
-        j = settings["OAUTH.json"]
-        r = CONVERTER.from_json(j, OauthSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), OauthSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, OauthSetting)
+        validate_yaml_roundtrip(expected, OauthSetting)
 
     def test_page(self, settings):
+        json = settings["PAGE.json"]
         expected = PageSetting(
             id="myPageSetting",
             name="Choose what applies",
@@ -204,38 +197,32 @@ class TestParseSettings:
             page="page-id",
             image="https://some-image-url",
         )
-        j = settings["PAGE.json"]
-        r = CONVERTER.from_json(j, PageSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), PageSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, PageSetting)
+        validate_yaml_roundtrip(expected, PageSetting)
 
     def test_paragraph(self, settings):
+        json = settings["PARAGRAPH.json"]
         expected = ParagraphSetting(
             id="myParagraphSetting",
             name="Some information title",
             description="Some description",
             default_value="This is the information to display.",
         )
-        j = settings["PARAGRAPH.json"]
-        r = CONVERTER.from_json(j, ParagraphSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), ParagraphSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, ParagraphSetting)
+        validate_yaml_roundtrip(expected, ParagraphSetting)
 
     def test_phone(self, settings):
+        json = settings["PHONE.json"]
         expected = PhoneSetting(
             id="myPhoneSetting",
             name="Enter a phone number",
             description="Tap to set",
         )
-        j = settings["PHONE.json"]
-        r = CONVERTER.from_json(j, PhoneSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), PhoneSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, PhoneSetting)
+        validate_yaml_roundtrip(expected, PhoneSetting)
 
     def test_text(self, settings):
+        json = settings["TEXT.json"]
         expected = TextSetting(
             id="myTextSetting",
             name="Enter some text",
@@ -243,36 +230,30 @@ class TestParseSettings:
             required=True,
             default_value="Some default value",
         )
-        j = settings["TEXT.json"]
-        r = CONVERTER.from_json(j, TextSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), TextSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, TextSetting)
+        validate_yaml_roundtrip(expected, TextSetting)
 
     def test_time(self, settings):
+        json = settings["TIME.json"]
         expected = TimeSetting(
             id="myTimeInput",
             name="Choose a time",
             description="Tap to set",
         )
-        j = settings["TIME.json"]
-        r = CONVERTER.from_json(j, TimeSetting)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), TimeSetting)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, TimeSetting)
+        validate_yaml_roundtrip(expected, TimeSetting)
 
 
 class TestParseResponse:
     def test_confirmation(self, responses):
+        json = responses["CONFIRMATION.json"]
         expected = ConfirmationResponse(target_url="{TARGET_URL}")
-        j = responses["CONFIRMATION.json"]
-        r = CONVERTER.from_json(j, ConfirmationResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfirmationResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, ConfirmationResponse)
+        validate_yaml_roundtrip(expected, ConfirmationResponse)
 
     def test_configuration_initialize(self, responses):
         # Response for INITIALIZE is different than for PAGE
+        json = responses["CONFIGURATION-INITIALIZE.json"]
         expected = ConfigurationInitResponse(
             configuration_data=ConfigInitData(
                 initialize=ConfigInit(
@@ -284,15 +265,13 @@ class TestParseResponse:
                 )
             )
         )
-        j = responses["CONFIGURATION-INITIALIZE.json"]
-        r = CONVERTER.from_json(j, ConfigurationInitResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfigurationInitResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, ConfigurationInitResponse)
+        validate_yaml_roundtrip(expected, ConfigurationInitResponse)
 
     def test_configuration_page_only(self, responses):
         # Response for PAGE is different than for INITIALIZE
         # This tests the example for an only page (1 of 1)
+        json = responses["CONFIGURATION-PAGE-only.json"]
         expected = ConfigurationPageResponse(
             configuration_data=ConfigPageData(
                 page=ConfigPage(
@@ -334,15 +313,13 @@ class TestParseResponse:
                 )
             )
         )
-        j = responses["CONFIGURATION-PAGE-only.json"]
-        r = CONVERTER.from_json(j, ConfigurationPageResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfigurationPageResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, ConfigurationPageResponse)
+        validate_yaml_roundtrip(expected, ConfigurationPageResponse)
 
     def test_configuration_page_1of2(self, responses):
         # Response for PAGE is different than for INITIALIZE
         # This tests the example for page 1 of 2
+        json = responses["CONFIGURATION-PAGE-1of2.json"]
         expected = ConfigurationPageResponse(
             configuration_data=ConfigPageData(
                 page=ConfigPage(
@@ -370,55 +347,43 @@ class TestParseResponse:
                 )
             )
         )
-        j = responses["CONFIGURATION-PAGE-1of2.json"]
-        r = CONVERTER.from_json(j, ConfigurationPageResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), ConfigurationPageResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, ConfigurationPageResponse)
+        validate_yaml_roundtrip(expected, ConfigurationPageResponse)
 
     def test_install(self, responses):
+        json = responses["INSTALL.json"]
         expected = InstallResponse()
-        j = responses["INSTALL.json"]
-        r = CONVERTER.from_json(j, InstallResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), InstallResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, InstallResponse)
+        validate_yaml_roundtrip(expected, InstallResponse)
 
     def test_update(self, responses):
+        json = responses["UPDATE.json"]
         expected = UpdateResponse()
-        j = responses["UPDATE.json"]
-        r = CONVERTER.from_json(j, UpdateResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), UpdateResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, UpdateResponse)
+        validate_yaml_roundtrip(expected, UpdateResponse)
 
     def test_uninstall(self, responses):
+        json = responses["UNINSTALL.json"]
         expected = UninstallResponse()
-        j = responses["UNINSTALL.json"]
-        r = CONVERTER.from_json(j, UninstallResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), UninstallResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, UninstallResponse)
+        validate_yaml_roundtrip(expected, UninstallResponse)
 
     def test_oauth_callback(self, responses):
+        json = responses["OAUTH_CALLBACK.json"]
         expected = OauthCallbackResponse()
-        j = responses["OAUTH_CALLBACK.json"]
-        r = CONVERTER.from_json(j, OauthCallbackResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), OauthCallbackResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, OauthCallbackResponse)
+        validate_yaml_roundtrip(expected, OauthCallbackResponse)
 
     def test_event(self, responses):
+        json = responses["EVENT.json"]
         expected = EventResponse()
-        j = responses["EVENT.json"]
-        r = CONVERTER.from_json(j, EventResponse)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), EventResponse)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, EventResponse)
+        validate_yaml_roundtrip(expected, EventResponse)
 
 
 class TestParseRequest:
     def test_confirmation(self, requests):
+        json = requests["CONFIRMATION.json"]
         expected = ConfirmationRequest(
             lifecycle=LifecyclePhase.CONFIRMATION,
             execution_id="8F8FA33E-2A5B-4BC5-826C-4B2AB73FE9DD",
@@ -433,13 +398,11 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["CONFIRMATION.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_configuration_initialize(self, requests):
+        json = requests["CONFIGURATION-INITIALIZE.json"]
         expected = ConfigurationRequest(
             lifecycle=LifecyclePhase.CONFIGURATION,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -474,14 +437,12 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["CONFIGURATION-INITIALIZE.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_configuration_page(self, requests):
         # Note that the invalid "app" config item is ignored when we deserialize
+        json = requests["CONFIGURATION-PAGE.json"]
         expected = ConfigurationRequest(
             lifecycle=LifecyclePhase.CONFIGURATION,
             execution_id="ce3975c1-0d03-3777-5250-0e61b15ad1d4",
@@ -502,13 +463,11 @@ class TestParseRequest:
             ),
             settings={},
         )
-        j = requests["CONFIGURATION-PAGE.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_install(self, requests):
+        json = requests["INSTALL.json"]
         expected = InstallRequest(
             lifecycle=LifecyclePhase.INSTALL,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -555,13 +514,11 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["INSTALL.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_update(self, requests):
+        json = requests["UPDATE.json"]
         expected = UpdateRequest(
             lifecycle=LifecyclePhase.UPDATE,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -636,13 +593,11 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["UPDATE.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_uninstall(self, requests):
+        json = requests["UNINSTALL.json"]
         expected = UninstallRequest(
             lifecycle=LifecyclePhase.UNINSTALL,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -687,13 +642,11 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["UNINSTALL.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_oauth_callback(self, requests):
+        json = requests["OAUTH_CALLBACK.json"]
         expected = OauthCallbackRequest(
             lifecycle=LifecyclePhase.OAUTH_CALLBACK,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -701,13 +654,11 @@ class TestParseRequest:
             version="1.0.0",
             o_auth_callback_data=OauthCallbackData(installed_app_id="string", url_path="string"),
         )
-        j = requests["OAUTH_CALLBACK.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_event_device(self, requests):
+        json = requests["EVENT-DEVICE.json"]
         expected = EventRequest(
             lifecycle=LifecyclePhase.EVENT,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -770,13 +721,11 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["EVENT-DEVICE.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
 
     def test_event_timer(self, requests):
+        json = requests["EVENT-TIMER.json"]
         expected = EventRequest(
             lifecycle=LifecyclePhase.EVENT,
             execution_id="b328f242-c602-4204-8d73-33c48ae180af",
@@ -834,8 +783,5 @@ class TestParseRequest:
                 "property2": "string",
             },
         )
-        j = requests["EVENT-TIMER.json"]
-        r = CONVERTER.from_json(j, LifecycleRequest)
-        assert expected == r
-        c = CONVERTER.from_json(CONVERTER.to_json(r), LifecycleRequest)
-        assert c == r and c is not r
+        validate_json_roundtrip(json, expected, LifecycleRequest)
+        validate_yaml_roundtrip(expected, LifecycleRequest)
