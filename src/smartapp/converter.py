@@ -32,15 +32,16 @@ TIMESTAMP_ZONE = "UTC"
 T = TypeVar("T")  # pylint: disable=invalid-name:
 
 # noinspection PyMethodMayBeStatic
-class LifecycleConverter(GenConverter):
+class SmartAppConverter(GenConverter):
     """
-    Cattrs converter to serialize/deserialize the lifestyle class structure, supporting both JSON and YAML.
+    Cattrs converter to serialize/deserialize SmartApp-related classes, supporting both JSON and YAML.
     """
 
-    # Note: we need to use GenConverter and not Converter because we use PEP563 (postponed) annotations
+    # Note: we need to inherit from GenConverter and not Converter because we use PEP563 (postponed) annotations
     # See: https://stackoverflow.com/a/72539298/2907667 and https://github.com/python-attrs/cattrs/issues/41
 
     # The factory hooks convert snake case to camel case, so we can use normal coding standards with SmartThings JSON
+    # It's also applied to YAML, which isn't strictly necessary (we don't send or receive it) but is easier to read this way
     # See: https://cattrs.readthedocs.io/en/latest/usage.html#using-factory-hooks
 
     def __init__(self) -> None:
@@ -99,7 +100,7 @@ class LifecycleConverter(GenConverter):
             raise ValueError("Unknown config value type") from e
 
     def _structure_config_setting(self, data: Dict[str, Any], _: Type[ConfigSetting]) -> ConfigSetting:
-        """Deserialize input data into a ConfigValue of the proper type."""
+        """Deserialize input data into a ConfigSetting of the proper type."""
         try:
             value_type = ConfigSettingType[data["type"]]
             return self.structure(data, CONFIG_SETTING_BY_TYPE[value_type])  # type: ignore
@@ -115,4 +116,4 @@ class LifecycleConverter(GenConverter):
             raise ValueError("Unknown lifecycle phase") from e
 
 
-CONVERTER = LifecycleConverter()
+CONVERTER = SmartAppConverter()
