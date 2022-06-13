@@ -119,6 +119,7 @@ Usage: run <command>
 - run docs: Build the Spinx documentation for apologies.readthedocs.io
 - run docs -o: Build the Spinx documentation and open in a browser
 - run tox: Run the Tox test suite used by the GitHub CI action
+- run server: Run the REST server at localhost:8080
 - run release: Release a specific version and tag the code
 - run publish: Publish the current code to PyPI and push to GitHub
 ```

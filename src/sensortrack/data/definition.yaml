@@ -1,25 +1,23 @@
-name: name
-description: description
-targetUrl: target_url
+id: sensor-track
+name: Sensor Tracking
+description: Track historical data for SmartThings temperature and humidity sensors
+targetUrl: https://daystrom.cedar-solutions.com/smartthings/sensor-track
 permissions:
-- permission
+- r:devices
 configPages:
-- pageName: First page
+- pageName: Configuration
   sections:
-  - name: Section 1
+  - name: Devices
     settings:
-    - id: paragraph-id
-      name: paragraph-name
-      description: paragraph-description
-      required: false
-      type: PARAGRAPH
-      defaultValue: paragraph-text
-- pageName: Second page
-  sections:
-  - name: Section 2
-    settings:
-    - id: decimal-id
-      name: decimal-name
-      description: decimal-description
-      required: false
-      type: DECIMAL
+    - id: sensor-devices
+      name: Sensor Devices
+      description: Sensor devices to track historical data for
+      type: DEVICE
+      required: true
+      multiple: true
+      capabilities:
+      - temperatureMeasurement
+      - relativeHumidityMeasurement
+      permissions:
+      - r
+

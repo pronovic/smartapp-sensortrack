@@ -1,0 +1,15 @@
+[Unit]
+Description=Sensor Tracking
+After=network.target
+
+[Service]
+ExecStart=%h/.local/bin/uvicorn sensortrack.server:API     \
+          --uds %h/.config/sensortrack/server/run/engine.sock     \
+          --log-config %h/.config/sensortrack/server/logging.yaml
+SyslogIdentifier=sensortrack
+WorkingDirectory=~
+Environment=PYTHONUNBUFFERED=1
+Restart=on-failure
+
+[Install]
+WantedBy=default.target

@@ -197,6 +197,19 @@ run_docs() {
    fi
 }
 
+# Run the REST server at localhost:8080
+run_server() {
+   poetry run which uvicorn > /dev/null
+   if [ $? != 0 ]; then
+      run_install
+   fi
+
+   poetry run uvicorn sensortrack.server:API \
+      --port 8080 \
+      --app-dir src --reload \
+      --log-config config/local/sensortrack/server/logging.yaml
+}
+
 # Release a specific version and tag the code
 run_release() {
    if [ $# != 1 ]; then
@@ -340,6 +353,10 @@ case $1 in
       shift 1
       run_docs $*
       ;;
+   server)
+      shift 1
+      run_server $*
+      ;;
    release)
       shift 1
       run_release $*
@@ -366,6 +383,7 @@ case $1 in
       echo "- run docs: Build the Spinx documentation for sensortrack.readthedocs.io"
       echo "- run docs -o: Build the Spinx documentation and open in a browser"
       echo "- run tox: Run the Tox test suite used by the GitHub CI action"
+      echo "- run server: Run the REST server at localhost:8080"
       echo "- run release: Release a specific version and tag the code"
       echo "- run publish: Publish the current code to PyPI and push to GitHub"
       echo ""
