@@ -164,7 +164,7 @@ class SmartAppDispatcher:
             (int, str): HTTP status code and response JSON payload that to be returned to the POST caller
         """
         try:
-            # TODO: check signature and return 401 if it's not valid
+            # TODO: check signature and return 401 if it's not valid (but this is a relatively large effort)
             request: LifecycleRequest = CONVERTER.from_json(request_json, LifecycleRequest)  # type: ignore
             response = self._handle_request(request)
             return 200, CONVERTER.to_json(response)
