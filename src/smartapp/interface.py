@@ -18,7 +18,7 @@ Classes that are part of the SmartApp interface.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
+from typing import Any, Dict, List, Mapping, Optional, Union
 
 from attrs import field, frozen
 from pendulum.datetime import DateTime
@@ -732,6 +732,7 @@ class SmartAppDispatcherConfig:
 
     check_signatures: bool = True
     clock_skew_sec: Optional[int] = 300
+    key_server_url: str = "https://key.smartthings.com"
 
 
 class SmartAppEventHandler(ABC):
@@ -853,20 +854,7 @@ class SmartAppRequestContext:
     headers: Mapping[str, str] = field(factory=dict)
     body: str = ""
 
-    def header(self, name: str) -> Optional[str]:
-        """Get the named header, or None if not found"""
-        return self.headers[name] if name in self.headers else None
-
-    def all_headers(self, names: Sequence[str]) -> Dict[str, Optional[str]]:
-        """Get all of the named headers in a dict in one operation."""
-        return {name: self.header(name) for name in names}
-
     @property
     def correlation_id(self) -> Optional[str]:
         """Return the correlation id, if set."""
-        return self.header(CORRELATION_ID_HEADER)
-
-    @property
-    def authorization(self) -> Optional[str]:
-        """Return the authorization header, if set."""
-        return self.header(AUTHORIZATION_HEADER)
+        return self.headers[CORRELATION_ID_HEADER] if CORRELATION_ID_HEADER in self.headers else None

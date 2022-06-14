@@ -33,9 +33,4 @@ class TestSmartAppRequestContext:
             headers={"authorization": "token", "x-st-correlation": "correlation", "another": "value"},
             body="thebody",
         )
-        assert context.authorization == "token"
         assert context.correlation_id == "correlation"
-        assert context.header("authorization") == "token"
-        assert context.header("x-st-correlation") == "correlation"
-        assert context.header("bogus") is None
-        assert context.all_headers(("authorization", "bogus")) == {"authorization": "token", "bogus": None}
