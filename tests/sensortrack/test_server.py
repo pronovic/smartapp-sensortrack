@@ -78,9 +78,7 @@ class TestRoutes:
         assert codecs.decode(response.content) == "result"
         assert response.headers["content-type"] == "application/json"
         dispatcher.dispatch.assert_called_once()
-        _, kwargs = dispatcher.dispatch.call_args
+        _, kwargs = dispatcher.dispatch.call_args  # needed because FastAPI enhances the headers; we can't check equality
         context: SmartAppRequestContext = kwargs["context"]
-        assert context.method == "POST"
-        assert context.path == "/smartapp"
         assert context.headers["a"] == "b"  # just make sure our headers get passed, among others
         assert context.body == "body"

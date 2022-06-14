@@ -83,11 +83,8 @@ async def version() -> Version:
 @API.post("/smartapp")
 async def smartapp(request: Request) -> Response:
     """Handle the SmartApp lifecycle requests via the dispatcher implementation."""
-    context = SmartAppRequestContext(
-        method=request.method,
-        path=request.url.path,
-        headers=request.headers,
-        body=codecs.decode(await request.body(), "UTF-8"),
-    )
+    headers = request.headers
+    body = codecs.decode(await request.body(), "UTF-8")
+    context = SmartAppRequestContext(headers=headers, body=body)
     content = DISPATCHER.dispatch(context=context)
     return Response(status_code=200, content=content, media_type="application/json")

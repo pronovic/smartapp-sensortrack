@@ -25,7 +25,6 @@ from pendulum.datetime import DateTime
 
 AUTHORIZATION_HEADER = "authorization"
 CORRELATION_ID_HEADER = "x-st-correlation"
-REQUEST_TARGET_HEADER = "(request-target)"  # this is a special pseudo-header used for signature verification
 
 
 class LifecyclePhase(Enum):
@@ -851,25 +850,16 @@ class SmartAppRequestContext:
         body(str): The body of the request as string
     """
 
-    method: str = "POST"
-    path: str = "/"
     headers: Mapping[str, str] = field(factory=dict)
     body: str = ""
 
     def header(self, name: str) -> Optional[str]:
         """Get the named header, or None if not found"""
-        if name in ("%s" % REQUEST_TARGET_HEADER):  # special-case pseudo-header for signature verification purposes
-            return self.request_target
         return self.headers[name] if name in self.headers else None
 
     def all_headers(self, names: Sequence[str]) -> Dict[str, Optional[str]]:
         """Get all of the named headers in a dict in one operation."""
         return {name: self.header(name) for name in names}
-
-    @property
-    def request_target(self) -> str:
-        """Return the request target."""
-        return "%s %s" % (self.method.lower(), self.path)
 
     @property
     def correlation_id(self) -> Optional[str]:
