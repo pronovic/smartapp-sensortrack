@@ -119,7 +119,11 @@ class TestSmartAppDispatcher:
         # all of the requests have the same behavior, so we just check it once
         request_json = requests["CONFIRMATION.json"]
         dispatcher_with_check.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
-        check_signature.assert_called_once_with(SmartAppRequestContext(headers=HEADERS, body=request_json), CLOCK_SKEW_SEC)
+        check_signature.assert_called_once_with(
+            SmartAppRequestContext(headers=HEADERS, body=request_json),
+            dispatcher_with_check.config,
+            dispatcher_with_check.definition,
+        )
 
     @patch("smartapp.dispatcher.check_signature")
     def test_bad_signature(self, check_signature, requests, dispatcher_with_check):
@@ -128,7 +132,11 @@ class TestSmartAppDispatcher:
         check_signature.side_effect = SignatureError("Hello")  # this what would be thrown, so make sure it comes through
         with pytest.raises(SignatureError):
             dispatcher_with_check.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
-        check_signature.assert_called_once_with(SmartAppRequestContext(headers=HEADERS, body=request_json), CLOCK_SKEW_SEC)
+        check_signature.assert_called_once_with(
+            SmartAppRequestContext(headers=HEADERS, body=request_json),
+            dispatcher_with_check.config,
+            dispatcher_with_check.definition,
+        )
 
     def test_confirmation(self, requests, dispatcher):
         request_json = requests["CONFIRMATION.json"]

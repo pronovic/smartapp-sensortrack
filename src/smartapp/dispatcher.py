@@ -80,7 +80,7 @@ class SmartAppDispatcher:
         """
         try:
             if self.config.check_signatures:
-                check_signature(context, self.config.clock_skew_sec)
+                check_signature(context, self.config, self.definition)
             request: LifecycleRequest = CONVERTER.from_json(context.body, LifecycleRequest)  # type: ignore
             response = self._handle_request(context.correlation_id, request)
             return CONVERTER.to_json(response)
