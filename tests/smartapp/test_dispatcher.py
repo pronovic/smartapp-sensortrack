@@ -107,36 +107,48 @@ class TestSmartAppDispatcher:
         with pytest.raises(InternalError):
             dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
 
-    @patch("smartapp.dispatcher.check_signature")
-    def test_disabled_signature(self, check_signature, requests, dispatcher):
+    @patch("smartapp.dispatcher.SignatureVerifier")
+    def test_disabled_signature(self, signature_verifier, requests, dispatcher):
         # all of the requests have the same behavior, so we just check it once
+        obj = MagicMock()
+        obj.verify = MagicMock()
+        signature_verifier.side_effect = obj
         request_json = requests["CONFIRMATION.json"]
         dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
-        check_signature.assert_not_called()
+        signature_verifier.assert_not_called()
+        obj.verify.assert_not_called()
 
-    @patch("smartapp.dispatcher.check_signature")
-    def test_enabled_signature(self, check_signature, requests, dispatcher_with_check):
+    @patch("smartapp.dispatcher.SignatureVerifier")
+    def test_enabled_signature(self, signature_verifier, requests, dispatcher_with_check):
         # all of the requests have the same behavior, so we just check it once
+        obj = MagicMock()
+        obj.verify = MagicMock()
+        signature_verifier.return_value = obj
         request_json = requests["CONFIRMATION.json"]
         dispatcher_with_check.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
-        check_signature.assert_called_once_with(
-            SmartAppRequestContext(headers=HEADERS, body=request_json),
-            dispatcher_with_check.config,
-            dispatcher_with_check.definition,
+        signature_verifier.assert_called_once_with(
+            context=SmartAppRequestContext(headers=HEADERS, body=request_json),
+            config=dispatcher_with_check.config,
+            definition=dispatcher_with_check.definition,
         )
+        obj.verify.assert_called_once()
 
-    @patch("smartapp.dispatcher.check_signature")
-    def test_bad_signature(self, check_signature, requests, dispatcher_with_check):
+    @patch("smartapp.dispatcher.SignatureVerifier")
+    def test_bad_signature(self, signature_verifier, requests, dispatcher_with_check):
         # all of the requests have the same behavior, so we just check it once
+        obj = MagicMock()
+        obj.verify = MagicMock()
+        obj.verify.side_effect = SignatureError("Hello")  # this what would be thrown, so make sure it comes through
+        signature_verifier.return_value = obj
         request_json = requests["CONFIRMATION.json"]
-        check_signature.side_effect = SignatureError("Hello")  # this what would be thrown, so make sure it comes through
         with pytest.raises(SignatureError):
             dispatcher_with_check.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
-        check_signature.assert_called_once_with(
-            SmartAppRequestContext(headers=HEADERS, body=request_json),
-            dispatcher_with_check.config,
-            dispatcher_with_check.definition,
+        signature_verifier.assert_called_once_with(
+            context=SmartAppRequestContext(headers=HEADERS, body=request_json),
+            config=dispatcher_with_check.config,
+            definition=dispatcher_with_check.definition,
         )
+        obj.verify.assert_called_once()
 
     def test_confirmation(self, requests, dispatcher):
         request_json = requests["CONFIRMATION.json"]

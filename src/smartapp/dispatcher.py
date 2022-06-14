@@ -42,7 +42,7 @@ from .interface import (
     UpdateRequest,
     UpdateResponse,
 )
-from .signature import check_signature
+from .signature import SignatureVerifier
 
 
 @frozen(kw_only=True)
@@ -80,7 +80,7 @@ class SmartAppDispatcher:
         """
         try:
             if self.config.check_signatures:
-                check_signature(context, self.config, self.definition)
+                SignatureVerifier(context=context, config=self.config, definition=self.definition).verify()
             request: LifecycleRequest = CONVERTER.from_json(context.body, LifecycleRequest)  # type: ignore
             response = self._handle_request(context.correlation_id, request)
             return CONVERTER.to_json(response)

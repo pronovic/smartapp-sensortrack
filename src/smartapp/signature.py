@@ -43,14 +43,14 @@ from .interface import SignatureError, SmartAppDefinition, SmartAppDispatcherCon
 
 
 # This is implemented as a function so we can cache the result and implement retries outside of SignatureVerifier.
+# We retry up to 5 times (6 total attempts), waiting 0.25 sec before first retry, and limiting the wait between retries to 2 sec
 @lru_cache(maxsize=32)
 @retry(
-    # retry up to 5 times (6 attempts total); wait 0.25 sec before first retry; limit wait between retries to 2 sec
     stop=stop_after_attempt(5),
     wait=wait_exponential(multiplier=0.25, max=2),
     retry=retry_if_exception_type((RequestsConnectionError, HTTPError)),
 )
-def _retrieve_public_key(key_server_url: str, key_id: str) -> str:
+def retrieve_public_key(key_server_url: str, key_id: str) -> str:
     """Retrieve a public key, caching the result."""
     url = "%s/%s" % (key_server_url, key_id)
     response = requests.get(url)
@@ -174,7 +174,7 @@ class SignatureVerifier:
     def retrieve_public_key(self) -> str:
         """Retrieve the configured public key."""
         try:
-            return _retrieve_public_key(self.key_url, self.key_id)  # will retry automatically
+            return retrieve_public_key(self.key_url, self.key_id)  # will retry automatically
         except RequestException as e:
             raise SignatureError("Failed to retrieve key [%s]" % self.key_id) from e
 
@@ -199,9 +199,3 @@ class SignatureVerifier:
         """Verify the signature."""
         self.verify_date()
         self.verify_signature()
-
-
-# This is implemented as a function to make mocking and stubbing easier
-def check_signature(context: SmartAppRequestContext, config: SmartAppDispatcherConfig, definition: SmartAppDefinition) -> None:
-    """Verify the signature on a SmartApp request, raising SignatureError if invalid."""
-    SignatureVerifier(context=context, config=config, definition=definition).verify()
