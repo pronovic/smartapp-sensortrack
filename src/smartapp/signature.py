@@ -69,20 +69,20 @@ class SignatureVerifier:
     context: SmartAppRequestContext
     config: SmartAppDispatcherConfig
     definition: SmartAppDefinition
-    body: str = field()
-    method: str = field()
-    path: str = field()
-    request_target: str = field()
-    date: DateTime = field()
-    authorization: str = field()
-    signing_attributes: Mapping[str, str] = field()
-    key_id: str = field()
-    key_url: str = field()
-    algorithm: str = field()
-    digest: str = field()
-    signing_headers: str = field()
-    signing_string: str = field()
-    signature: str = field()
+    body: str = field(init=False)
+    method: str = field(init=False)
+    path: str = field(init=False)
+    request_target: str = field(init=False)
+    date: DateTime = field(init=False)
+    authorization: str = field(init=False)
+    signing_attributes: Mapping[str, str] = field(init=False)
+    key_id: str = field(init=False)
+    key_url: str = field(init=False)
+    algorithm: str = field(init=False)
+    digest: str = field(init=False)
+    signing_headers: str = field(init=False)
+    signing_string: str = field(init=False)
+    signature: str = field(init=False)
 
     @body.default
     def _default_body(self) -> str:
@@ -200,6 +200,6 @@ class SignatureVerifier:
             raise SignatureError("Signature is not valid") from e
 
     def verify(self) -> None:
-        """Verify the signature."""
+        """Verify the request date and the signature of the signing string."""
         self.verify_date()
         self.verify_signature()
