@@ -41,9 +41,12 @@ from tenacity.wait import wait_exponential
 
 from .interface import SignatureError, SmartAppDefinition, SmartAppDispatcherConfig, SmartAppRequestContext
 
+# This is implemented as a function so we can cache the result and implement retries
+# outside of SignatureVerifier.  We retry up to 5 times (6 total attempts), waiting
+# 0.25 seconds before first retry, and limiting the wait between retries to 2 seconds.
+# Note that the LRU cache only caches responses, not any exceptions that were thrown.
 
-# This is implemented as a function so we can cache the result and implement retries outside of SignatureVerifier.
-# We retry up to 5 times (6 total attempts), waiting 0.25 sec before first retry, and limiting the wait between retries to 2 sec
+
 @lru_cache(maxsize=32)
 @retry(
     stop=stop_after_attempt(5),
@@ -52,6 +55,7 @@ from .interface import SignatureError, SmartAppDefinition, SmartAppDispatcherCon
 )
 def retrieve_public_key(key_server_url: str, key_id: str) -> str:
     """Retrieve a public key, caching the result."""
+    # Note that the key ID is assumed to be URL-safe, and so we don't encode it
     url = "%s/%s" % (key_server_url, key_id)
     response = requests.get(url)
     response.raise_for_status()
