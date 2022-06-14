@@ -8,13 +8,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from smartapp.converter import CONVERTER
-from smartapp.dispatcher import (
-    SmartAppConfigPage,
-    SmartAppDefinition,
-    SmartAppDispatcher,
-    SmartAppDispatcherConfig,
-    SmartAppEventHandler,
-)
+from smartapp.dispatcher import SmartAppDispatcher
 from smartapp.interface import *
 from tests.testutil import load_data
 

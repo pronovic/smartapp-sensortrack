@@ -8,7 +8,6 @@ import pendulum
 import pytest
 
 from smartapp.converter import CONVERTER
-from smartapp.dispatcher import SmartAppConfigPage, SmartAppDefinition
 from smartapp.interface import *
 from tests.testutil import load_data
 

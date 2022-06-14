@@ -7,7 +7,8 @@ SmartApp dispatcher.
 import importlib.resources
 
 from smartapp.converter import CONVERTER
-from smartapp.dispatcher import SmartAppDefinition, SmartAppDispatcher
+from smartapp.dispatcher import SmartAppDispatcher
+from smartapp.interface import SmartAppDefinition
 
 from .handler import EventHandler
 

@@ -6,13 +6,13 @@ SmartApp event handler.
 """
 from typing import Optional
 
-from smartapp.dispatcher import SmartAppEventHandler
 from smartapp.interface import (
     ConfigurationRequest,
     ConfirmationRequest,
     EventRequest,
     InstallRequest,
     OauthCallbackRequest,
+    SmartAppEventHandler,
     UninstallRequest,
     UpdateRequest,
 )

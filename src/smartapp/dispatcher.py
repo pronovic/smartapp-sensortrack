@@ -5,8 +5,7 @@
 Manage the requests and responses that are part of the SmartApp lifecycle.
 """
 import logging
-from abc import ABC, abstractmethod
-from typing import List, Mapping, Optional, Union
+from typing import Mapping, Optional, Union
 
 from attr import field, frozen
 
@@ -19,7 +18,6 @@ from .interface import (
     ConfigPage,
     ConfigPageData,
     ConfigPhase,
-    ConfigSection,
     ConfigurationInitResponse,
     ConfigurationPageResponse,
     ConfigurationRequest,
@@ -34,7 +32,10 @@ from .interface import (
     LifecycleResponse,
     OauthCallbackRequest,
     OauthCallbackResponse,
+    SmartAppDefinition,
+    SmartAppDispatcherConfig,
     SmartAppError,
+    SmartAppEventHandler,
     UninstallRequest,
     UninstallResponse,
     UpdateRequest,
@@ -43,127 +44,6 @@ from .interface import (
 from .signature import check_signature
 
 CORRELATION_ID = "x-st-correlation"
-
-
-@frozen(kw_only=True)
-class SmartAppDispatcherConfig:
-
-    # noinspection PyUnresolvedReferences
-    """
-    Configuration for the SmartAppDispatcher.
-
-    Any production SmartApp should always check signatures.  We support disabling that feature
-    to make local testing easier during development.
-
-    Attributes:
-        check_signatures(bool): Whether to check the digital signature on lifecycle requests
-        clock_skew_sec(int): Amount of clock skew allowed when verifying digital signatures
-    """
-
-    check_signatures: bool = True
-    clock_skew_sec: int = 300
-
-
-class SmartAppEventHandler(ABC):
-    """
-    Application event handler for SmartApp lifecycle events.
-
-    Inherit from this class to implement your own application-specific event handler.
-    The application-specific event handler is always called first, before any default
-    event handler logic in the dispatcher itself.
-
-    The correlation id is an optional value that you can associate with your log messages.
-    It may aid in debugging if you need to contact SmartThings for support.
-
-    Some lifecycle events do not require you to implement any custom event handler logic:
-
-    - CONFIRMATION: normally no callback needed, since the dispatcher logs the app id and confirmation URL
-    - CONFIGURATION: normally no callback needed, since the dispatcher has the information it needs to respond
-    - INSTALL/UPDATE: set up or replace subscriptions and schedules and persist required data, if any
-    - UNINSTALL: remove persisted data, if any
-    - OAUTH_CALLBACK: coordinate with your oauth provider as needed
-    - EVENT: handle SmartThings events or scheduled triggers
-
-    The EventRequest object that you receive for the EVENT callback includes an
-    authorization token and also the entire configuration bundle for the installed
-    application.  So, if your SmartApp is built around event handling and scheduled
-    actions triggered by SmartThings, your handler can probably be stateless.  There is
-    probably is not any need to persist any of the data returned in the INSTALL or UPDATE
-    lifecycle events into your own data store.
-
-    Note that SmartAppHandler is a synchronous and single-threaded interface.  The
-    assumption is that if you need high-volume asynchronous or multi-threaded processing,
-    you will implement that at the tier above this where the actual POST requests are
-    accepted from remote callers.
-    """
-
-    @abstractmethod
-    def handle_confirmation(self, correlation_id: Optional[str], request: ConfirmationRequest) -> None:
-        """Handle a CONFIRMATION lifecycle request"""
-
-    @abstractmethod
-    def handle_configuration(self, correlation_id: Optional[str], request: ConfigurationRequest) -> None:
-        """Handle a CONFIGURATION lifecycle request."""
-
-    @abstractmethod
-    def handle_install(self, correlation_id: Optional[str], request: InstallRequest) -> None:
-        """Handle an INSTALL lifecycle request."""
-
-    @abstractmethod
-    def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
-        """Handle an UPDATE lifecycle request."""
-
-    @abstractmethod
-    def handle_uninstall(self, correlation_id: Optional[str], request: UninstallRequest) -> None:
-        """Handle an UNINSTALL lifecycle request."""
-
-    @abstractmethod
-    def handle_oauth_callback(self, correlation_id: Optional[str], request: OauthCallbackRequest) -> None:
-        """Handle an OAUTH_CALLBACK lifecycle request."""
-
-    @abstractmethod
-    def handle_event(self, correlation_id: Optional[str], request: EventRequest) -> None:
-        """Handle an EVENT lifecycle request."""
-
-
-@frozen(kw_only=True)
-class SmartAppConfigPage:
-    """
-    A page of configuration for the SmartApp.
-    """
-
-    page_name: str
-    sections: List[ConfigSection]
-
-
-@frozen(kw_only=True)
-class SmartAppDefinition:
-
-    # noinspection PyUnresolvedReferences
-    """
-    The definition of the SmartApp.
-
-    All of this data would normally be static for any given version of your application.
-    If you wish, you can maintain the definition in YAML or JSON in your source tree
-    and parse it with `smartapp.converter.CONVERTER`.
-
-    Keep in mind that the JSON or YAML format on disk will be consistent with the SmartThings
-    lifecycle API, so it will use camel case attribute names (like `configPages`) rather than
-    the Python attribute names you see in source code (like `config_pages`).
-
-    Attributes:
-        id(str): Identifier for this SmartApp
-        name(str): Name of the SmartApp
-        description(str): Description of the SmartApp
-        permissions(List[str]): Permissions that the SmartApp requires
-        config_pages(List[SmartAppConfigPage]): Configuration pages that the SmartApp will offer users
-    """
-    id: str
-    name: str
-    description: str
-    target_url: str
-    permissions: List[str]
-    config_pages: List[SmartAppConfigPage]
 
 
 @frozen(kw_only=True)
