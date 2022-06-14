@@ -4,11 +4,13 @@
 """
 Verify HTTP signatures on SmartApp lifecycle event requests.
 """
-from typing import Mapping, Optional
+from typing import Optional
+
+from smartapp.interface import SmartAppRequestContext
 
 
 # pylint: disable=unused-argument:
-def check_signature(correlation_id: Optional[str], headers: Mapping[str, str], request_json: str, clock_skew_sec: int) -> None:
+def check_signature(context: SmartAppRequestContext, clock_skew_sec: Optional[int]) -> None:
 
     """Verify HTTP signatures on a SmartApp request, raising SignatureError if invalid."""
 

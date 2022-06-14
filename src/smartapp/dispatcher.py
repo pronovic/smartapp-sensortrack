@@ -5,7 +5,7 @@
 Manage the requests and responses that are part of the SmartApp lifecycle.
 """
 import logging
-from typing import Mapping, Optional, Union
+from typing import Optional, Union
 
 from attr import field, frozen
 
@@ -36,14 +36,13 @@ from .interface import (
     SmartAppDispatcherConfig,
     SmartAppError,
     SmartAppEventHandler,
+    SmartAppRequestContext,
     UninstallRequest,
     UninstallResponse,
     UpdateRequest,
     UpdateResponse,
 )
 from .signature import check_signature
-
-CORRELATION_ID = "x-st-correlation"
 
 
 @frozen(kw_only=True)
@@ -66,13 +65,12 @@ class SmartAppDispatcher:
     event_handler: SmartAppEventHandler
     config: SmartAppDispatcherConfig = field(factory=SmartAppDispatcherConfig)
 
-    def dispatch(self, headers: Mapping[str, str], request_json: str) -> str:
+    def dispatch(self, context: SmartAppRequestContext) -> str:
         """
         Dispatch a request, responding to SmartThings and invoking callbacks as needed.
 
         Args:
-            headers(Mapping[str, str]): The request headers, assumed to be accessible in case-insenstive fashion
-            request_json(str): The request JSON from the POST body
+            context(SmartAppRequestContext): The request context
 
         Returns:
             str: Response JSON payload that to be returned to the POST caller
@@ -80,19 +78,18 @@ class SmartAppDispatcher:
         Raises:
             SmartAppError: If processing fails
         """
-        correlation_id = headers[CORRELATION_ID] if CORRELATION_ID in headers else None
         try:
             if self.config.check_signatures:
-                check_signature(correlation_id, headers, request_json, self.config.clock_skew_sec)
-            request: LifecycleRequest = CONVERTER.from_json(request_json, LifecycleRequest)  # type: ignore
-            response = self._handle_request(correlation_id, request)
+                check_signature(context, self.config.clock_skew_sec)
+            request: LifecycleRequest = CONVERTER.from_json(context.body, LifecycleRequest)  # type: ignore
+            response = self._handle_request(context.correlation_id, request)
             return CONVERTER.to_json(response)
         except SmartAppError as e:
             raise e
         except ValueError as e:
-            raise BadRequestError("%s" % e, correlation_id) from e
+            raise BadRequestError("%s" % e, context.correlation_id) from e
         except Exception as e:  # pylint: disable=broad-except:
-            raise InternalError("%s" % e, correlation_id) from e
+            raise InternalError("%s" % e, context.correlation_id) from e
 
     def _handle_request(self, correlation_id: Optional[str], request: AbstractRequest) -> LifecycleResponse:
         """Handle a lifecycle request, returning the appropriate response."""

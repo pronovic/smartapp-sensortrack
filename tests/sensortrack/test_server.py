@@ -16,7 +16,7 @@ from sensortrack.server import (
     signature_error_handler,
     startup_event,
 )
-from smartapp.interface import BadRequestError, InternalError, SignatureError
+from smartapp.interface import BadRequestError, InternalError, SignatureError, SmartAppRequestContext
 
 CLIENT = TestClient(API)
 
@@ -79,5 +79,8 @@ class TestRoutes:
         assert response.headers["content-type"] == "application/json"
         dispatcher.dispatch.assert_called_once()
         _, kwargs = dispatcher.dispatch.call_args
-        assert kwargs["headers"]["a"] == "b"  # just make sure our headers get passed, among others
-        assert kwargs["request_json"] == "body"
+        context: SmartAppRequestContext = kwargs["context"]
+        assert context.method == "POST"
+        assert context.path == "/smartapp"
+        assert context.headers["a"] == "b"  # just make sure our headers get passed, among others
+        assert context.body == "body"

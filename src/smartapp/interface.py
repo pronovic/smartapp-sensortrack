@@ -18,10 +18,14 @@ Classes that are part of the SmartApp interface.
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 from attrs import field, frozen
 from pendulum.datetime import DateTime
+
+AUTHORIZATION_HEADER = "authorization"
+CORRELATION_ID_HEADER = "x-st-correlation"
+REQUEST_TARGET_HEADER = "(request-target)"  # this is a special pseudo-header used for signature verification
 
 
 class LifecyclePhase(Enum):
@@ -724,11 +728,11 @@ class SmartAppDispatcherConfig:
 
     Attributes:
         check_signatures(bool): Whether to check the digital signature on lifecycle requests
-        clock_skew_sec(int): Amount of clock skew allowed when verifying digital signatures
+        clock_skew_sec(int): Amount of clock skew allowed when verifying digital signatures, or None to allow any skew
     """
 
     check_signatures: bool = True
-    clock_skew_sec: int = 300
+    clock_skew_sec: Optional[int] = 300
 
 
 class SmartAppEventHandler(ABC):
@@ -831,3 +835,48 @@ class SmartAppDefinition:
     target_url: str
     permissions: List[str]
     config_pages: List[SmartAppConfigPage]
+
+
+@frozen(kw_only=True)
+class SmartAppRequestContext:
+
+    # noinspection PyUnresolvedReferences
+    """
+    The context for a SmartApp lifecycle request.
+
+    Attributes:
+        method(str): The request method, typically "POST"
+        path(str): The request path that was used to invoke the endpoint
+        headers(Mapping[str, str]): The request headers, assumed to be accessible in case-insenstive fashion
+        body(str): The body of the request as string
+    """
+
+    method: str = "POST"
+    path: str = "/"
+    headers: Mapping[str, str] = field(factory=dict)
+    body: str = ""
+
+    def header(self, name: str) -> Optional[str]:
+        """Get the named header, or None if not found"""
+        if name in ("%s" % REQUEST_TARGET_HEADER):  # special-case pseudo-header for signature verification purposes
+            return self.request_target
+        return self.headers[name] if name in self.headers else None
+
+    def all_headers(self, names: Sequence[str]) -> Dict[str, Optional[str]]:
+        """Get all of the named headers in a dict in one operation."""
+        return {name: self.header(name) for name in names}
+
+    @property
+    def request_target(self) -> str:
+        """Return the request target."""
+        return "%s %s" % (self.method.lower(), self.path)
+
+    @property
+    def correlation_id(self) -> Optional[str]:
+        """Return the correlation id, if set."""
+        return self.header(CORRELATION_ID_HEADER)
+
+    @property
+    def authorization(self) -> Optional[str]:
+        """Return the authorization header, if set."""
+        return self.header(AUTHORIZATION_HEADER)
