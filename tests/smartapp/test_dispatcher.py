@@ -97,15 +97,17 @@ def dispatcher_with_check(definition: SmartAppDefinition, event_handler: SmartAp
 class TestSmartAppDispatcher:
     def test_json_exception(self, dispatcher):
         # all of the requests have the same behavior, so we just check it once
-        with pytest.raises(BadRequestError):
+        with pytest.raises(BadRequestError) as e:
             dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, body="bogus"))
+        assert e.value.correlation_id == CORRELATION
 
     def test_handler_internal_error(self, requests, dispatcher):
         # all of the requests have the same behavior, so we just check it once
         request_json = requests["CONFIRMATION.json"]
         dispatcher.event_handler.handle_confirmation.side_effect = Exception("Hello")
-        with pytest.raises(InternalError):
+        with pytest.raises(InternalError) as e:
             dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
+        assert e.value.correlation_id == CORRELATION
 
     @patch("smartapp.dispatcher.SignatureVerifier")
     def test_disabled_signature(self, signature_verifier, requests, dispatcher):
@@ -136,13 +138,15 @@ class TestSmartAppDispatcher:
     @patch("smartapp.dispatcher.SignatureVerifier")
     def test_bad_signature(self, signature_verifier, requests, dispatcher_with_check):
         # all of the requests have the same behavior, so we just check it once
+        exception = SignatureError("Hello")
         obj = MagicMock()
         obj.verify = MagicMock()
-        obj.verify.side_effect = SignatureError("Hello")  # this what would be thrown, so make sure it comes through
+        obj.verify.side_effect = exception  # this what would be thrown, so make sure it comes through
         signature_verifier.return_value = obj
         request_json = requests["CONFIRMATION.json"]
-        with pytest.raises(SignatureError):
+        with pytest.raises(SignatureError) as e:
             dispatcher_with_check.dispatch(SmartAppRequestContext(headers=HEADERS, body=request_json))
+        assert e.value is exception
         signature_verifier.assert_called_once_with(
             context=SmartAppRequestContext(headers=HEADERS, body=request_json),
             config=dispatcher_with_check.config,

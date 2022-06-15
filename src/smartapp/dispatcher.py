@@ -5,6 +5,7 @@
 Manage the requests and responses that are part of the SmartApp lifecycle.
 """
 import logging
+from json import JSONDecodeError
 from typing import Optional, Union
 
 from attr import field, frozen
@@ -79,13 +80,18 @@ class SmartAppDispatcher:
             SmartAppError: If processing fails
         """
         try:
+            request: LifecycleRequest = CONVERTER.from_json(context.body, LifecycleRequest)  # type: ignore
+            logging.info("[%s] Handling %s request [%s]", context.correlation_id, request.lifecycle, request.execution_id)
+            logging.debug("[%s] Signature: %s", context.correlation_id, context.signature)  # note: signature not confidential
+            logging.debug("[%s] Request: %s", context.correlation_id, request)  # note: secrets are not serialized in repr()
             if self.config.check_signatures:
                 SignatureVerifier(context=context, config=self.config, definition=self.definition).verify()
-            request: LifecycleRequest = CONVERTER.from_json(context.body, LifecycleRequest)  # type: ignore
             response = self._handle_request(context.correlation_id, request)
             return CONVERTER.to_json(response)
         except SmartAppError as e:
             raise e
+        except JSONDecodeError as e:
+            raise BadRequestError("Invalid JSON", context.correlation_id) from e
         except ValueError as e:
             raise BadRequestError("%s" % e, context.correlation_id) from e
         except Exception as e:  # pylint: disable=broad-except:
@@ -93,8 +99,6 @@ class SmartAppDispatcher:
 
     def _handle_request(self, correlation_id: Optional[str], request: AbstractRequest) -> LifecycleResponse:
         """Handle a lifecycle request, returning the appropriate response."""
-        logging.info("[%s] Handling %s request executionId=%s", correlation_id, request.lifecycle, request.execution_id)
-        logging.debug("[%s] Request: %s", correlation_id, request)  # this is safe because secrets are not shown
         if isinstance(request, ConfirmationRequest):
             self.event_handler.handle_confirmation(correlation_id, request)
             return self._handle_confirmation_request(request)

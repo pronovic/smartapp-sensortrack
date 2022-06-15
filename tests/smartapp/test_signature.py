@@ -42,6 +42,7 @@ CONTENT_TYPE = "application/json"
 CONTENT_LENGTH = str(len(BODY))  # should be 18
 DIGEST = "SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE="
 
+CORRELATION = "XXX"
 KEY_ID = "Test"
 ALGORITHM = "rsa-sha256"
 CLOCK_SKEW = 300
@@ -88,6 +89,7 @@ DEFAULT_ORIGINAL_HEADERS = {
     "Digest": DIGEST,
     "Content-Length": CONTENT_LENGTH,
     "Authorization": DEFAULT_AUTHORIZATION,
+    "x-st-correlation": CORRELATION,
 }
 
 DEFAULT_NORMALIZED_HEADERS = {
@@ -97,6 +99,7 @@ DEFAULT_NORMALIZED_HEADERS = {
     "digest": DIGEST,
     "content-length": CONTENT_LENGTH,
     "authorization": DEFAULT_AUTHORIZATION,
+    "x-st-correlation": CORRELATION,
 }
 
 DEFAULT_SIGNING_HEADERS = "Date"
@@ -229,6 +232,7 @@ class TestSignatureVerifier:
         # technically, if we can properly verify a valid or invalid a signature, these are irrelevant
         # however, checking them helps us confirm that we have the right inputs to the algorithm
         verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        assert verifier.correlation_id == CORRELATION
         assert verifier.headers == DEFAULT_NORMALIZED_HEADERS
         assert verifier.body == BODY
         assert verifier.method == METHOD
@@ -248,6 +252,7 @@ class TestSignatureVerifier:
         # technically, if we can properly verify a valid or invalid a signature, these are irrelevant
         # however, checking them helps us confirm that we have the right inputs to the algorithm
         verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
+        assert verifier.correlation_id is None  # because the header isn't in ALL_HEADERS_ORIGINAL_HEADERS
         assert verifier.headers == ALL_HEADERS_NORMALIZED_HEADERS
         assert verifier.body == BODY
         assert verifier.method == METHOD
@@ -296,8 +301,9 @@ class TestSignatureVerifier:
         # with a clock skew set, anything 1 second or more outside the configured skew is invalid
         now.return_value = date
         verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
-        with pytest.raises(SignatureError, match="Request date is not current"):
+        with pytest.raises(SignatureError, match="Request date is not current") as e:
             verifier.verify_date()
+        assert e.value.correlation_id == default_context.correlation_id
 
     @patch("smartapp.signature.now")
     @pytest.mark.parametrize(
@@ -349,8 +355,9 @@ class TestSignatureVerifier:
         now.return_value = DATE_OBJ
         retrieve.return_value = "bogus"
         verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
-        with pytest.raises(SignatureError, match="Signature is not valid"):
+        with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
+        assert e.value.correlation_id == default_context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
@@ -359,8 +366,9 @@ class TestSignatureVerifier:
         now.return_value = DATE_OBJ
         retrieve.return_value = "bogus"
         verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
-        with pytest.raises(SignatureError, match="Signature is not valid"):
+        with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
+        assert e.value.correlation_id == all_headers_context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
@@ -369,8 +377,9 @@ class TestSignatureVerifier:
         now.return_value = DATE_OBJ
         retrieve.return_value = WRONG_SIGNING_KEY
         verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
-        with pytest.raises(SignatureError, match="Signature is not valid"):
+        with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
+        assert e.value.correlation_id == default_context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
@@ -379,8 +388,9 @@ class TestSignatureVerifier:
         now.return_value = DATE_OBJ
         retrieve.return_value = WRONG_SIGNING_KEY
         verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
-        with pytest.raises(SignatureError, match="Signature is not valid"):
+        with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
+        assert e.value.correlation_id == all_headers_context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
@@ -391,8 +401,9 @@ class TestSignatureVerifier:
         retrieve.return_value = PUBLIC_SIGNING_KEY
         verifier = SignatureVerifier(context=bad_default_context, config=config, definition=definition)
         assert verifier.signing_string != DEFAULT_SIGNING_STRING
-        with pytest.raises(SignatureError, match="Request date is not current"):
+        with pytest.raises(SignatureError, match="Request date is not current") as e:
             verifier.verify()
+        assert e.value.correlation_id == bad_default_context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
@@ -403,8 +414,9 @@ class TestSignatureVerifier:
         retrieve.return_value = PUBLIC_SIGNING_KEY
         verifier = SignatureVerifier(context=all_headers_context, config=config, definition=bad_definition)
         assert verifier.signing_string != ALL_HEADERS_SIGNING_STRING
-        with pytest.raises(SignatureError, match="Signature is not valid"):
+        with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
+        assert e.value.correlation_id == all_headers_context.correlation_id
 
 
 @patch("smartapp.signature.requests.get")
@@ -417,7 +429,7 @@ class TestRetrievePublicKey:
         response = MagicMock(text="public-key")
         response.raise_for_status = MagicMock()
         get.return_value = response
-        key1 = retrieve_public_key("https://whatever.com", "key-succeeds")
+        key1 = retrieve_public_key("https://whatever.com", "key-succeeds")  # note: no leading slash
         assert key1 == "public-key"
         key2 = retrieve_public_key("https://whatever.com", "key-succeeds")  # this call is cached
         assert key2 == "public-key"
@@ -431,9 +443,9 @@ class TestRetrievePublicKey:
         response2 = MagicMock(text="public-key")
         response2.raise_for_status = MagicMock()
         get.side_effect = [response1, response2]
-        key1 = retrieve_public_key("https://whatever.com", "key-retry")
+        key1 = retrieve_public_key("https://whatever.com", "/key-retry")  # note: leading slash
         assert key1 == "public-key"
-        key2 = retrieve_public_key("https://whatever.com", "key-retry")  # this call is cached
+        key2 = retrieve_public_key("https://whatever.com", "/key-retry")  # this call is cached
         assert key2 == "public-key"
         get.assert_has_calls([call("https://whatever.com/key-retry")] * 2)
         response1.raise_for_status.assert_called_once()

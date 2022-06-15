@@ -856,3 +856,8 @@ class SmartAppRequestContext:
     def correlation_id(self) -> Optional[str]:
         """Return the correlation id, if set."""
         return self.headers[CORRELATION_ID_HEADER] if CORRELATION_ID_HEADER in self.headers else None
+
+    @property
+    def signature(self) -> Optional[str]:
+        """Return the signature from the authorization header, if set."""
+        return self.headers[AUTHORIZATION_HEADER] if AUTHORIZATION_HEADER in self.headers else None

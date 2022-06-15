@@ -30,7 +30,8 @@ class TestExceptions:
 class TestSmartAppRequestContext:
     def test_context(self):
         context = SmartAppRequestContext(
-            headers={"authorization": "token", "x-st-correlation": "correlation", "another": "value"},
+            headers={"authorization": "signature", "x-st-correlation": "correlation", "another": "value"},
             body="thebody",
         )
         assert context.correlation_id == "correlation"
+        assert context.signature == "signature"

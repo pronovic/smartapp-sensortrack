@@ -64,7 +64,7 @@ from .interface import SignatureError, SmartAppDefinition, SmartAppDispatcherCon
 def retrieve_public_key(key_server_url: str, key_id: str) -> str:
     """Retrieve a public key, caching the result."""
     # Note that the key ID is assumed to be URL-safe, and so we don't encode it
-    url = "%s/%s" % (key_server_url, key_id)
+    url = "%s/%s" % (key_server_url, key_id.lstrip("/"))
     response = requests.get(url)
     response.raise_for_status()
     return response.text
@@ -81,6 +81,7 @@ class SignatureVerifier:
     context: SmartAppRequestContext
     config: SmartAppDispatcherConfig
     definition: SmartAppDefinition
+    correlation_id: Optional[str] = field(init=False)
     headers: Mapping[str, str] = field(init=False)
     body: str = field(init=False)
     method: str = field(init=False)
@@ -96,6 +97,10 @@ class SignatureVerifier:
     signature: str = field(init=False)
     digest: str = field(init=False)
     signing_string: str = field(init=False)
+
+    @correlation_id.default
+    def _default_correlation_id(self) -> Optional[str]:
+        return self.context.correlation_id
 
     @headers.default
     def _default_headers(self) -> Mapping[str, str]:
@@ -136,13 +141,13 @@ class SignatureVerifier:
         # We're parsing a string like: 'Signature keyId="key",algorithm="rsa-sha256",headers="date",signature="xxx"'
         def attribute(name: str, default: Optional[str] = None) -> str:
             if not self.authorization.startswith("Signature "):
-                raise SignatureError("Authorization header is not a signature")
+                raise SignatureError("Authorization header is not a signature", self.correlation_id)
             pattern = r"(%s=\")([^\"]+?)(\")" % name
             match = re.search(pattern=pattern, string=self.authorization)
             if not match:
                 if default:
                     return default
-                raise SignatureError("Signature does not contain: %s" % name)
+                raise SignatureError("Signature does not contain: %s" % name, self.correlation_id)
             return match.group(2)
 
         return {
@@ -169,7 +174,7 @@ class SignatureVerifier:
     def _default_algorithm(self) -> str:
         algorithm = self.signing_attributes["algorithm"]
         if algorithm != "rsa-sha256":
-            raise SignatureError("Algorithm not supported: %s" % algorithm)
+            raise SignatureError("Algorithm not supported: %s" % algorithm, self.correlation_id)
         return algorithm
 
     @signature.default
@@ -198,10 +203,10 @@ class SignatureVerifier:
     def header(self, name: str) -> str:
         """Return the named header, raising SignatureError if it is not found or is empty"""
         if not name.lower() in self.headers:
-            raise SignatureError("Header not found: %s" % name)
+            raise SignatureError("Header not found: %s" % name, self.correlation_id)
         value = self.headers[name.lower()]
         if not value or not value.strip():
-            raise SignatureError("Header not found: %s" % name)
+            raise SignatureError("Header not found: %s" % name, self.correlation_id)
         return value
 
     def retrieve_public_key(self) -> str:
@@ -209,14 +214,14 @@ class SignatureVerifier:
         try:
             return retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
         except RequestException as e:
-            raise SignatureError("Failed to retrieve key [%s]" % self.key_id) from e
+            raise SignatureError("Failed to retrieve key [%s]" % self.key_id, self.correlation_id) from e
 
     def verify_date(self) -> None:
         """Verify the date, ensuring that it is current per skew configuration."""
         if self.config.clock_skew_sec is not None:
             skew = abs(now() - self.date)
             if skew.seconds > self.config.clock_skew_sec:
-                raise SignatureError("Request date is not current, skew of %d seconds" % skew.seconds)
+                raise SignatureError("Request date is not current, skew of %d seconds" % skew.seconds, self.correlation_id)
 
     def verify_signature(self) -> None:
         """Verify the RSA-SHA256 signature of the signing string."""
@@ -227,7 +232,7 @@ class SignatureVerifier:
             key = RSA.import_key(self.retrieve_public_key())
             pkcs1_15.new(key).verify(sha256, signature)
         except (ValueError, TypeError) as e:
-            raise SignatureError("Signature is not valid") from e
+            raise SignatureError("Signature is not valid", self.correlation_id) from e
 
     def verify(self) -> None:
         """Verify the request date and the signature of the signing string."""

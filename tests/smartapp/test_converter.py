@@ -3,6 +3,7 @@
 # pylint: disable=redefined-outer-name,invalid-name,wildcard-import:
 
 import os
+from json import JSONDecodeError
 
 import pendulum
 import pytest
@@ -409,6 +410,16 @@ class TestConvertResponses:
 
 
 class TestConvertRequests:
+    def test_invalid_json(self):
+        # This is not a valid JSON string
+        with pytest.raises(JSONDecodeError):
+            CONVERTER.from_json("*(&)(&_)()", LifecycleRequest)
+
+    def test_mismatch_json(self):
+        # This is valid JSON, just not valid LifecycleRequest
+        with pytest.raises(ValueError):
+            CONVERTER.from_json('{"hello": "there"}', LifecycleRequest)
+
     def test_confirmation(self, requests):
         json = requests["CONFIRMATION.json"]
         expected = ConfirmationRequest(
