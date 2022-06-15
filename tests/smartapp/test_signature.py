@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
 # pylint: disable=redefined-outer-name:
+from typing import Dict, Optional
 from unittest.mock import MagicMock, call, patch
 
 import pendulum
@@ -156,70 +157,30 @@ content-length: 18
 """.strip()
 
 
-@pytest.fixture
-def config() -> SmartAppDispatcherConfig:
-    # normal configuration with clock skew configured
+def build_config(clock_skew_sec: Optional[int] = CLOCK_SKEW) -> SmartAppDispatcherConfig:
+    """Build configuration to test with."""
     return SmartAppDispatcherConfig(
         check_signatures=True,
-        clock_skew_sec=CLOCK_SKEW,
+        clock_skew_sec=clock_skew_sec,
         key_server_url=KEYSERVER_URL,
     )
 
 
-@pytest.fixture
-def no_skew_config() -> SmartAppDispatcherConfig:
-    # configuration with no skew, which means dates are ignored
-    return SmartAppDispatcherConfig(
-        check_signatures=True,
-        clock_skew_sec=None,
-        key_server_url=KEYSERVER_URL,
-    )
-
-
-@pytest.fixture
-def definition() -> SmartAppDefinition:
-    # smartapp definition with a target URL that matches the Joyent sample
+def build_definition(target_url: str = SMARTAPP_URL) -> SmartAppDefinition:
+    """Build a SmartApp definition to test with."""
     return SmartAppDefinition(
         id="",
         name="",
         description="",
-        target_url=SMARTAPP_URL,
+        target_url=target_url,
         permissions=[],
         config_pages=[],
     )
 
 
-@pytest.fixture
-def bad_definition() -> SmartAppDefinition:
-    # this has a target URL (path) that does not match the Joyent sample, causing an invalid signature
-    return SmartAppDefinition(
-        id="",
-        name="",
-        description="",
-        target_url="https://whatever.com/smartapp",  # does not match Joyent's example
-        permissions=[],
-        config_pages=[],
-    )
-
-
-@pytest.fixture
-def default_context() -> SmartAppRequestContext:
-    # request context for the Joyent default headers sample
-    return SmartAppRequestContext(body=BODY, headers=DEFAULT_ORIGINAL_HEADERS)
-
-
-@pytest.fixture()
-def bad_default_context() -> SmartAppRequestContext:
-    # this has a Date header that does not match the Joyent sample, causing an invalid signature
-    headers = DEFAULT_ORIGINAL_HEADERS.copy()
-    headers["Date"] = "Tue, 14 Jun 2022 21:23:01 GMT"  # different date than in Joyent sample
+def build_context(headers: Dict[str, str]) -> SmartAppRequestContext:
+    """Build a request context to test with."""
     return SmartAppRequestContext(body=BODY, headers=headers)
-
-
-@pytest.fixture
-def all_headers_context() -> SmartAppRequestContext:
-    # request context for the Joyent all headers sample
-    return SmartAppRequestContext(body=BODY, headers=ALL_HEADERS_ORIGINAL_HEADERS)
 
 
 class TestSignatureVerifier:
@@ -228,10 +189,13 @@ class TestSignatureVerifier:
     #       is not as flexible as I need, because I want to have various different kinds
     #       of bad configuration, or missing values, etc., etc.
 
-    def test_default_signature_attributes(self, default_context, config, definition):
+    def test_default_signature_attributes(self):
         # technically, if we can properly verify a valid or invalid a signature, these are irrelevant
         # however, checking them helps us confirm that we have the right inputs to the algorithm
-        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         assert verifier.correlation_id == CORRELATION
         assert verifier.headers == DEFAULT_NORMALIZED_HEADERS
         assert verifier.body == BODY
@@ -248,10 +212,13 @@ class TestSignatureVerifier:
         assert verifier.digest == DIGEST
         assert verifier.signing_string == DEFAULT_SIGNING_STRING
 
-    def test_all_headers_signature_attributes(self, all_headers_context, config, definition):
+    def test_all_headers_signature_attributes(self):
         # technically, if we can properly verify a valid or invalid a signature, these are irrelevant
         # however, checking them helps us confirm that we have the right inputs to the algorithm
-        verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
+        context = build_context(headers=ALL_HEADERS_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         assert verifier.correlation_id is None  # because the header isn't in ALL_HEADERS_ORIGINAL_HEADERS
         assert verifier.headers == ALL_HEADERS_NORMALIZED_HEADERS
         assert verifier.body == BODY
@@ -281,10 +248,13 @@ class TestSignatureVerifier:
             DATE_OBJ.add(seconds=CLOCK_SKEW),
         ],
     )
-    def test_verify_date_valid(self, now, date, default_context, config, definition):
+    def test_verify_date_valid(self, now, date):
         # with a clock skew set, anything inclusively within the configured skew is valid
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = date
-        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         verifier.verify_date()
 
     @patch("smartapp.signature.now")
@@ -297,13 +267,16 @@ class TestSignatureVerifier:
             DATE_OBJ.add(seconds=CLOCK_SKEW).add(seconds=2),
         ],
     )
-    def test_verify_date_invalid(self, now, date, default_context, config, definition):
+    def test_verify_date_invalid(self, now, date):
         # with a clock skew set, anything 1 second or more outside the configured skew is invalid
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = date
-        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         with pytest.raises(SignatureError, match="Request date is not current") as e:
             verifier.verify_date()
-        assert e.value.correlation_id == default_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
     @patch("smartapp.signature.now")
     @pytest.mark.parametrize(
@@ -322,101 +295,129 @@ class TestSignatureVerifier:
             DATE_OBJ.add(seconds=CLOCK_SKEW).add(seconds=2),
         ],
     )
-    def test_verify_date_no_skew(self, now, date, default_context, no_skew_config, definition):
+    def test_verify_date_no_skew(self, now, date):
         # with clock skew set to None (via no_skew_config) any date is valid
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config(clock_skew_sec=None)
+        definition = build_definition()
         now.return_value = date
-        verifier = SignatureVerifier(context=default_context, config=no_skew_config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         verifier.verify_date()
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_default_verify_valid(self, now, retrieve, default_context, config, definition):
+    def test_default_verify_valid(self, now, retrieve):
         # with a valid key from the Joyent sample data, everything should line up and we should have a valid signature
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = PUBLIC_SIGNING_KEY
-        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         verifier.verify()
         retrieve.assert_called_once_with(KEYSERVER_URL, KEY_ID)
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_all_headers_verify_valid(self, now, retrieve, all_headers_context, config, definition):
+    def test_all_headers_verify_valid(self, now, retrieve):
         # with a valid key from the Joyent sample data, everything should line up and we should have a valid signature
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = PUBLIC_SIGNING_KEY
-        verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         verifier.verify()
         retrieve.assert_called_once_with(KEYSERVER_URL, KEY_ID)
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_default_verify_invalid_key(self, now, retrieve, default_context, config, definition):
+    def test_default_verify_invalid_key(self, now, retrieve):
         # with an invalid key, the signature can never be valid
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = "bogus"
-        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
-        assert e.value.correlation_id == default_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_all_headers_verify_invalid_key(self, now, retrieve, all_headers_context, config, definition):
+    def test_all_headers_verify_invalid_key(self, now, retrieve):
         # with an invalid key, the signature can never be valid
+        context = build_context(headers=ALL_HEADERS_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = "bogus"
-        verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
-        assert e.value.correlation_id == all_headers_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_default_verify_wrong_key(self, now, retrieve, default_context, config, definition):
+    def test_default_verify_wrong_key(self, now, retrieve):
         # with the wrong key, the signature can never be valid
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = WRONG_SIGNING_KEY
-        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
-        assert e.value.correlation_id == default_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_all_headers_verify_wrong_key(self, now, retrieve, all_headers_context, config, definition):
+    def test_all_headers_verify_wrong_key(self, now, retrieve):
         # with the wrong key, the signature can never be valid
+        context = build_context(headers=ALL_HEADERS_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = WRONG_SIGNING_KEY
-        verifier = SignatureVerifier(context=all_headers_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
-        assert e.value.correlation_id == all_headers_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_default_verify_mismatch(self, now, retrieve, bad_default_context, config, definition):
-        # the bad_default_context sets a Date header that doesn't match the Joyent sample
-        # we will generate a bad signing string and hence the signature is invalid
+    def test_default_verify_mismatch(self, now, retrieve):
+        # this has a Date header that does not match the Joyent sample, causing an invalid signature
+        headers = DEFAULT_ORIGINAL_HEADERS.copy()
+        headers["Date"] = "Tue, 14 Jun 2022 21:23:01 GMT"  # different date than in Joyent sample
+        context = build_context(headers)
+        config = build_config()
+        definition = build_definition()
         now.return_value = DATE_OBJ
         retrieve.return_value = PUBLIC_SIGNING_KEY
-        verifier = SignatureVerifier(context=bad_default_context, config=config, definition=definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         assert verifier.signing_string != DEFAULT_SIGNING_STRING
         with pytest.raises(SignatureError, match="Request date is not current") as e:
             verifier.verify()
-        assert e.value.correlation_id == bad_default_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
-    def test_all_headers_verify_mismatch(self, now, retrieve, all_headers_context, config, bad_definition):
+    def test_all_headers_verify_mismatch(self, now, retrieve):
         # the bad_definition contains a URL that doesn't match the Joyent sample
         # we will generate a bad signing string and hence the signature is invalid
+        context = build_context(headers=ALL_HEADERS_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition(target_url="https://whatever.com/smartapp")  # does not match Joyent's example
         now.return_value = DATE_OBJ
         retrieve.return_value = PUBLIC_SIGNING_KEY
-        verifier = SignatureVerifier(context=all_headers_context, config=config, definition=bad_definition)
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
         assert verifier.signing_string != ALL_HEADERS_SIGNING_STRING
         with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
-        assert e.value.correlation_id == all_headers_context.correlation_id
+        assert e.value.correlation_id == context.correlation_id
 
 
 @patch("smartapp.signature.requests.get")
