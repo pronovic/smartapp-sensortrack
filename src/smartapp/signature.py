@@ -74,16 +74,17 @@ def retrieve_public_key(key_server_url: str, key_id: str) -> str:
 DATE_FORMAT = "DD MMM YYYY HH:mm:ss z"  # like "05 Jan 2014 21:31:40 GMT"; we strip off the leading day of week
 
 # noinspection PyUnresolvedReferences
-@frozen(kw_only=True, repr=False)
+@frozen(kw_only=True, repr=True)
 class SignatureVerifier:
 
     """Signature verifier for Joyent HTTP signatures."""
 
-    context: SmartAppRequestContext
-    config: SmartAppDispatcherConfig
-    definition: SmartAppDefinition
+    context: SmartAppRequestContext = field(repr=False)  # because context.body may contain secrets
+    config: SmartAppDispatcherConfig = field()
+    definition: SmartAppDefinition = field()
     correlation_id: Optional[str] = field(init=False)
     body: str = field(init=False)
+    content_length: int = field(init=False)
     method: str = field(init=False)
     path: str = field(init=False)
     request_target: str = field(init=False)
