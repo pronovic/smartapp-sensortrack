@@ -22,16 +22,15 @@ import re
 import urllib.parse
 from base64 import b64encode
 from functools import lru_cache
-from typing import List, Mapping
+from typing import List, Mapping, Optional
 
 import requests
 from attrs import field, frozen
 from Cryptodome.Hash import SHA256
 from Cryptodome.PublicKey import RSA
 from Cryptodome.Signature import pkcs1_15
-from pendulum import now
+from pendulum import from_format, now
 from pendulum.datetime import DateTime
-from pendulum.parser import parse
 from requests import ConnectionError as RequestsConnectionError
 from requests import HTTPError, RequestException
 from tenacity import retry
@@ -62,6 +61,8 @@ def retrieve_public_key(key_server_url: str, key_id: str) -> str:
     return response.text
 
 
+DATE_FORMAT = "DD MMM YYYY HH:mm:ss z"  # like "05 Jan 2014 21:31:40 GMT"; we strip off the leading day of week
+
 # noinspection PyUnresolvedReferences
 @frozen(kw_only=True, repr=False)
 class SignatureVerifier:
@@ -69,6 +70,7 @@ class SignatureVerifier:
     context: SmartAppRequestContext
     config: SmartAppDispatcherConfig
     definition: SmartAppDefinition
+    headers: Mapping[str, str] = field(init=False)
     body: str = field(init=False)
     method: str = field(init=False)
     path: str = field(init=False)
@@ -76,13 +78,18 @@ class SignatureVerifier:
     date: DateTime = field(init=False)
     authorization: str = field(init=False)
     signing_attributes: Mapping[str, str] = field(init=False)
-    key_id: str = field(init=False)
-    key_url: str = field(init=False)
-    algorithm: str = field(init=False)
-    digest: str = field(init=False)
     signing_headers: str = field(init=False)
-    signing_string: str = field(init=False)
+    key_id: str = field(init=False)
+    keyserver_url: str = field(init=False)
+    algorithm: str = field(init=False)
     signature: str = field(init=False)
+    digest: str = field(init=False)
+    signing_string: str = field(init=False)
+
+    @headers.default
+    def _default_headers(self) -> Mapping[str, str]:
+        # in conjunction with header(), this gives us a case-insensitive dictionary
+        return {key.lower(): value for (key, value) in self.context.headers.items()}
 
     @body.default
     def _default_body(self) -> str:
@@ -95,7 +102,13 @@ class SignatureVerifier:
     @path.default
     def _default_path(self) -> str:
         # The path from the configured endpoint might be different than what the server served, due to forwarding
-        return urllib.parse.urlparse(self.definition.target_url).path
+        parts = urllib.parse.urlsplit(self.definition.target_url)
+        path = parts.path
+        if parts.query:
+            path = "%s?%s" % (path, parts.query)
+        if parts.fragment:
+            path = "%s#%s" % (path, parts.fragment)
+        return path
 
     @request_target.default
     def _default_request_target(self) -> str:
@@ -107,28 +120,40 @@ class SignatureVerifier:
 
     @date.default
     def _default_date(self) -> DateTime:
-        return parse(self.header("date"))  # type: ignore
+        return from_format(self.header("date")[5:], DATE_FORMAT)  # remove the day ("Thu, ") from front
 
     @signing_attributes.default
     def _default_signing_attributes(self) -> Mapping[str, str]:
         # We're parsing a string like: 'Signature keyId="key",algorithm="rsa-sha256",headers="date",signature="xxx"'
-        def attribute(name: str) -> str:
+        def attribute(name: str, default: Optional[str] = None) -> str:
             if not self.authorization.startswith("Signature "):
                 raise SignatureError("Authorization header is not a signature")
             pattern = r"(%s=\")([^\"]+?)(\")" % name
             match = re.search(pattern=pattern, string=self.authorization)
             if not match:
+                if default:
+                    return default
                 raise SignatureError("Signature does not contain: %s" % name)
             return match.group(2)
 
-        return {name: attribute(name) for name in ["keyId", "headers", "algorithm", "signature"]}
+        return {
+            "keyId": attribute("keyId"),
+            "headers": attribute("headers", default="Date"),
+            "algorithm": attribute("algorithm"),
+            "signature": attribute("signature"),
+        }
+
+    @signing_headers.default
+    def _default_signing_headers(self) -> List[str]:
+        # We're parsing a string like "(request-target) date content-type digest" into a list
+        return self.signing_attributes["headers"].strip().split(" ")
 
     @key_id.default
     def _default_key_id(self) -> str:
         return self.signing_attributes["keyId"]
 
-    @key_url.default
-    def _default_key_server_url(self) -> str:
+    @keyserver_url.default
+    def _default_keyserver_url(self) -> str:
         return self.config.key_server_url
 
     @algorithm.default
@@ -149,11 +174,6 @@ class SignatureVerifier:
         base64 = b64encode(digest).decode("ascii")
         return "SHA-256=%s" % base64
 
-    @signing_headers.default
-    def _default_signing_headers(self) -> List[str]:
-        # We're parsing a string like "(request-target) date content-type digest" into a list
-        return self.signing_attributes["headers"].strip().split(" ")
-
     @signing_string.default
     def _signing_string(self) -> str:
         components = []
@@ -163,14 +183,14 @@ class SignatureVerifier:
             elif name == "digest":
                 components.append("digest: %s" % self.digest)
             else:
-                components.append("%s: %s" % (name, self.header(name)))
+                components.append("%s: %s" % (name.lower(), self.header(name)))
         return "\n".join(components).rstrip("\n")
 
     def header(self, name: str) -> str:
         """Return the named header, raising SignatureError if it is not found or is empty"""
-        if not name in self.context.headers:
+        if not name.lower() in self.headers:
             raise SignatureError("Header not found: %s" % name)
-        value = self.context.headers[name]
+        value = self.headers[name.lower()]
         if not value or not value.strip():
             raise SignatureError("Header not found: %s" % name)
         return value
@@ -178,7 +198,7 @@ class SignatureVerifier:
     def retrieve_public_key(self) -> str:
         """Retrieve the configured public key."""
         try:
-            return retrieve_public_key(self.key_url, self.key_id)  # will retry automatically
+            return retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
         except RequestException as e:
             raise SignatureError("Failed to retrieve key [%s]" % self.key_id) from e
 

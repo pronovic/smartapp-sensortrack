@@ -845,8 +845,6 @@ class SmartAppRequestContext:
     The context for a SmartApp lifecycle request.
 
     Attributes:
-        method(str): The request method, typically "POST"
-        path(str): The request path that was used to invoke the endpoint
         headers(Mapping[str, str]): The request headers, assumed to be accessible in case-insenstive fashion
         body(str): The body of the request as string
     """
