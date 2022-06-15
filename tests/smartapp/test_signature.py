@@ -7,7 +7,7 @@ import pendulum
 import pytest
 from requests import HTTPError
 
-from smartapp.interface import SmartAppDefinition, SmartAppDispatcherConfig, SmartAppRequestContext
+from smartapp.interface import SignatureError, SmartAppDefinition, SmartAppDispatcherConfig, SmartAppRequestContext
 from smartapp.signature import SignatureVerifier, retrieve_public_key
 
 # These tests are built on sample data found in the Joyent specification.
@@ -152,6 +152,15 @@ def config() -> SmartAppDispatcherConfig:
 
 
 @pytest.fixture
+def no_skew_config() -> SmartAppDispatcherConfig:
+    return SmartAppDispatcherConfig(
+        check_signatures=True,
+        clock_skew_sec=None,
+        key_server_url=KEYSERVER_URL,
+    )
+
+
+@pytest.fixture
 def definition() -> SmartAppDefinition:
     return SmartAppDefinition(
         id="",
@@ -207,6 +216,89 @@ class TestSignatureVerifier:
         assert verifier.signature == ALL_HEADERS_SIGNATURE
         assert verifier.digest == DIGEST
         assert verifier.signing_string == ALL_HEADERS_SIGNING_STRING
+
+    @patch("smartapp.signature.now")
+    @pytest.mark.parametrize(
+        "date",
+        [
+            DATE_OBJ.subtract(seconds=CLOCK_SKEW),
+            DATE_OBJ.subtract(seconds=CLOCK_SKEW).add(seconds=1),
+            DATE_OBJ,
+            DATE_OBJ.add(seconds=CLOCK_SKEW).subtract(seconds=1),
+            DATE_OBJ.add(seconds=CLOCK_SKEW),
+        ],
+    )
+    def test_verify_date_valid(self, now, date, default_context, config, definition):
+        # date is identical between default and all headers test cases, so just test one of them
+        now.return_value = date
+        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier.verify_date()
+
+    @patch("smartapp.signature.now")
+    @pytest.mark.parametrize(
+        "date",
+        [
+            DATE_OBJ.subtract(seconds=CLOCK_SKEW).subtract(seconds=1),
+            DATE_OBJ.add(seconds=CLOCK_SKEW).add(seconds=1),
+        ],
+    )
+    def test_verify_date_invalid(self, now, date, default_context, config, definition):
+        # date is identical between default and all headers test cases, so just test one of them
+        now.return_value = date
+        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        with pytest.raises(SignatureError, match="Request date is not current"):
+            verifier.verify_date()
+
+    @patch("smartapp.signature.now")
+    @pytest.mark.parametrize(
+        "date",
+        [
+            DATE_OBJ.subtract(seconds=CLOCK_SKEW).subtract(seconds=1),
+            DATE_OBJ.subtract(seconds=CLOCK_SKEW),
+            DATE_OBJ.subtract(seconds=CLOCK_SKEW).add(seconds=1),
+            DATE_OBJ,
+            DATE_OBJ.add(seconds=CLOCK_SKEW).subtract(seconds=1),
+            DATE_OBJ.add(seconds=CLOCK_SKEW),
+            DATE_OBJ.add(seconds=CLOCK_SKEW).add(seconds=1),
+        ],
+    )
+    def test_verify_date_no_skew(self, now, date, default_context, no_skew_config, definition):
+        # date is identical between default and all headers test cases, so just test one of them
+        now.return_value = date
+        verifier = SignatureVerifier(context=default_context, config=no_skew_config, definition=definition)
+        verifier.verify_date()
+
+    @patch("smartapp.signature.retrieve_public_key")
+    @patch("smartapp.signature.now")
+    def test_default_verify_valid(self, now, retrieve, default_context, config, definition):
+        # TODO: fix this test case, which reports an invalid signature
+        now.return_value = DATE_OBJ
+        retrieve.return_value = PUBLIC_SIGNING_KEY
+        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier.verify()
+        retrieve.assert_called_once_with(KEYSERVER_URL, KEY_ID)
+
+    @patch("smartapp.signature.retrieve_public_key")
+    @patch("smartapp.signature.now")
+    def test_all_headers_verify_valid(self, now, retrieve, default_context, config, definition):
+        # TODO: fix this test case, which reports an invalid signature
+        now.return_value = DATE_OBJ
+        retrieve.return_value = PUBLIC_SIGNING_KEY
+        verifier = SignatureVerifier(context=default_context, config=config, definition=definition)
+        verifier.verify()
+        retrieve.assert_called_once_with(KEYSERVER_URL, KEY_ID)
+
+    @patch("smartapp.signature.retrieve_public_key")
+    @patch("smartapp.signature.now")
+    def test_default_verify_invalid(self):
+        # TODO: come up with a way to make part of the signature invalid (not sure how)
+        pytest.fail("Not implemented")
+
+    @patch("smartapp.signature.retrieve_public_key")
+    @patch("smartapp.signature.now")
+    def test_all_headers_verify_invalid(self):
+        # TODO: come up with a way to make part of the signature invalid (not sure how)
+        pytest.fail("Not implemented")
 
 
 @patch("smartapp.signature.requests.get")
