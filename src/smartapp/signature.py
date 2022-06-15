@@ -206,7 +206,7 @@ class SignatureVerifier:
         """Retrieve the configured public key."""
         try:
             key = retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
-            logging.debug("Public key [%s]: \n%s", self.key_id, key)
+            logging.debug("[%s] Public key [%s]: \n%s", self.correlation_id, self.key_id, key)
             return key
         except RequestException as e:
             raise SignatureError("Failed to retrieve key [%s]" % self.key_id, self.correlation_id) from e
@@ -222,7 +222,7 @@ class SignatureVerifier:
         """Verify the RSA-SHA256 signature of the signing string."""
         # See: https://www.pycryptodome.org/en/latest/src/signature/pkcs1_v1_5.html
         try:
-            logging.debug("Signing string: %s", self.signing_string)
+            logging.debug("[%s] Signing string: \n%s", self.correlation_id, self.signing_string)
             signature = b64decode(self.signature)
             sha256 = SHA256.new(self.signing_string.encode())
             key = RSA.import_key(self.retrieve_public_key())
