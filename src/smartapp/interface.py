@@ -25,6 +25,7 @@ from pendulum.datetime import DateTime
 
 AUTHORIZATION_HEADER = "authorization"
 CORRELATION_ID_HEADER = "x-st-correlation"
+DATE_HEADER = "date"
 
 
 class LifecyclePhase(Enum):
@@ -725,14 +726,20 @@ class SmartAppDispatcherConfig:
     Any production SmartApp should always check signatures.  We support disabling that feature
     to make local testing easier during development.
 
+    BEWARE: setting `log_json` to `True` will potentially place secrets (such as authorization
+    keys) in your logs.  This is intended for use during development and debugging only.
+
     Attributes:
         check_signatures(bool): Whether to check the digital signature on lifecycle requests
         clock_skew_sec(int): Amount of clock skew allowed when verifying digital signatures, or None to allow any skew
+        keyserver_url(str): The SmartThings keyserver URL, where we retrieve keys for signature checks
+        log_json(bool): Whether to log JSON data at DEBUG level when processing requests
     """
 
     check_signatures: bool = True
     clock_skew_sec: Optional[int] = 300
-    key_server_url: str = "https://key.smartthings.com"
+    keyserver_url: str = "https://key.smartthings.com"
+    log_json: bool = False
 
 
 class SmartAppEventHandler(ABC):
@@ -837,27 +844,51 @@ class SmartAppDefinition:
     config_pages: List[SmartAppConfigPage]
 
 
+# noinspection PyUnresolvedReferences
 @frozen(kw_only=True)
 class SmartAppRequestContext:
 
-    # noinspection PyUnresolvedReferences
     """
     The context for a SmartApp lifecycle request.
 
     Attributes:
-        headers(Mapping[str, str]): The request headers, assumed to be accessible in case-insenstive fashion
+        headers(Mapping[str, str]): The request headers
         body(str): The body of the request as string
     """
 
+    # I'm pulling out the correlation id, signature, and date because they are 3 specific
+    # headers that I know the SmartThings API always provides.  Others can be pulled out
+    # using header().
+
     headers: Mapping[str, str] = field(factory=dict)
     body: str = ""
+    normalized: Mapping[str, str] = field(init=False)
+    correlation_id: str = field(init=False)
+    signature: str = field(init=False)
+    date: str = field(init=False)
 
-    @property
-    def correlation_id(self) -> Optional[str]:
-        """Return the correlation id, if set."""
-        return self.headers[CORRELATION_ID_HEADER] if CORRELATION_ID_HEADER in self.headers else None
+    @normalized.default
+    def _default_normalized(self) -> Mapping[str, str]:
+        # in conjunction with header(), this gives us a case-insensitive dictionary
+        return {key.lower(): value for (key, value) in self.headers.items()} if self.headers else {}
 
-    @property
-    def signature(self) -> Optional[str]:
-        """Return the signature from the authorization header, if set."""
-        return self.headers[AUTHORIZATION_HEADER] if AUTHORIZATION_HEADER in self.headers else None
+    @correlation_id.default
+    def _default_correlation_id(self) -> Optional[str]:
+        return self.header(CORRELATION_ID_HEADER)
+
+    @signature.default
+    def _default_signature(self) -> Optional[str]:
+        return self.header(AUTHORIZATION_HEADER)
+
+    @date.default
+    def _default_date(self) -> Optional[str]:
+        return self.header(DATE_HEADER)
+
+    def header(self, name: str) -> Optional[str]:
+        """Return the named header case-insensitively, or None if not found."""
+        if not name.lower() in self.normalized:
+            return None
+        value = self.normalized[name.lower()]
+        if not value or not value.strip():
+            return None
+        return value

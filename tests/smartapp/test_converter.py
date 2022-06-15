@@ -825,6 +825,18 @@ class TestConvertRequests:
         validate_yaml_roundtrip(None, expected, LifecycleRequest)
 
 
+class TestConvertSmartAppDispatcherConfig:
+    def test_config(self):
+        expected = SmartAppDispatcherConfig(
+            check_signatures=True,
+            clock_skew_sec=1234,
+            keyserver_url="https://whatever.com",
+            log_json=False,
+        )
+        validate_json_roundtrip(None, expected, SmartAppDispatcherConfig)
+        validate_yaml_roundtrip(None, expected, SmartAppDispatcherConfig)
+
+
 class TestConvertSmartAppDefinition:
     def test_definition(self):
         # SmartAppDefinition isn't part of the SmartThings interface, but we support serializing/deserializing it

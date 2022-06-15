@@ -29,9 +29,24 @@ class TestExceptions:
 
 class TestSmartAppRequestContext:
     def test_context(self):
+        headers = {
+            "Date": "the-date",
+            "Authorization": "signature",
+            "X-ST-Correlation": "correlation",
+            "empty": "",
+            "whitespace": "\t\n",
+            "none": None,
+        }
         context = SmartAppRequestContext(
-            headers={"authorization": "signature", "x-st-correlation": "correlation", "another": "value"},
+            headers=headers,
             body="thebody",
         )
         assert context.correlation_id == "correlation"
         assert context.signature == "signature"
+        assert context.date == "the-date"
+        for header in ["DATE", "Date", "date"]:
+            assert context.header(header) == "the-date"
+        for header in ["AUTHORIZATION", "Authorization", "authorization"]:
+            assert context.header(header) == "signature"
+        for header in ["missing", "empty", "whitespace", "none"]:
+            assert context.header(header) is None

@@ -93,16 +93,6 @@ DEFAULT_ORIGINAL_HEADERS = {
     "x-st-correlation": CORRELATION,
 }
 
-DEFAULT_NORMALIZED_HEADERS = {
-    "host": HOST,
-    "date": DATE_STR,
-    "content-type": CONTENT_TYPE,
-    "digest": DIGEST,
-    "content-length": CONTENT_LENGTH,
-    "authorization": DEFAULT_AUTHORIZATION,
-    "x-st-correlation": CORRELATION,
-}
-
 DEFAULT_SIGNING_HEADERS = "Date"
 
 DEFAULT_SIGNING_ATTRIBUTES = {
@@ -129,15 +119,6 @@ ALL_HEADERS_ORIGINAL_HEADERS = {
     "Authorization": ALL_HEADERS_AUTHORIZATION,
 }
 
-ALL_HEADERS_NORMALIZED_HEADERS = {
-    "host": HOST,
-    "date": DATE_STR,
-    "content-type": CONTENT_TYPE,
-    "digest": DIGEST,
-    "content-length": CONTENT_LENGTH,
-    "authorization": ALL_HEADERS_AUTHORIZATION,
-}
-
 ALL_HEADERS_SIGNING_HEADERS = "(request-target) host date content-type digest content-length"
 
 ALL_HEADERS_SIGNING_ATTRIBUTES = {
@@ -162,7 +143,7 @@ def build_config(clock_skew_sec: Optional[int] = CLOCK_SKEW) -> SmartAppDispatch
     return SmartAppDispatcherConfig(
         check_signatures=True,
         clock_skew_sec=clock_skew_sec,
-        key_server_url=KEYSERVER_URL,
+        keyserver_url=KEYSERVER_URL,
     )
 
 
@@ -192,7 +173,6 @@ class TestSignatureVerifier:
         definition = build_definition()
         verifier = SignatureVerifier(context=context, config=config, definition=definition)
         assert verifier.correlation_id == CORRELATION
-        assert verifier.headers == DEFAULT_NORMALIZED_HEADERS
         assert verifier.body == BODY
         assert verifier.method == METHOD
         assert verifier.path == PATH
@@ -215,7 +195,6 @@ class TestSignatureVerifier:
         definition = build_definition()
         verifier = SignatureVerifier(context=context, config=config, definition=definition)
         assert verifier.correlation_id is None  # because the header isn't in ALL_HEADERS_ORIGINAL_HEADERS
-        assert verifier.headers == ALL_HEADERS_NORMALIZED_HEADERS
         assert verifier.body == BODY
         assert verifier.method == METHOD
         assert verifier.path == PATH

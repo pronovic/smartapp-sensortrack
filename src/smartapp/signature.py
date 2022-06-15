@@ -32,6 +32,7 @@ Verify HTTP signatures on SmartApp lifecycle event requests.
 # retries to 2 seconds.  This is not configurable.  Note that the LRU cache only caches
 # responses, not any exceptions that were thrown.
 
+import logging
 import re
 import urllib.parse
 from base64 import b64decode, b64encode
@@ -82,7 +83,6 @@ class SignatureVerifier:
     config: SmartAppDispatcherConfig
     definition: SmartAppDefinition
     correlation_id: Optional[str] = field(init=False)
-    headers: Mapping[str, str] = field(init=False)
     body: str = field(init=False)
     method: str = field(init=False)
     path: str = field(init=False)
@@ -101,11 +101,6 @@ class SignatureVerifier:
     @correlation_id.default
     def _default_correlation_id(self) -> Optional[str]:
         return self.context.correlation_id
-
-    @headers.default
-    def _default_headers(self) -> Mapping[str, str]:
-        # in conjunction with header(), this gives us a case-insensitive dictionary
-        return {key.lower(): value for (key, value) in self.context.headers.items()}
 
     @body.default
     def _default_body(self) -> str:
@@ -168,7 +163,7 @@ class SignatureVerifier:
 
     @keyserver_url.default
     def _default_keyserver_url(self) -> str:
-        return self.config.key_server_url
+        return self.config.keyserver_url
 
     @algorithm.default
     def _default_algorithm(self) -> str:
@@ -201,18 +196,18 @@ class SignatureVerifier:
         return "\n".join(components).rstrip("\n")
 
     def header(self, name: str) -> str:
-        """Return the named header, raising SignatureError if it is not found or is empty"""
-        if not name.lower() in self.headers:
-            raise SignatureError("Header not found: %s" % name, self.correlation_id)
-        value = self.headers[name.lower()]
-        if not value or not value.strip():
+        """Return the named header case-insensitively, raising SignatureError if it is not found or is empty"""
+        value = self.context.header(name)
+        if not value:
             raise SignatureError("Header not found: %s" % name, self.correlation_id)
         return value
 
     def retrieve_public_key(self) -> str:
         """Retrieve the configured public key."""
         try:
-            return retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
+            key = retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
+            logging.debug("Public key [%s]: \n%s", self.key_id, key)
+            return key
         except RequestException as e:
             raise SignatureError("Failed to retrieve key [%s]" % self.key_id, self.correlation_id) from e
 
@@ -227,6 +222,7 @@ class SignatureVerifier:
         """Verify the RSA-SHA256 signature of the signing string."""
         # See: https://www.pycryptodome.org/en/latest/src/signature/pkcs1_v1_5.html
         try:
+            logging.debug("Signing string: %s", self.signing_string)
             signature = b64decode(self.signature)
             sha256 = SHA256.new(self.signing_string.encode())
             key = RSA.import_key(self.retrieve_public_key())

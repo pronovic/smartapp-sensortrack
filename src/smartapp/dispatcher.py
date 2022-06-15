@@ -81,9 +81,12 @@ class SmartAppDispatcher:
         """
         try:
             request: LifecycleRequest = CONVERTER.from_json(context.body, LifecycleRequest)  # type: ignore
-            logging.info("[%s] Handling %s request [%s]", context.correlation_id, request.lifecycle, request.execution_id)
+            logging.info("[%s] Handling %s request", context.correlation_id, request.lifecycle)
+            logging.debug("[%s] Date: %s", context.correlation_id, context.date)
             logging.debug("[%s] Signature: %s", context.correlation_id, context.signature)  # note: signature not confidential
             logging.debug("[%s] Request: %s", context.correlation_id, request)  # note: secrets are not serialized in repr()
+            if self.config.log_json:
+                logging.debug("[%s] Raw JSON: \n%s", context.correlation_id, context.body)  # note: may contain secrets!
             if self.config.check_signatures:
                 SignatureVerifier(context=context, config=self.config, definition=self.definition).verify()
             response = self._handle_request(context.correlation_id, request)
