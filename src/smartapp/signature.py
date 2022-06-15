@@ -34,7 +34,7 @@ Verify HTTP signatures on SmartApp lifecycle event requests.
 
 import re
 import urllib.parse
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from functools import lru_cache
 from typing import List, Mapping, Optional
 
@@ -117,8 +117,6 @@ class SignatureVerifier:
         path = parts.path
         if parts.query:
             path = "%s?%s" % (path, parts.query)
-        if parts.fragment:
-            path = "%s#%s" % (path, parts.fragment)
         return path
 
     @request_target.default
@@ -216,17 +214,18 @@ class SignatureVerifier:
     def verify_date(self) -> None:
         """Verify the date, ensuring that it is current per skew configuration."""
         if self.config.clock_skew_sec is not None:
-            skew = now() - self.date
-            if abs(skew.seconds) > self.config.clock_skew_sec:
+            skew = abs(now() - self.date)
+            if skew.seconds > self.config.clock_skew_sec:
                 raise SignatureError("Request date is not current, skew of %d seconds" % skew.seconds)
 
     def verify_signature(self) -> None:
         """Verify the RSA-SHA256 signature of the signing string."""
         # See: https://www.pycryptodome.org/en/latest/src/signature/pkcs1_v1_5.html
         try:
-            key = RSA.import_key(self.retrieve_public_key())
+            signature = b64decode(self.signature)
             sha256 = SHA256.new(self.signing_string.encode())
-            pkcs1_15.new(key).verify(sha256, self.signature.encode())
+            key = RSA.import_key(self.retrieve_public_key())
+            pkcs1_15.new(key).verify(sha256, signature)
         except (ValueError, TypeError) as e:
             raise SignatureError("Signature is not valid") from e
 
