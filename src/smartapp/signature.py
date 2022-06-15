@@ -8,15 +8,29 @@ Verify HTTP signatures on SmartApp lifecycle event requests.
 # This implements HTTP signature verification for the SmartApp lifecycle events.
 # See: https://developer-preview.smartthings.com/docs/connected-services/hosting/webhook-smartapp/
 #
-# SmartThings uses Joyent's HTTP signature scheme.  Note that only the rsa-sha256 algorithm
-# is supported in this code.  As far as I can tell, this is the only one SmartThings uses.
-# Limiting to the single algorithm greatly simplifies the implementation, plus we can use
-# the test cases that Joylent includes in their specification document in our own unit tests.
+# SmartThings uses Joyent's HTTP signature scheme to signal all lifecycle events.
 # See: https://github.com/TritonDataCenter/node-http-signature/blob/master/http_signing.md
+#
+# Note that only the rsa-sha256 algorithm is supported in this code.  As far as I can
+# tell, this is the only one SmartThings uses.  Limiting to the single algorithm greatly
+# simplifies the implementation, plus we can use the test cases that Joylent includes in
+# their specification document in our own unit tests.
 #
 # The crypto implementation is PyCryptodome. There are other options, but this appears to
 # be well-maintained, is fairly popular (2000+ GitHub stars), and the documentation is good.
 # See: https://pypi.org/project/pycryptodomex/ and https://www.pycryptodome.org/en/latest/
+#
+# The derived signature attributes are in some sense private to the implementation, and in
+# some sense public, since they are inputs to the Joyent signature algorithm itself.  I've
+# chosen to make them public and read-only on `SignatureVerifier`, which makes the
+# implementation more transparent and also makes it easier to verify the implementation
+# using the sample data provided in the Joyent spec.
+#
+# The retrieve_public_key() function is implemented as a function so we can cache the
+# result and implement retries outside of SignatureVerifier.  We retry up to 5 times (6
+# total attempts), waiting 0.25 seconds before first retry, and limiting the wait between
+# retries to 2 seconds.  This is not configurable.  Note that the LRU cache only caches
+# responses, not any exceptions that were thrown.
 
 import re
 import urllib.parse
@@ -40,11 +54,6 @@ from tenacity.wait import wait_exponential
 
 from .interface import SignatureError, SmartAppDefinition, SmartAppDispatcherConfig, SmartAppRequestContext
 
-# This is implemented as a function so we can cache the result and implement retries
-# outside of SignatureVerifier.  We retry up to 5 times (6 total attempts), waiting
-# 0.25 seconds before first retry, and limiting the wait between retries to 2 seconds.
-# Note that the LRU cache only caches responses, not any exceptions that were thrown.
-
 
 @lru_cache(maxsize=32)
 @retry(
@@ -66,6 +75,8 @@ DATE_FORMAT = "DD MMM YYYY HH:mm:ss z"  # like "05 Jan 2014 21:31:40 GMT"; we st
 # noinspection PyUnresolvedReferences
 @frozen(kw_only=True, repr=False)
 class SignatureVerifier:
+
+    """Signature verifier for Joyent HTTP signatures."""
 
     context: SmartAppRequestContext
     config: SmartAppDispatcherConfig

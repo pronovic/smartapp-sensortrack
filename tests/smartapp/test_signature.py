@@ -10,10 +10,11 @@ from requests import HTTPError
 from smartapp.interface import SmartAppDefinition, SmartAppDispatcherConfig, SmartAppRequestContext
 from smartapp.signature import SignatureVerifier, retrieve_public_key
 
-# These tests are built on sample data on the Joyent documentation.
+# These tests are built on sample data found in the Joyent specification.
 # See: https://github.com/TritonDataCenter/node-http-signature/blob/master/http_signing.md#appendix-a---test-values
 #
-# The sample request is:
+# Joyent provides a sample request and also a public key and some sample signatures based
+# on this request.  The sample request is::
 #
 #    POST /foo?param=value&pet=dog HTTP/1.1
 #    Host: example.com
@@ -24,9 +25,11 @@ from smartapp.signature import SignatureVerifier, retrieve_public_key
 #
 #    {"hello": "world"}
 #
-# They also provide a public key and some sample signatures based on this request.
+# The public key is stored below in `PUBLIC_SIGNING_KEY`
+#
 # In Joyent's documentation, there are two cases: the "default" case and the "all
 # headers" case.  Below, the expected results are DEFAULTS_* and ALL_HEADERS_*.
+
 
 METHOD = "POST"
 HOST = "example.com"
@@ -34,10 +37,10 @@ PATH = "/foo?param=value&pet=dog"
 REQUEST_TARGET = "post /foo?param=value&pet=dog"
 DATE_STR = "Thu, 05 Jan 2014 21:31:40 GMT"
 DATE_OBJ = pendulum.datetime(2014, 1, 5, 21, 31, 40, tz="GMT")
-CONTENT_TYPE = "application/json"
-CONTENT_LENGTH = "18"
-DIGEST = "SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE="
 BODY = '{"hello": "world"}'
+CONTENT_TYPE = "application/json"
+CONTENT_LENGTH = str(len(BODY))  # should be 18
+DIGEST = "SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE="
 
 KEY_ID = "Test"
 ALGORITHM = "rsa-sha256"
@@ -45,6 +48,15 @@ CLOCK_SKEW = 300
 KEYSERVER_URL = "https://key.smartthings.com"
 KEY_DOWNLOAD_URL = "%s/%s" % (KEYSERVER_URL, KEY_ID)
 SMARTAPP_URL = "https://%s%s" % (HOST, PATH)
+
+PUBLIC_SIGNING_KEY = """
+-----BEGIN PUBLIC KEY-----
+MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCFENGw33yGihy92pDjZQhl0C3
+6rPJj+CvfSC8+q28hxA161QFNUd13wuCTUcq0Qd2qsBe/2hFyc2DCJJg0h1L78+6
+Z4UMR7EOcpfdUE9Hf3m/hs+FUR45uBJeDK1HSFHD8bHKD6kv8FPGfJTotc+2xjJw
+oYi+1hqp1fIekaxsyQIDAQAB
+-----END PUBLIC KEY-----
+""".strip()
 
 DEFAULT_AUTHORIZATION = """
 Signature keyId="Test",algorithm="rsa-sha256",signature="jKyvPcxB4JbmYY4mByyBY7cZfNl4OW9HpFQlG7N4YcJPteKTu4MWCLyk+gIr0wDgqtLWf9NLpMAMimdfsH7FSWGfbMFSrsVTHNTk0rK3usrfFnti1dxsM4jl0kYJCKTGI/UWkqiaxwNiKqGcdlEDrTcUhhsFsOIo8VhddmZTZ8w="
@@ -127,16 +139,6 @@ date: Thu, 05 Jan 2014 21:31:40 GMT
 content-type: application/json
 digest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=
 content-length: 18
-""".strip()
-
-
-PUBLIC_SIGNING_KEY = """
------BEGIN PUBLIC KEY-----
-MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDCFENGw33yGihy92pDjZQhl0C3
-6rPJj+CvfSC8+q28hxA161QFNUd13wuCTUcq0Qd2qsBe/2hFyc2DCJJg0h1L78+6
-Z4UMR7EOcpfdUE9Hf3m/hs+FUR45uBJeDK1HSFHD8bHKD6kv8FPGfJTotc+2xjJw
-oYi+1hqp1fIekaxsyQIDAQAB
------END PUBLIC KEY-----
 """.strip()
 
 
