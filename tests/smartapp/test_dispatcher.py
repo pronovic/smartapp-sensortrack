@@ -95,10 +95,16 @@ def dispatcher_with_check(definition: SmartAppDefinition, event_handler: SmartAp
 
 # noinspection PyUnresolvedReferences
 class TestSmartAppDispatcher:
-    def test_json_exception(self, dispatcher):
+    def test_invalid_json(self, dispatcher):
         # all of the requests have the same behavior, so we just check it once
         with pytest.raises(BadRequestError) as e:
             dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, body="bogus"))
+        assert e.value.correlation_id == CORRELATION
+
+    def test_wrong_json(self, dispatcher):
+        # all of the requests have the same behavior, so we just check it once
+        with pytest.raises(BadRequestError) as e:
+            dispatcher.dispatch(SmartAppRequestContext(headers=HEADERS, body='{"hello":"world"}'))
         assert e.value.correlation_id == CORRELATION
 
     def test_handler_internal_error(self, requests, dispatcher):

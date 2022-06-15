@@ -184,11 +184,6 @@ def build_context(headers: Dict[str, str]) -> SmartAppRequestContext:
 
 
 class TestSignatureVerifier:
-
-    # TODO: I need better coverage here; I think the way I'm structuring the fixtures
-    #       is not as flexible as I need, because I want to have various different kinds
-    #       of bad configuration, or missing values, etc., etc.
-
     def test_default_signature_attributes(self):
         # technically, if we can properly verify a valid or invalid a signature, these are irrelevant
         # however, checking them helps us confirm that we have the right inputs to the algorithm
@@ -234,6 +229,26 @@ class TestSignatureVerifier:
         assert verifier.signature == ALL_HEADERS_SIGNATURE
         assert verifier.digest == DIGEST
         assert verifier.signing_string == ALL_HEADERS_SIGNING_STRING
+
+    def test_header(self):
+        headers = {
+            "Date": DATE_STR,
+            "Authorization": DEFAULT_AUTHORIZATION,
+            "empty": "",
+            "whitespace": "\t\n",
+            "none": None,
+        }
+        context = build_context(headers=headers)
+        config = build_config()
+        definition = build_definition()
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
+        for header in ["DATE", "Date", "date"]:
+            assert verifier.header(header) == DATE_STR
+        for header in ["AUTHORIZATION", "Authorization", "authorization"]:
+            assert verifier.header(header) == DEFAULT_AUTHORIZATION
+        for header in ["missing", "empty", "whitespace", "none"]:
+            with pytest.raises(SignatureError, match="Header not found: %s" % header):
+                verifier.header(header)
 
     @patch("smartapp.signature.now")
     @pytest.mark.parametrize(
@@ -332,6 +347,34 @@ class TestSignatureVerifier:
 
     @patch("smartapp.signature.retrieve_public_key")
     @patch("smartapp.signature.now")
+    def test_default_verify_key_download_failure(self, now, retrieve):
+        # if we fail to download the key, the signature can never be valid
+        context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
+        now.return_value = DATE_OBJ
+        retrieve.side_effect = HTTPError("failed to download")
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
+        with pytest.raises(SignatureError, match=r"Failed to retrieve key \[%s\]" % KEY_ID) as e:
+            verifier.verify()
+        assert e.value.correlation_id == context.correlation_id
+
+    @patch("smartapp.signature.retrieve_public_key")
+    @patch("smartapp.signature.now")
+    def test_all_headers_verify_download_failure(self, now, retrieve):
+        # if we fail to download the key, the signature can never be valid
+        context = build_context(headers=ALL_HEADERS_ORIGINAL_HEADERS)
+        config = build_config()
+        definition = build_definition()
+        now.return_value = DATE_OBJ
+        retrieve.side_effect = HTTPError("failed to download")
+        verifier = SignatureVerifier(context=context, config=config, definition=definition)
+        with pytest.raises(SignatureError, match=r"Failed to retrieve key \[%s\]" % KEY_ID) as e:
+            verifier.verify()
+        assert e.value.correlation_id == context.correlation_id
+
+    @patch("smartapp.signature.retrieve_public_key")
+    @patch("smartapp.signature.now")
     def test_default_verify_invalid_key(self, now, retrieve):
         # with an invalid key, the signature can never be valid
         context = build_context(headers=DEFAULT_ORIGINAL_HEADERS)
@@ -417,6 +460,37 @@ class TestSignatureVerifier:
         assert verifier.signing_string != ALL_HEADERS_SIGNING_STRING
         with pytest.raises(SignatureError, match="Signature is not valid") as e:
             verifier.verify()
+        assert e.value.correlation_id == context.correlation_id
+
+    def test_authorization_bad(self):
+        headers = DEFAULT_ORIGINAL_HEADERS.copy()
+        headers["Authorization"] = "bogus"  # does not match expected format
+        context = build_context(headers)
+        config = build_config()
+        definition = build_definition()
+        with pytest.raises(SignatureError, match="Authorization header is not a signature") as e:
+            SignatureVerifier(context=context, config=config, definition=definition)
+        assert e.value.correlation_id == context.correlation_id
+
+    @pytest.mark.parametrize("attribute", ["keyId", "algorithm", "signature"])
+    def test_authorization_missing_attribute(self, attribute):
+        headers = DEFAULT_ORIGINAL_HEADERS.copy()
+        headers["Authorization"] = DEFAULT_AUTHORIZATION.replace(attribute, "bogus")
+        context = build_context(headers)
+        config = build_config()
+        definition = build_definition()
+        with pytest.raises(SignatureError, match="Signature does not contain: %s" % attribute) as e:
+            SignatureVerifier(context=context, config=config, definition=definition)
+        assert e.value.correlation_id == context.correlation_id
+
+    def test_authorization_invalid_algorithm(self):
+        headers = DEFAULT_ORIGINAL_HEADERS.copy()
+        headers["Authorization"] = DEFAULT_AUTHORIZATION.replace("rsa-sha256", "bogus")
+        context = build_context(headers)
+        config = build_config()
+        definition = build_definition()
+        with pytest.raises(SignatureError, match="Algorithm not supported: bogus") as e:
+            SignatureVerifier(context=context, config=config, definition=definition)
         assert e.value.correlation_id == context.correlation_id
 
 
