@@ -1,0 +1,4 @@
+checkSignatures: true
+clockSkewSec: 300
+keyserverUrl: https://key.smartthings.com
+logJson: false
