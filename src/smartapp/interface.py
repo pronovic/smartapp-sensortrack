@@ -695,23 +695,25 @@ CONFIG_SETTING_BY_TYPE = {
 }
 
 
+@frozen
 class SmartAppError(Exception):
     """An error tied to the SmartApp implementation."""
 
-    def __init__(self, message: str, correlation_id: Optional[str] = None):
-        super().__init__(message)
-        self.message = message
-        self.correlation_id = correlation_id
+    message: str
+    correlation_id: Optional[str] = None
 
 
+@frozen
 class InternalError(SmartAppError):
     """An internal error was encountered processing a lifecycle event."""
 
 
+@frozen
 class BadRequestError(SmartAppError):
     """A lifecycle event was invalid."""
 
 
+@frozen
 class SignatureError(SmartAppError):
     """The request signature on a lifecycle event was invalid."""
 

@@ -64,7 +64,7 @@ from .interface import SignatureError, SmartAppDefinition, SmartAppDispatcherCon
 )
 def retrieve_public_key(key_server_url: str, key_id: str) -> str:
     """Retrieve a public key, caching the result."""
-    # Note that the key ID is assumed to be URL-safe, and so we don't encode it
+    # Note that the key ID is assumed to be URL-safe per notes in the SmartThings spec, so we don't encode it
     url = "%s/%s" % (key_server_url, key_id.lstrip("/"))
     response = requests.get(url)
     response.raise_for_status()
@@ -198,9 +198,7 @@ class SignatureVerifier:
     def retrieve_public_key(self) -> str:
         """Retrieve the configured public key."""
         try:
-            key = retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
-            logging.debug("[%s] Public key [%s]: \n%s", self.correlation_id, self.key_id, key)
-            return key
+            return retrieve_public_key(self.keyserver_url, self.key_id)  # will retry automatically
         except RequestException as e:
             raise SignatureError("Failed to retrieve key [%s]" % self.key_id, self.correlation_id) from e
 
