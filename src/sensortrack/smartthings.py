@@ -11,6 +11,8 @@ from typing import Dict, Optional, Union
 import requests
 from attrs import field, frozen
 
+from sensortrack.config import config
+
 BASE_API_URL = "https://api.smartthings.com"
 
 
@@ -67,7 +69,7 @@ class SmartThings:
 
 def _url(endpoint: str) -> str:
     """Build a URL based on API configuration."""
-    return "%s%s" % (BASE_API_URL, endpoint)
+    return "%s%s" % (config().smartthings.base_url, endpoint)
 
 
 def _raise_for_status(response: requests.Response) -> None:
