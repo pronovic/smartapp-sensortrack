@@ -32,28 +32,33 @@ class Version(BaseModel):
     api: str = Field(...)
 
 
+def _generic_error_handler(e: Exception, status_code: int, message: str) -> Response:
+    """Generic error handle that properly logs the entire exception context."""
+    try:
+        raise e
+    except:  # pylint: disable=bare-except:
+        logging.exception(message)
+    return Response(status_code=status_code)
+
+
 @API.exception_handler(BadRequestError)
 async def bad_request_handler(_: Request, e: BadRequestError) -> Response:
-    logging.error("[%s] Bad request: %s", e.correlation_id, e)
-    return Response(status_code=400)
+    return _generic_error_handler(e, 400, "[%s] Bad request: %s" % (e.correlation_id, e))
 
 
 @API.exception_handler(SignatureError)
 async def signature_error_handler(_: Request, e: SignatureError) -> Response:
-    logging.error("[%s] Signature error: %s", e.correlation_id, e)
-    return Response(status_code=401)
+    return _generic_error_handler(e, 401, "[%s] Signature error: %s" % (e.correlation_id, e))
 
 
 @API.exception_handler(SmartAppError)
 async def internal_error_handler(_: Request, e: SmartAppError) -> Response:
-    logging.error("[%s] Internal error: %s", e.correlation_id, e)
-    return Response(status_code=500)
+    return _generic_error_handler(e, 500, "[%s] Internal error: %s" % (e.correlation_id, e))
 
 
 @API.exception_handler(Exception)
 async def exception_handler(_: Request, e: Exception) -> Response:
-    logging.error("Internal error: %s", e)
-    return Response(status_code=500)
+    return _generic_error_handler(e, 500, "Internal error: %s" % e)
 
 
 @API.on_event("startup")

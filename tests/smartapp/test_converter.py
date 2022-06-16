@@ -4,11 +4,12 @@
 
 import os
 from json import JSONDecodeError
+from unittest.mock import patch
 
 import pendulum
 import pytest
 
-from smartapp.converter import CONVERTER
+from smartapp.converter import CONVERTER, deserialize_datetime, serialize_datetime
 from smartapp.interface import *
 from tests.testutil import load_data
 
@@ -16,6 +17,8 @@ FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures/samples")
 REQUEST_DIR = os.path.join(FIXTURE_DIR, "request")
 RESPONSE_DIR = os.path.join(FIXTURE_DIR, "response")
 SETTINGS_DIR = os.path.join(FIXTURE_DIR, "settings")
+
+NOW = pendulum.datetime(2022, 6, 1, 2, 3, 4, microsecond=5, tz="UTC")
 
 
 @pytest.fixture
@@ -49,6 +52,49 @@ def validate_yaml_roundtrip(yaml, expected, cls):
         assert obj == expected
     converted = CONVERTER.from_yaml(CONVERTER.to_yaml(expected), cls)
     assert converted == expected and converted is not expected
+
+
+class TestDatetime:
+    @pytest.mark.parametrize(
+        "datetime,expected",
+        [
+            (pendulum.datetime(2017, 9, 13, 4, 18, 12, microsecond=469000, tz="UTC"), "2017-09-13T04:18:12.469Z"),
+            (pendulum.datetime(2017, 9, 13, 4, 18, 12, microsecond=0, tz="UTC"), "2017-09-13T04:18:12.000Z"),
+            (pendulum.datetime(1970, 1, 1, 0, 0, 0, microsecond=0, tz="UTC"), "1970-01-01T00:00:00.000Z"),
+        ],
+    )
+    def test_serialize_datetime(self, datetime, expected):
+        assert serialize_datetime(datetime) == expected
+
+    @patch("smartapp.converter.now")
+    @pytest.mark.parametrize(
+        "datetime,expected",
+        [
+            ("2017-09-13T04:18:12.469Z", pendulum.datetime(2017, 9, 13, 4, 18, 12, microsecond=469000, tz="UTC")),
+            ("2017-09-13T04:18:12.000Z", pendulum.datetime(2017, 9, 13, 4, 18, 12, microsecond=0, tz="UTC")),
+            ("2017-09-13T04:18:12Z", pendulum.datetime(2017, 9, 13, 4, 18, 12, microsecond=0, tz="UTC")),
+            ("2022-06-16T15:17:24.883Z", pendulum.datetime(2022, 6, 16, 10, 17, 24, microsecond=883000, tz="America/Chicago")),
+            ("2022-06-16T15:17:24.000Z", pendulum.datetime(2022, 6, 16, 10, 17, 24, microsecond=0, tz="America/Chicago")),
+            ("2022-06-16T15:16:24Z", pendulum.datetime(2022, 6, 16, 10, 16, 24, microsecond=0, tz="America/Chicago")),
+            ("1970-01-01T00:00:00.000Z", NOW),
+            ("1970-01-01T00:00:00Z", NOW),
+        ],
+    )
+    def test_deserialize_datetime(self, now, datetime, expected):
+        now.return_value = NOW
+        assert deserialize_datetime(datetime) == expected
+
+    @pytest.mark.parametrize(
+        "datetime",
+        [
+            "",  # empty
+            "2017-09-13T04:18:12.469",  # no trailing Z
+            "2017-09-13T04:18:12",  # no trailing Z
+        ],
+    )
+    def test_deserialize_datetim_invalid(self, datetime):
+        with pytest.raises(ValueError, match="Unknown datetime format"):
+            deserialize_datetime(datetime)
 
 
 class TestConvertSettings:
