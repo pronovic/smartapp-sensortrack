@@ -11,9 +11,17 @@ Classes that are part of the SmartApp interface.
 #   https://developer-preview.smartthings.com/docs/connected-services/lifecycles/
 #   https://developer-preview.smartthings.com/docs/connected-services/configuration/
 #
-# I can't find any official documentation about the event structure, only the Javascript code referenced below.
-# So, the structure below mostly mirrors the definitions within the AppEvent namespace, except I've excluded most enums.
-# Also, there is a scene lifecycle class (but no event id), and an installed app event id (but no class), so I've ignored those.
+# I can't find any official documentation about the event structure, only the Javascript
+# reference implementation.  So, the structure below mostly mirrors the definitions within
+# the AppEvent namespace, except I've excluded most enums and made them strings instead.
+# Also, there is a scene lifecycle class (but no event id), and an installed app event id
+# (but no class), so I've ignored those.
+#
+# In some cases, real event JSON has extra fields that don't appear in the reference
+# implementation.  It's not clear whether those truly are optional, or whether they're
+# simply new fields that haven't yet been documented.  Where I am aware of these fields,
+# I am treating them as Optional, so at least callers have access to the values if provided.
+#
 # See: https://github.com/SmartThingsCommunity/smartapp-sdk-nodejs/blob/f1ef97ec9c6dc270ba744197b842c6632c778987/lib/lifecycle-events.d.ts
 
 from abc import ABC, abstractmethod
@@ -321,11 +329,14 @@ class DeviceEvent:
     subscription_name: str
     event_id: str
     location_id: str
+    owner_id: Optional[str] = None
+    owner_type: Optional[str] = None
     device_id: str
     component_id: str
     capability: str
     attribute: str
     value: str
+    value_type: Optional[str] = None  # seems to not always be accurate based on my testing
     state_change: bool
     data: Optional[Dict[str, Any]] = None
 
