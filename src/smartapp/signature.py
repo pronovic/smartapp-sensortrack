@@ -35,7 +35,7 @@ Verify HTTP signatures on SmartApp lifecycle event requests.
 import logging
 import re
 import urllib.parse
-from base64 import b64decode, b64encode
+from base64 import b64decode
 from functools import lru_cache
 from typing import List, Mapping, Optional
 
@@ -96,7 +96,6 @@ class SignatureVerifier:
     keyserver_url: str = field(init=False)
     algorithm: str = field(init=False)
     signature: str = field(init=False)
-    digest: str = field(init=False)
     signing_string: str = field(init=False)
 
     @correlation_id.default
@@ -177,21 +176,14 @@ class SignatureVerifier:
     def _default_signature(self) -> str:
         return self.signing_attributes["signature"]
 
-    @digest.default
-    def _default_digest(self) -> str:
-        data = self.body.encode()
-        digest = SHA256.new(data=data).digest()
-        base64 = b64encode(digest).decode("ascii")
-        return "SHA-256=%s" % base64
-
     @signing_string.default
     def _signing_string(self) -> str:
+        # The only "special" component in the signing string is "(request-target)"
+        # Everything else must be found as a header, and we should fail if it's not
         components = []
         for name in self.signing_headers:
             if name == "(request-target)":
                 components.append("(request-target): %s" % self.request_target)
-            elif name == "digest":
-                components.append("digest: %s" % self.digest)
             else:
                 components.append("%s: %s" % (name.lower(), self.header(name)))
         return "\n".join(components).rstrip("\n")

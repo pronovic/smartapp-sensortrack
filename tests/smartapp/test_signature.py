@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
-# pylint: disable=redefined-outer-name:
+# pylint: disable=redefined-outer-name,line-too-long:
 from typing import Dict, Optional
 from unittest.mock import MagicMock, call, patch
 
@@ -30,7 +30,42 @@ from smartapp.signature import SignatureVerifier, retrieve_public_key
 #
 # In Joyent's documentation, there are two cases: the "default" case and the "all
 # headers" case.  Below, the expected results are DEFAULTS_* and ALL_HEADERS_*.
-
+#
+# As a santity check, you can also verify behavior using OpenSSL::
+#
+#    #!/bin/bash
+#
+#    # Create the signing text per definition in the spec
+#    # Note newlines between items but not at the end
+#    printf "(request-target): post /foo?param=value&pet=dog\n" > signing_string.txt
+#    printf "host: example.com\n" >> signing_string.txt
+#    printf "date: Thu, 05 Jan 2014 21:31:40 GMT\n" >> signing_string.txt
+#    printf "content-type: application/json\n" >> signing_string.txt
+#    printf "digest: SHA-256=X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=\n" >> signing_string.txt
+#    printf "content-length: 18" >> signing_string.txt
+#
+#    # Create a SHA-256 signature in base64 format, the string from Joyent's example
+#    printf "Ef7MlxLXoBovhil3AlyjtBwAL9g4TN3tibLj7uuNB3CROat/9KaeQ4hW2NiJ+pZ6HQEOx9vYZAyi+7cmIkmJszJCut5kQLAwuX+Ms/mUFvpKlSo9StS2bMXDBNjOh4Auj774GFj4gwjS+3NhFeoqyr/MuN6HsEnkvn6zdgfE2i0=" > signature.base64.joyent
+#
+#    # Create SHA-256 signature in base64 format, using OpenSSL and the signing string
+#    cat signing_string.txt | openssl dgst -binary -sign private.pem -sha256 | openssl enc -base64 -A > signature.base64.openssl
+#
+#    # Check that Joyent example and OpenSSL give same result
+#    diff -Naur signature.base64.joyent signature.base64.openssl
+#
+#    # Decode the bas64 format, leaving raw bytes
+#    cat signature.base64.openssl | openssl enc -A -d -base64 > signature
+#
+#    # Use OpenSSL's verify signature mechanism to check the raw byte signature against the signing string
+#    cat signing_string.txt | openssl dgst -sha256 -verify public.pem -signature ./signature
+#
+#    # Clean up temporary files
+#    rm -f signing_string.txt signature.base64.* signature.*
+#
+# When you run this, you get should::
+#
+#     $ sh check.sh
+#     Verified OK
 
 METHOD = "POST"
 HOST = "example.com"
@@ -184,7 +219,6 @@ class TestSignatureVerifier:
         assert verifier.keyserver_url == KEYSERVER_URL
         assert verifier.algorithm == ALGORITHM
         assert verifier.signature == DEFAULT_SIGNATURE
-        assert verifier.digest == DIGEST
         assert verifier.signing_string == DEFAULT_SIGNING_STRING
 
     def test_all_headers_signature_attributes(self):
@@ -206,7 +240,6 @@ class TestSignatureVerifier:
         assert verifier.keyserver_url == KEYSERVER_URL
         assert verifier.algorithm == ALGORITHM
         assert verifier.signature == ALL_HEADERS_SIGNATURE
-        assert verifier.digest == DIGEST
         assert verifier.signing_string == ALL_HEADERS_SIGNING_STRING
 
     def test_header(self):
