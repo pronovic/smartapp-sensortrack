@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
-# pylint: disable=unnecessary-pass:
+# pylint: disable=unnecessary-pass,too-many-locals:
 
 """
 SmartApp event handler.
@@ -63,6 +63,8 @@ class EventHandler(SmartAppEventHandler):
         url = config().influxdb.url
         org = config().influxdb.org
         token = config().influxdb.token
+        bucket = config().influxdb.bucket
+        logging.info("URL: %s, org=%s, token=%s", url, org, token)
         with InfluxDBClient(url=url, org=org, token=token) as client:
             points = []
             write_api = client.write_api()
@@ -74,5 +76,5 @@ class EventHandler(SmartAppEventHandler):
                     measurement = float(event.device_event.value)  # the actual value, seems to be a float
                     point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
                     points.append(point)
-            write_api.write(bucket="sensors", record=points)
+            write_api.write(bucket=bucket, record=points)
             logging.debug("Completed persisting %d points of data", len(points))

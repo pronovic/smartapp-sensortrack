@@ -209,7 +209,8 @@ run_server() {
       --port 8080 \
       --host 0.0.0.0 \
       --app-dir src --reload \
-      --log-config config/local/sensortrack/server/logging.yaml
+      --log-config config/local/sensortrack/server/logging.yaml \
+      --env-file config/local/sensortrack/server/server.env
 }
 
 # Run InfluxDB at localhost:8086

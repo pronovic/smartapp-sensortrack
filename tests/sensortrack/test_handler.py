@@ -74,6 +74,7 @@ class TestEventHandler:
                 url="url",
                 org="org",
                 token="token",
+                bucket="bucket",
             ),
         )
 
@@ -94,7 +95,7 @@ class TestEventHandler:
         (_, kwargs) = client.__enter__.return_value.write_api.return_value.write.call_args
         bucket: str = kwargs["bucket"]
         points: List[Point] = kwargs["record"]
-        assert bucket == "sensors"
+        assert bucket == "bucket"
         assert len(points) == 1
         assert len(points[0]._tags) == 2
         assert len(points[0]._fields) == 1

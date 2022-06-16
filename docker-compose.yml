@@ -10,6 +10,8 @@ services:
       - INFLUXDB_DB=db0
       - INFLUXDB_ADMIN_USER=admin
       - INFLUXDB_ADMIN_PASSWORD=admin
+      - DOCKER_INFLUXDB_INIT_ORG=iot
+      - DOCKER_INFLUXDB_INIT_BUCKET=metrics
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=admintoken
 volumes:
   influxdb-storage:

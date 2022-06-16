@@ -40,6 +40,7 @@ class InfluxDbConfig:
     url: str
     org: str
     token: str
+    bucket: str
 
 
 @frozen
