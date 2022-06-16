@@ -13,8 +13,8 @@ from smartapp.interface import SmartAppDefinition, SmartAppDispatcherConfig
 from .handler import EventHandler
 
 _CONFIG_PACKAGE = "sensortrack.data"
-_CONFIG_FILE = "config.yaml"
-_DEFINITION_FILE = "definition.yaml"
+_CONFIG_FILE = "dispatcher.yaml"  # configuration for the dispatcher
+_DEFINITION_FILE = "definition.yaml"  # definition of the SmartApp
 
 
 def _load_config() -> SmartAppDispatcherConfig:
