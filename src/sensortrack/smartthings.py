@@ -5,7 +5,6 @@
 """
 SmartThings API client
 """
-import uuid
 from contextvars import ContextVar
 from typing import Dict, Optional, Union
 
@@ -20,7 +19,6 @@ class SmartThingsClientError(Exception):
     """An error invoking the SmartThings API."""
 
     message: str
-    correlation_id: Optional[str] = None
     request_body: Optional[Union[bytes, str]] = None
     response_body: Optional[str] = None
 
@@ -31,7 +29,6 @@ class SmartThingsApiContext:
     token: str
     app_id: str
     location_id: str
-    correlation_id: str
     headers: Dict[str, str] = field(init=False)
 
     # noinspection PyUnresolvedReferences
@@ -42,7 +39,6 @@ class SmartThingsApiContext:
             "Accept-Language": "en_US",
             "Content-Type": "application/json",
             "Authorization": "Bearer %s" % self.token,
-            "X-ST-Correlation": self.correlation_id,
         }
 
 
@@ -59,9 +55,6 @@ class SmartThings:
                 token=token,
                 app_id=app_id,
                 location_id=location_id,
-                correlation_id=str(
-                    uuid.uuid4(),
-                ),
             )
         )
 
@@ -70,10 +63,6 @@ class SmartThings:
 
     def __exit__(self, _type, value, traceback) -> None:  # type: ignore[no-untyped-def]
         CONTEXT.reset(self.context)
-
-    @property
-    def correlation_id(self) -> str:
-        return CONTEXT.get().correlation_id
 
 
 def _url(endpoint: str) -> str:
@@ -88,7 +77,6 @@ def _raise_for_status(response: requests.Response) -> None:
     except requests.models.HTTPError as e:
         raise SmartThingsClientError(
             message="Failed SmartThings API call: %s" % e,
-            correlation_id=CONTEXT.get().correlation_id,
             request_body=response.request.body,
             response_body=response.text,
         ) from e
