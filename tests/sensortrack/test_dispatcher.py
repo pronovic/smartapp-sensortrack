@@ -1,20 +1,32 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
-from sensortrack.dispatcher import DISPATCHER
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from sensortrack.dispatcher import dispatcher, reset
 from sensortrack.handler import EventHandler
+from smartapp.interface import SmartAppDispatcherConfig
 
 
 class TestDispatcher:
-    def test_dispatcher(self):
-        # Check all configuration, since some of these values are important for security
-        assert DISPATCHER.config.check_signatures is True
-        assert DISPATCHER.config.clock_skew_sec == 300
-        assert DISPATCHER.config.keyserver_url == "https://key.smartthings.com"
-        assert DISPATCHER.config.log_json is False
+    @pytest.fixture(autouse=True)
+    def cleanup(self):
+        """Reset singleton before and after tests."""
+        reset()
+        yield
+        reset()
+
+    @patch("sensortrack.dispatcher.config")
+    def test_dispatcher(self, config):
+        config.return_value = MagicMock(dispatcher=SmartAppDispatcherConfig())
+
+        # Check that we loaded dispatcher configuration from global state
+        assert dispatcher().config is not None
 
         # Spot-check the SmartApp definition, just to be sure it loaded ok from disk
-        assert DISPATCHER.definition.id == "sensor-track"
-        assert DISPATCHER.definition.name == "Sensor Tracking"
+        assert dispatcher().definition.id == "sensor-track"
+        assert dispatcher().definition.name == "Sensor Tracking"
 
         # Confirm that event handler is set as expected
-        assert isinstance(DISPATCHER.event_handler, EventHandler)
+        assert isinstance(dispatcher().event_handler, EventHandler)

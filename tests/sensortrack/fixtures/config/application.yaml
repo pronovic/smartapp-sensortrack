@@ -1,0 +1,11 @@
+dispatcher:
+   checkSignatures: true
+   clockSkewSec: 300
+   keyserverUrl: https://key.smartthings.com
+   logJson: false
+smartthings:
+   baseUrl: https://api.smartthings.com
+influxdb:
+   url: {SENSORTRACK_INFLUXDB_URL}
+   org: {SENSORTRACK_INFLUXDB_ORG}
+   token: {SENSORTRACK_INFLUXDB_TOKEN}

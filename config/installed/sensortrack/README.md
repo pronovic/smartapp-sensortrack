@@ -1,1 +1,1 @@
-Holds all server configuration for sensortrack
+Holds all server configuration for sensortrack.

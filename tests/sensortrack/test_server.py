@@ -70,15 +70,15 @@ class TestRoutes:
         assert response.status_code == 200
         assert response.json() == {"package": "xxx", "api": API_VERSION}
 
-    @patch("sensortrack.server.DISPATCHER")
-    def test_smartapp(self, dispatcher):
-        dispatcher.dispatch = MagicMock(return_value="result")
+    @patch("sensortrack.server.dispatcher")
+    def test_smartapp(self, d):
+        d.return_value = MagicMock(dispatch=MagicMock(return_value="result"))
         response = CLIENT.post(url="/smartapp", headers={"a": "b"}, data="body")
         assert response.status_code == 200
         assert codecs.decode(response.content) == "result"
         assert response.headers["content-type"] == "application/json"
-        dispatcher.dispatch.assert_called_once()
-        _, kwargs = dispatcher.dispatch.call_args  # needed because FastAPI enhances the headers; we can't check equality
+        d.return_value.dispatch.assert_called_once()
+        (_, kwargs) = d.return_value.dispatch.call_args  # needed because FastAPI enhances the headers; we can't check equality
         context: SmartAppRequestContext = kwargs["context"]
         assert context.headers["a"] == "b"  # just make sure our headers get passed, among others
         assert context.body == "body"

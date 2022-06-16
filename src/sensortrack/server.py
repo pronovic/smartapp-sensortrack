@@ -11,9 +11,8 @@ from importlib.metadata import version as metadata_version
 from fastapi import FastAPI, Request, Response
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module:
 
+from sensortrack.dispatcher import dispatcher
 from smartapp.interface import BadRequestError, SignatureError, SmartAppError, SmartAppRequestContext
-
-from .dispatcher import DISPATCHER
 
 API_VERSION = "1.0.0"
 API = FastAPI(version=API_VERSION, docs_url=None, redoc_url=None)  # no Swagger or ReDoc endpoints
@@ -91,5 +90,5 @@ async def smartapp(request: Request) -> Response:
     headers = request.headers
     body = codecs.decode(await request.body(), "UTF-8")
     context = SmartAppRequestContext(headers=headers, body=body)
-    content = DISPATCHER.dispatch(context=context)
+    content = dispatcher().dispatch(context=context)
     return Response(status_code=200, content=content, media_type="application/json")

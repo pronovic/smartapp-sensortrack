@@ -120,9 +120,13 @@ Usage: run <command>
 - run docs -o: Build the Spinx documentation and open in a browser
 - run tox: Run the Tox test suite used by the GitHub CI action
 - run server: Run the REST server at localhost:8080
+- run influxdb: Run the InfluxDB server at localhost:8086
 - run release: Release a specific version and tag the code
 - run publish: Publish the current code to PyPI and push to GitHub
 ```
+
+For local testing, use `run influxdb` in one window and `run server` in another.
+The standard local configuration is able to connect to the database.
 
 ## Integration with PyCharm
 

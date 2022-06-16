@@ -63,25 +63,19 @@ def deserialize_datetime(datetime: str) -> DateTime:
 
 
 # noinspection PyMethodMayBeStatic
-class SmartAppConverter(GenConverter):
+class StandardConverter(GenConverter):
     """
-    Cattrs converter to serialize/deserialize SmartApp-related classes, supporting both JSON and YAML.
+    Standard cattrs converter supporting both JSON and YAML and using camelCase for fields.
     """
 
     # Note: we need to inherit from GenConverter and not Converter because we use PEP563 (postponed) annotations
     # See: https://stackoverflow.com/a/72539298/2907667 and https://github.com/python-attrs/cattrs/issues/41
 
-    # The factory hooks convert snake case to camel case, so we can use normal coding standards with SmartThings JSON
-    # It's also applied to YAML, which isn't strictly necessary (we don't send or receive it) but is easier to read this way
+    # The factory hooks convert snake case to camel case
     # See: https://cattrs.readthedocs.io/en/latest/usage.html#using-factory-hooks
 
     def __init__(self) -> None:
         super().__init__()
-        self.register_unstructure_hook(DateTime, self._unstructure_datetime)
-        self.register_structure_hook(DateTime, self._structure_datetime)
-        self.register_structure_hook(ConfigValue, self._structure_config_value)
-        self.register_structure_hook(ConfigSetting, self._structure_config_setting)
-        self.register_structure_hook(LifecycleRequest, self._structure_request)
         self.register_unstructure_hook_factory(has, self._unstructure_camel_case)
         self.register_structure_hook_factory(has, self._structure_camel_case)
 
@@ -113,6 +107,21 @@ class SmartAppConverter(GenConverter):
     def _structure_camel_case(self, cls):  # type: ignore
         """Automatic snake_case to camelCase conversion when deserializing any class."""
         return make_dict_structure_fn(cls, self, **{a.name: override(rename=self._to_camel_case(a.name)) for a in fields(cls)})
+
+
+# noinspection PyMethodMayBeStatic
+class SmartAppConverter(StandardConverter):
+    """
+    Cattrs converter to serialize/deserialize SmartApp-related classes, supporting both JSON and YAML.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.register_unstructure_hook(DateTime, self._unstructure_datetime)
+        self.register_structure_hook(DateTime, self._structure_datetime)
+        self.register_structure_hook(ConfigValue, self._structure_config_value)
+        self.register_structure_hook(ConfigSetting, self._structure_config_setting)
+        self.register_structure_hook(LifecycleRequest, self._structure_request)
 
     def _unstructure_datetime(self, datetime: DateTime) -> str:
         """Serialize a DateTime to a string."""
