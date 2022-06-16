@@ -5,17 +5,21 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
+from influxdb_client.client.exceptions import InfluxDBError
 
 from sensortrack.server import (
     API,
     API_VERSION,
     bad_request_handler,
     exception_handler,
-    internal_error_handler,
+    influxdb_error_handler,
     shutdown_event,
     signature_error_handler,
+    smartapp_error_handler,
+    smartthings_client_error_handler,
     startup_event,
 )
+from sensortrack.smartthings import SmartThingsClientError
 from smartapp.interface import BadRequestError, InternalError, SignatureError, SmartAppRequestContext
 
 CLIENT = TestClient(API)
@@ -35,9 +39,19 @@ class TestErrorHandlers:
         response = await signature_error_handler(None, e)
         assert response.status_code == 401
 
-    async def test_internal_error_handler(self):
+    async def test_smartapp_error_handler(self):
         e = InternalError("hello")
-        response = await internal_error_handler(None, e)
+        response = await smartapp_error_handler(None, e)
+        assert response.status_code == 500
+
+    async def test_smartthings_client_error_handler(self):
+        e = SmartThingsClientError("hello")
+        response = await smartthings_client_error_handler(None, e)
+        assert response.status_code == 500
+
+    async def test_influxdb_error_handler(self):
+        e = InfluxDBError(message="hello")
+        response = await influxdb_error_handler(None, e)
         assert response.status_code == 500
 
     async def test_exception_handler(self):

@@ -9,9 +9,11 @@ import logging
 from importlib.metadata import version as metadata_version
 
 from fastapi import FastAPI, Request, Response
+from influxdb_client.client.exceptions import InfluxDBError
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module:
 
 from sensortrack.dispatcher import dispatcher
+from sensortrack.smartthings import SmartThingsClientError
 from smartapp.interface import BadRequestError, SignatureError, SmartAppError, SmartAppRequestContext
 
 API_VERSION = "1.0.0"
@@ -51,8 +53,18 @@ async def signature_error_handler(_: Request, e: SignatureError) -> Response:
 
 
 @API.exception_handler(SmartAppError)
-async def internal_error_handler(_: Request, e: SmartAppError) -> Response:
-    return _generic_error_handler(e, 500, "[%s] Internal error: %s" % (e.correlation_id, e))
+async def smartapp_error_handler(_: Request, e: SmartAppError) -> Response:
+    return _generic_error_handler(e, 500, "[%s] SmartApp error: %s" % (e.correlation_id, e))
+
+
+@API.exception_handler(SmartThingsClientError)
+async def smartthings_client_error_handler(_: Request, e: SmartAppError) -> Response:
+    return _generic_error_handler(e, 500, "SmartThings client error: %s" % e)
+
+
+@API.exception_handler(InfluxDBError)
+async def influxdb_error_handler(_: Request, e: SmartAppError) -> Response:
+    return _generic_error_handler(e, 500, "InfluxDB error: %s" % e)
 
 
 @API.exception_handler(Exception)

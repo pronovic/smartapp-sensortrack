@@ -8,12 +8,10 @@ SmartApp event handler.
 import logging
 from typing import Optional
 
-from sensortrack.smartthings import (
-    SmartThings,
-    SmartThingsClientError,
-    subscribe_to_humidity_events,
-    subscribe_to_temperature_events,
-)
+from influxdb_client import InfluxDBClient, Point
+
+from sensortrack.config import config
+from sensortrack.smartthings import SmartThings, subscribe_to_humidity_events, subscribe_to_temperature_events
 from smartapp.interface import (
     ConfigurationRequest,
     ConfirmationRequest,
@@ -40,15 +38,13 @@ class EventHandler(SmartAppEventHandler):
 
     def handle_install(self, correlation_id: Optional[str], request: InstallRequest) -> None:
         """Handle an INSTALL lifecycle request."""
-        try:
-            token = request.install_data.auth_token
-            app_id = request.install_data.installed_app.installed_app_id
-            location_id = request.install_data.installed_app.location_id
-            with SmartThings(token=token, app_id=app_id, location_id=location_id):
-                subscribe_to_temperature_events()
-                subscribe_to_humidity_events()
-        except SmartThingsClientError as e:
-            logging.exception("Failed to handle install event: %s", e.message)
+        token = request.install_data.auth_token
+        app_id = request.install_data.installed_app.installed_app_id
+        location_id = request.install_data.installed_app.location_id
+        with SmartThings(token=token, app_id=app_id, location_id=location_id):
+            subscribe_to_temperature_events()
+            subscribe_to_humidity_events()
+            logging.info("Completed subscribing to device events for app %s", app_id)
 
     def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
         """Handle an UPDATE lifecycle request."""
@@ -64,4 +60,19 @@ class EventHandler(SmartAppEventHandler):
 
     def handle_event(self, correlation_id: Optional[str], request: EventRequest) -> None:
         """Handle an EVENT lifecycle request."""
-        pass  # TODO: handle events where we get data when sensors change state (not sure exactly how this works)
+        url = config().influxdb.url
+        org = config().influxdb.org
+        token = config().influxdb.token
+        with InfluxDBClient(url=url, org=org, token=token) as client:
+            points = []
+            write_api = client.write_api()
+            for event in request.event_data.events:
+                if event.device_event:
+                    attribute = event.device_event.attribute  # "temperature" or "humidity"
+                    location_id = event.device_event.location_id
+                    device_id = event.device_event.device_id
+                    measurement = float(event.device_event.value)  # the actual value, seems to be a float
+                    point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
+                    points.append(point)
+            write_api.write(bucket="sensors", record=points)
+            logging.debug("Completed persisting %d points of data", len(points))
