@@ -2,7 +2,7 @@
 
 ## Supported Platforms
 
-This code should work equivalently on MacOS, Linux, and Windows.
+This code runs as a daemon and is intended for use Linux and UNIX-like platforms.
 
 ## Packaging and Dependencies
 
