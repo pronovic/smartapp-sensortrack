@@ -19,6 +19,15 @@ class TestWeatherLocation:
         assert location == location.from_identifier(location.to_identifier())
 
 
+class TestPrivateFunctions:
+    def test_raise_for_status(self):
+        response = MagicMock()
+        response.raise_for_status = MagicMock()
+        response.raise_for_status.side_effect = HTTPError("hello")
+        with pytest.raises(WeatherClientError):
+            _raise_for_status(response)
+
+
 class TestPublicFunctions:
     @patch("sensortrack.weather._raise_for_status")
     @patch("sensortrack.weather.requests")
@@ -45,12 +54,3 @@ class TestPublicFunctions:
 
         assert temperature == 84.92  # expected result taken from Google, to sanity-check library
         assert humidity == 41.59
-
-
-class TestPrivateFunctions:
-    def test_raise_for_status(self):
-        response = MagicMock()
-        response.raise_for_status = MagicMock()
-        response.raise_for_status.side_effect = HTTPError("hello")
-        with pytest.raises(WeatherClientError):
-            _raise_for_status(response)
