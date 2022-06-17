@@ -12,21 +12,21 @@ param([string]$command)
 Switch ($command)
 {
     format {
-      Write-Output "Running black formatter..." 
+      Write-Output "Running black formatter..."
       poetry run black .
 
-      Write-Output "`nRunning isort formatter..." 
+      Write-Output "`nRunning isort formatter..."
       poetry run isort .
       Write-Output "done"
     }
 
     mypy {
-      Write-Output "Running mypy checks..." 
+      Write-Output "Running mypy checks..."
       poetry run mypy
     }
 
     pylint {
-      Write-Output "Running pylint checks..." 
+      Write-Output "Running pylint checks..."
       poetry run pylint -j 0 src/sensortrack tests
     }
 }
