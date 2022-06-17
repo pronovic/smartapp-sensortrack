@@ -13,6 +13,7 @@
 - [x] figure out InfluxDB 
 - [x] Go through Librarian and check whether any of the events can be extended further
 - [x] Split out smartapp into its own Python package
-- [ ] Write documentation and publish code
+- [x] Write documentation 
+- [ ] Publish code to GitHub
 - [ ] Get server running on mercury and writing to InfluxDB on venus
 - [ ] See whether it's possible to get weather events to track outdoor temps along with indoor
