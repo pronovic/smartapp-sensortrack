@@ -11,18 +11,18 @@ Classes that are part of the SmartApp interface.
 #   https://developer-preview.smartthings.com/docs/connected-services/lifecycles/
 #   https://developer-preview.smartthings.com/docs/connected-services/configuration/
 #
-# I can't find any official documentation about the event structure, only the Javascript
-# reference implementation.  So, the structure below mostly mirrors the definitions within
-# the AppEvent namespace, except I've excluded most enums and made them strings instead.
-# Also, there is a scene lifecycle class (but no event id), and an installed app event id
-# (but no class), so I've ignored those.
+# There is not any public documentation about event structure, only the Javascript
+# reference implementation here:
 #
-# In some cases, real event JSON has extra fields that don't appear in the reference
-# implementation.  It's not clear whether those truly are optional, or whether they're
-# simply new fields that haven't yet been documented.  Where I am aware of these fields,
-# I am treating them as Optional, so at least callers have access to the values if provided.
+#   https://github.com/SmartThingsCommunity/smartapp-sdk-nodejs/blob/f1ef97ec9c6dc270ba744197b842c6632c778987/lib/lifecycle-events.d.ts
 #
-# See: https://github.com/SmartThingsCommunity/smartapp-sdk-nodejs/blob/f1ef97ec9c6dc270ba744197b842c6632c778987/lib/lifecycle-events.d.ts
+# However, as of this writitng, even that reference implementation is not fully up-to-date
+# with the JSON that is being returned for some events I have examined in my testing.
+#
+# I have access to private documentation that shows all of the attributes.  However, that
+# documentation doesn't always make it clear which attributes will always be included and
+# which are optional.  As compromise, I have decided to maintain the actual events as
+# dicts rather than true objects.  See further discussion below by the Event class.
 
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -85,14 +85,17 @@ class ConfigSettingType(Enum):
 class EventType(Enum):
     """Supported event types."""
 
-    DEVICE_EVENT = "DEVICE_EVENT"
-    DEVICE_LIFECYCLE_EVENT = "DEVICE_LIFECYCLE_EVENT"
-    DEVICE_HEALTH_EVENT = "DEVICE_HEALTH_EVENT"
-    HUB_HEALTH_EVENT = "HUB_HEALTH_EVENT"
     DEVICE_COMMANDS_EVENT = "DEVICE_COMMANDS_EVENT"
+    DEVICE_EVENT = "DEVICE_EVENT"
+    DEVICE_HEALTH_EVENT = "DEVICE_HEALTH_EVENT"
+    DEVICE_LIFECYCLE_EVENT = "DEVICE_LIFECYCLE_EVENT"
+    HUB_HEALTH_EVENT = "HUB_HEALTH_EVENT"
+    INSTALLED_APP_LIFECYCLE_EVENT = "INSTALLED_APP_LIFECYCLE_EVENT"
     MODE_EVENT = "MODE_EVENT"
-    TIMER_EVENT = "TIMER_EVENT"
+    SCENE_LIFECYCLE_EVENT = "SCENE_LIFECYCLE_EVENT"
     SECURITY_ARM_STATE_EVENT = "SECURITY_ARM_STATE_EVENT"
+    TIMER_EVENT = "TIMER_EVENT"
+    WEATHER_EVENT = "WEATHER_EVENT"
 
 
 class BooleanValue(str, Enum):
@@ -323,108 +326,24 @@ class InstalledApp:
 
 
 @frozen(kw_only=True)
-class DeviceEvent:
-    """A device event."""
-
-    subscription_name: str
-    event_id: str
-    location_id: str
-    owner_id: Optional[str] = None
-    owner_type: Optional[str] = None
-    device_id: str
-    component_id: str
-    capability: str
-    attribute: str
-    value: str
-    value_type: Optional[str] = None  # seems to not always be accurate based on my testing
-    state_change: bool
-    data: Optional[Dict[str, Any]] = None
-
-
-class DeviceLifecycleEvent:
-    """A device lifecycle event."""
-
-    lifecycle: str
-    event_id: str
-    location_id: str
-    device_id: str
-    device_name: str
-    principal: str
-
-
-@frozen(kw_only=True)
-class DeviceHealthEvent:
-    event_id: str
-    location_id: str
-    device_id: str
-    hub_id: str
-    status: str
-    reason: str
-
-
-@frozen(kw_only=True)
-class HubHealthEvent:
-    event_id: str
-    location_id: str
-    hub_id: str
-    status: str
-    reason: str
-
-
-@frozen(kw_only=True)
-class DeviceCommand:
-    component_id: str
-    capability: str
-    command: str
-    arguments: List[Any]  # TODO: exactly what do we get here?  Seems like this is too generic?
-
-
-@frozen(kw_only=True)
-class DeviceCommandsEvent:
-    event_id: str
-    device_id: str
-    profile_id: str
-    external_id: str
-    commands: List[DeviceCommand]
-
-
-@frozen(kw_only=True)
-class ModeEvent:
-    event_id: str
-    location_id: str
-    mode_id: str
-
-
-@frozen(kw_only=True)
-class TimerEvent:
-    event_id: str
-    name: str
-    type: str
-    time: DateTime
-    expression: str
-
-
-@frozen(kw_only=True)
-class SecurityArmStateEvent:
-    event_id: str
-    location_id: str
-    arm_state: str
-    optional_arguments: Dict[str, Any]
-
-
-@frozen(kw_only=True)
 class Event:
     """Holds the triggered event, one of several different attributes depending on event type."""
 
-    event_type: EventType
     event_time: Optional[DateTime] = None
-    device_event: Optional[DeviceEvent] = None
-    device_lifecycle_event: Optional[DeviceLifecycleEvent] = None
-    device_health_event: Optional[DeviceHealthEvent] = None
-    device_commands_event: Optional[DeviceCommandsEvent] = None
-    mode_event: Optional[ModeEvent] = None
-    timer_event: Optional[TimerEvent] = None
-    security_arm_state_event: Optional[SecurityArmStateEvent] = None
+    event_type: EventType
+    device_event: Optional[Dict[str, Any]] = None
+    device_lifecycle_event: Optional[Dict[str, Any]] = None
+    device_health_event: Optional[Dict[str, Any]] = None
+    device_commands_event: Optional[Dict[str, Any]] = None
+    mode_event: Optional[Dict[str, Any]] = None
+    timer_event: Optional[Dict[str, Any]] = None
+    scene_lifecycle_event: Optional[Dict[str, Any]] = None
+    security_arm_state_event: Optional[Dict[str, Any]] = None
+    hub_health_event: Optional[Dict[str, Any]] = None
+    installed_app_lifecycle_event: Optional[Dict[str, Any]] = None
+    weather_event: Optional[Dict[str, Any]] = None
+    weather_data: Optional[Dict[str, Any]] = None
+    air_quality_data: Optional[Dict[str, Any]] = None
 
 
 @frozen(kw_only=True)

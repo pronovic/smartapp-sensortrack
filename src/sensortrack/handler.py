@@ -16,6 +16,7 @@ from smartapp.interface import (
     ConfigurationRequest,
     ConfirmationRequest,
     EventRequest,
+    EventType,
     InstallRequest,
     OauthCallbackRequest,
     SmartAppEventHandler,
@@ -69,11 +70,11 @@ class EventHandler(SmartAppEventHandler):
             points = []
             write_api = client.write_api()
             for event in request.event_data.events:
-                if event.device_event:
-                    location_id = event.device_event.location_id
-                    device_id = event.device_event.device_id
-                    attribute = event.device_event.attribute  # "temperature" or "humidity"
-                    measurement = float(event.device_event.value)  # the actual value, seems to be a float
+                if event.event_type == EventType.DEVICE_EVENT and event.device_event:
+                    location_id = event.device_event["locationId"]
+                    device_id = event.device_event["deviceId"]
+                    attribute = event.device_event["attribute"]  # "temperature" or "humidity"
+                    measurement = float(event.device_event["value"])  # the actual value, seems to be a float
                     point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
                     points.append(point)
             write_api.write(bucket=bucket, record=points)

@@ -9,6 +9,7 @@ import pytest
 from influxdb_client import Point
 
 from sensortrack.handler import EventHandler
+from smartapp.interface import EventType
 
 CORRELATION_ID = "xxx"
 
@@ -56,15 +57,21 @@ class TestEventHandler:
             event_data=MagicMock(
                 events=[
                     MagicMock(
-                        device_event=None,  # represents any other kind of event
+                        event_type=EventType.TIMER_EVENT,  # represents any other kind of event
+                        device_event=None,
                     ),
                     MagicMock(
-                        device_event=MagicMock(
-                            location_id="l",
-                            device_id="d",
-                            attribute="t",
-                            value=23.7,
-                        ),
+                        event_type=EventType.DEVICE_EVENT,
+                        device_event=None,  # will be ignored unless it has both the correct event type and the dict
+                    ),
+                    MagicMock(
+                        event_type=EventType.DEVICE_EVENT,
+                        device_event={
+                            "locationId": "l",
+                            "deviceId": "d",
+                            "attribute": "t",
+                            "value": 23.7,
+                        },
                     ),
                 ]
             )

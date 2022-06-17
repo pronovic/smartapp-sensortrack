@@ -785,18 +785,17 @@ class TestConvertRequests:
                 events=[
                     Event(
                         event_type=EventType.DEVICE_EVENT,
-                        device_event=DeviceEvent(
-                            subscription_name="motion_sensors",
-                            event_id="736e3903-001c-4d40-b408-ff40d162a06b",
-                            location_id="499e28ba-b33b-49c9-a5a1-cce40e41f8a6",
-                            device_id="6f5ea629-4c05-4a90-a244-cc129b0a80c3",
-                            component_id="main",
-                            capability="motionSensor",
-                            attribute="motion",
-                            value="active",
-                            state_change=True,
-                            data=None,
-                        ),
+                        device_event={
+                            "subscriptionName": "motion_sensors",
+                            "eventId": "736e3903-001c-4d40-b408-ff40d162a06b",
+                            "locationId": "499e28ba-b33b-49c9-a5a1-cce40e41f8a6",
+                            "deviceId": "6f5ea629-4c05-4a90-a244-cc129b0a80c3",
+                            "componentId": "main",
+                            "capability": "motionSensor",
+                            "attribute": "motion",
+                            "value": "active",
+                            "stateChange": True,
+                        },
                     )
                 ],
             ),
@@ -852,13 +851,13 @@ class TestConvertRequests:
                 events=[
                     Event(
                         event_type=EventType.TIMER_EVENT,
-                        timer_event=TimerEvent(
-                            event_id="string",
-                            name="lights_off_timeout",
-                            type="CRON",
-                            time=pendulum.datetime(2017, 9, 13, 4, 18, 12, microsecond=469000, tz="UTC"),
-                            expression="string",
-                        ),
+                        timer_event={
+                            "eventId": "string",
+                            "name": "lights_off_timeout",
+                            "type": "CRON",
+                            "time": "2017-09-13T04:18:12.469Z",
+                            "expression": "string",
+                        },
                     )
                 ],
             ),
