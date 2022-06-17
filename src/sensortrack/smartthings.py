@@ -10,10 +10,9 @@ from typing import Dict, Optional, Union
 
 import requests
 from attrs import field, frozen
+from smartapp.converter import CONVERTER
 
 from sensortrack.config import config
-
-BASE_API_URL = "https://api.smartthings.com"
 
 
 @frozen
@@ -23,6 +22,20 @@ class SmartThingsClientError(Exception):
     message: str
     request_body: Optional[Union[bytes, str]] = None
     response_body: Optional[str] = None
+
+
+@frozen(kw_only=True)
+class Location:
+    """Details about a location."""
+
+    location_id: str
+    name: str
+    country_code: str
+    latitude: Optional[float]
+    longitude: Optional[float]
+    temperature_scale: str  # either "F" or "C"
+    time_zone_id: str
+    locale: str
 
 
 @frozen(kw_only=True)
@@ -100,6 +113,14 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
     }
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
     _raise_for_status(response)
+
+
+def retrieve_location() -> Location:
+    """Retrieve details about the location."""
+    url = _url("/locations/%s" % CONTEXT.get().location_id)
+    response = requests.get(url=url, headers=CONTEXT.get().headers)
+    _raise_for_status(response)
+    return CONVERTER.from_json(response.text, Location)
 
 
 def subscribe_to_temperature_events() -> None:

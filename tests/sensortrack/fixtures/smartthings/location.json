@@ -1,0 +1,19 @@
+{
+  "locationId": "15526d0a-XXXX-XXXX-XXXX-b6247aacbbb2",
+  "name": "My House",
+  "countryCode": "USA",
+  "latitude": 41.024654,
+  "longitude": -97.37219,
+  "regionRadius": 250,
+  "temperatureScale": "F",
+  "timeZoneId": "America/Chicago",
+  "locale": "en-US",
+  "backgroundImage": null,
+  "additionalProperties": {},
+  "parent": {
+    "type": "ACCOUNT",
+    "id": "a80c9f8a-XXXX-XXXX-XXXX-50ffe46f2b7d"
+  },
+  "created": 1632669303009,
+  "lastModified": 1636160258764
+}
