@@ -213,8 +213,8 @@ run_server() {
       --env-file config/local/sensortrack/server/server.env
 }
 
-# Run InfluxDB at localhost:8086
-run_influxdb() {
+# Run the InfluxDB & Grafana servers via docker-compose
+run_database() {
    docker-compose up
 }
 
@@ -365,8 +365,8 @@ case $1 in
       shift 1
       run_server $*
       ;;
-   influx*)
-      run_influxdb
+   database|influx*|grafana)
+      run_database
       ;;
    release)
       shift 1
@@ -395,7 +395,7 @@ case $1 in
       echo "- run docs -o: Build the Spinx documentation and open in a browser"
       echo "- run tox: Run the Tox test suite used by the GitHub CI action"
       echo "- run server: Run the REST server at localhost:8080"
-      echo "- run influxdb: Run the InfluxDB server at localhost:8086"
+      echo "- run database: Run the InfluxDB & Grafana servers via docker-compose"
       echo "- run release: Release a specific version and tag the code"
       echo "- run publish: Publish the current code to PyPI and push to GitHub"
       echo ""

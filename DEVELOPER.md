@@ -120,7 +120,7 @@ Usage: run <command>
 - run docs -o: Build the Spinx documentation and open in a browser
 - run tox: Run the Tox test suite used by the GitHub CI action
 - run server: Run the REST server at localhost:8080
-- run influxdb: Run the InfluxDB server at localhost:8086
+- run database: Run the InfluxDB & Grafana servers via docker-compose
 - run release: Release a specific version and tag the code
 - run publish: Publish the current code to PyPI and push to GitHub
 ```
