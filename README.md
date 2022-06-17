@@ -1,6 +1,6 @@
 # Sensor Tracking for SmartThings
 
-[![license](https://img.shields.io/pypi/l/sensor-track.svg)](https://github.com/pronovic/sensor-track/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/pronovic/sensor-track)](https://github.com/pronovic/sensor-track/blob/master/LICENSE)
 [![Test Suite](https://github.com/pronovic/sensor-track/workflows/Test%20Suite/badge.svg)](https://github.com/pronovic/sensor-track/actions?query=workflow%3A%22Test+Suite%22)
 [![coverage](https://coveralls.io/repos/github/pronovic/sensor-track/badge.svg?branch=master)](https://coveralls.io/github/pronovic/sensor-track?branch=master)
 [![release](https://img.shields.io/github/v/release/pronovic/sensor-track)](https://github.com/pronovic/sensor-track/releases/latest)
