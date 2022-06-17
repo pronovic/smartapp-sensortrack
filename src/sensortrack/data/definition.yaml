@@ -29,4 +29,34 @@ configPages:
         - relativeHumidityMeasurement
       permissions:
         - r
-
+  - name: Weather
+    settings:
+    - id: retrieve-weather-notes
+      name: Retrieve Weather
+      description: >-
+        You may optionally retrieve current weather conditions from
+        the U.S. National Weather Service (NWS).  This feature is available
+        for U.S.-based locations that have an associated latitude and
+        longitude.
+      type: PARAGRAPH
+      required: false
+      defaultValue:
+    - id: retrieve-weather-enabled
+      name: Enabled
+      description: Tap to set
+      type: BOOLEAN
+      required: true
+      defaultValue: 'false'
+    - id: retrieve-weather-frequency
+      name: Frequency
+      description: Tap to set
+      required: true
+      type: ENUM
+      multiple: false
+      options:
+      - id: 15
+        name: Once every 15 minutes
+      - id: 30
+        name: Once every 30 minutes
+      - id: 60
+        name: Once every hour
