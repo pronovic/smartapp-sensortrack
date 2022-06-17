@@ -17,6 +17,7 @@ APPLICATION_YAML = fixture("application.yaml")
 INFLUXDB_URL = "http://localhost:8086"
 INFLUXDB_ORG = "iot"
 INFLUXDB_TOKEN = "token"
+INFLUXDB_BUCKET = "metrics"
 
 
 class TestConfig:
@@ -34,6 +35,7 @@ class TestConfig:
             "SENSORTRACK_INFLUXDB_URL": INFLUXDB_URL,
             "SENSORTRACK_INFLUXDB_ORG": INFLUXDB_ORG,
             "SENSORTRACK_INFLUXDB_TOKEN": INFLUXDB_TOKEN,
+            "SENSORTRACK_INFLUXDB_BUCKET": INFLUXDB_BUCKET,
         },
         clear=True,
     )
@@ -47,6 +49,7 @@ class TestConfig:
             "SENSORTRACK_INFLUXDB_URL": INFLUXDB_URL,
             "SENSORTRACK_INFLUXDB_ORG": INFLUXDB_ORG,
             "SENSORTRACK_INFLUXDB_TOKEN": INFLUXDB_TOKEN,
+            "SENSORTRACK_INFLUXDB_BUCKET": INFLUXDB_BUCKET,
         },
         clear=True,
     )
@@ -60,6 +63,7 @@ class TestConfig:
             "SENSORTRACK_INFLUXDB_URL": INFLUXDB_URL,
             "SENSORTRACK_INFLUXDB_ORG": INFLUXDB_ORG,
             "SENSORTRACK_INFLUXDB_TOKEN": INFLUXDB_TOKEN,
+            "SENSORTRACK_INFLUXDB_BUCKET": INFLUXDB_BUCKET,
         },
         clear=True,
     )
@@ -74,6 +78,7 @@ class TestConfig:
             "SENSORTRACK_INFLUXDB_URL": INFLUXDB_URL,
             "SENSORTRACK_INFLUXDB_ORG": INFLUXDB_ORG,
             "SENSORTRACK_INFLUXDB_TOKEN": INFLUXDB_TOKEN,
+            "SENSORTRACK_INFLUXDB_BUCKET": INFLUXDB_BUCKET,
         },
         clear=True,
     )
@@ -97,5 +102,6 @@ class TestConfig:
                 url=INFLUXDB_URL,
                 org=INFLUXDB_ORG,
                 token=INFLUXDB_TOKEN,
+                bucket=INFLUXDB_BUCKET,
             ),
         )
