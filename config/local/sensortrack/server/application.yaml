@@ -5,6 +5,8 @@ dispatcher:
    logJson: true
 smartthings:
    baseUrl: https://api.smartthings.com
+weather:
+   baseUrl: https://api.weather.gov
 influxdb:
    url: {SENSORTRACK_INFLUXDB_URL}
    org: {SENSORTRACK_INFLUXDB_ORG}
