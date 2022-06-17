@@ -3,10 +3,10 @@
 from unittest.mock import MagicMock, patch
 
 import pytest
+from smartapp.interface import SmartAppDispatcherConfig
 
 from sensortrack.dispatcher import dispatcher, reset
 from sensortrack.handler import EventHandler
-from smartapp.interface import SmartAppDispatcherConfig
 
 
 class TestDispatcher:

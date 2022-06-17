@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi.testclient import TestClient
 from influxdb_client.client.exceptions import InfluxDBError
+from smartapp.interface import BadRequestError, InternalError, SignatureError, SmartAppRequestContext
 
 from sensortrack.server import (
     API,
@@ -20,7 +21,6 @@ from sensortrack.server import (
     startup_event,
 )
 from sensortrack.smartthings import SmartThingsClientError
-from smartapp.interface import BadRequestError, InternalError, SignatureError, SmartAppRequestContext
 
 CLIENT = TestClient(API)
 

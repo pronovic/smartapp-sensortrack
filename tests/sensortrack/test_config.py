@@ -4,9 +4,9 @@ import os
 from unittest.mock import patch
 
 import pytest
+from smartapp.interface import SmartAppDispatcherConfig
 
 from sensortrack.config import ConfigError, InfluxDbConfig, ServerConfig, SmartThingsApiConfig, config, reset
-from smartapp.interface import SmartAppDispatcherConfig
 
 
 def fixture(filename: str) -> str:

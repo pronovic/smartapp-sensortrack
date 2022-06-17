@@ -11,10 +11,10 @@ from importlib.metadata import version as metadata_version
 from fastapi import FastAPI, Request, Response
 from influxdb_client.client.exceptions import InfluxDBError
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module:
+from smartapp.interface import BadRequestError, SignatureError, SmartAppError, SmartAppRequestContext
 
 from sensortrack.dispatcher import dispatcher
 from sensortrack.smartthings import SmartThingsClientError
-from smartapp.interface import BadRequestError, SignatureError, SmartAppError, SmartAppRequestContext
 
 API_VERSION = "1.0.0"
 API = FastAPI(version=API_VERSION, docs_url=None, redoc_url=None)  # no Swagger or ReDoc endpoints

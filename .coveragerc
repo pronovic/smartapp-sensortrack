@@ -3,7 +3,7 @@ source = src
 
 [run]
 branch = true
-source = src/sensortrack, src/smartapp
+source = src/sensortrack
 
 [report]
 show_missing = false

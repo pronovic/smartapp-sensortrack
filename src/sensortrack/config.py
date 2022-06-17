@@ -10,7 +10,6 @@ from os.path import isfile
 from typing import Optional
 
 from attrs import frozen
-
 from smartapp.converter import StandardConverter
 
 # We read this environment variable to find the server configuration YAML file on disk

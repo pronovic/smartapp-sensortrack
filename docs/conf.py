@@ -241,7 +241,7 @@ html_show_copyright = True
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "sensensortrackdoc"
+htmlhelp_basename = "sensortrackdoc"
 
 # -- Options for LaTeX output ---------------------------------------------
 

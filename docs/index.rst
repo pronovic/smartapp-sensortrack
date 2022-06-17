@@ -18,8 +18,8 @@ Release v\ |version|
 .. image:: https://github.com/pronovic/sensor-track/workflows/Test%20Suite/badge.svg
     :target: https://github.com/pronovic/sensor-track/actions?query=workflow%3A%22Test+Suite%22
 
-.. image:: https://readthedocs.org/projects/sensortrack/badge/?version=stable&style=flat
-    :target: https://sensortrack.readthedocs.io/en/stable/
+.. image:: https://readthedocs.org/projects/sensor-track/badge/?version=stable&style=flat
+    :target: https://sensor-track.readthedocs.io/en/stable/
 
 .. image:: https://coveralls.io/repos/github/pronovic/sensor-track/badge.svg?branch=master
     :target: https://coveralls.io/github/pronovic/sensor-track?branch=master

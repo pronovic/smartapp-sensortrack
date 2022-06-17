@@ -16,7 +16,6 @@ include = [
 ]
 packages = [ 
    { include = "sensortrack", from = "src" },
-   { include = "smartapp", from = "src" }, # will eventually be refactored out
 ]
 classifiers=[
    "Programming Language :: Python :: 3",
@@ -26,21 +25,16 @@ classifiers=[
    "Intended Audience :: Developers",
    "Natural Language :: English",
    "Topic :: Home Automation",
+   "Development Status :: 4 - Beta",
 ]
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
-pendulum = "^2.1.2"
-attrs = "^21.4.0"
-cattrs = "^22.1.0"
-PyYAML = "^6.0"
 fastapi = "^0.78.0"
 uvicorn = "^0.17.6"
-pycryptodomex = "^3.14.1"
-requests = "^2.28.0"
-tenacity = "^8.0.1"
 influxdb-client = "^1.29.1"
 python-dotenv = "^0.20.0"
+smartapp-sdk = "^0.1.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.2"
