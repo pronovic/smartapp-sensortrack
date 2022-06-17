@@ -77,4 +77,4 @@ class EventHandler(SmartAppEventHandler):
                     point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
                     points.append(point)
             write_api.write(bucket=bucket, record=points)
-            logging.debug("Completed persisting %d points of data", len(points))
+            logging.debug("Completed persisting %d point(s) of data", len(points))
