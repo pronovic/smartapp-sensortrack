@@ -17,7 +17,8 @@ using a combination of `run server` and `run database`.  The `run database`
 command relies on Docker Compose.  It starts both InfluxDB and Grafana.  If you
 want to send in requests manually to watch the application's behavior, then
 it's easiest if you disable signature checking 
-in `config/local/sensortrack/server/application.yaml`.
+in `config/local/sensortrack/server/application.yaml`.  InfluxDB is running
+at localhost:8086 and Grafana is at localhost:3000.
 
 ## Continuous Integration (CI)
 
