@@ -54,9 +54,9 @@ configPages:
       type: ENUM
       multiple: false
       options:
-      - id: 15
+      - id: "10/15 * * * ? *" # four times per hour at :10, :25, :40, :55
         name: Once every 15 minutes
-      - id: 30
+      - id: "10/30 * * * ? *" # two times per hour at :10 and :40
         name: Once every 30 minutes
-      - id: 60
+      - id: "10 * * * ? *"  # one time per hour at :10
         name: Once every hour

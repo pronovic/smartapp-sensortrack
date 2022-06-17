@@ -15,6 +15,8 @@ from smartapp.converter import CONVERTER
 from sensortrack.config import config
 from sensortrack.weather import WeatherLocation
 
+WEATHER_LOOKUP_TIMER = "weather-lookup"  # id of the weather lookup timer event
+
 
 @frozen
 class SmartThingsClientError(Exception):
@@ -107,6 +109,23 @@ def _raise_for_status(response: requests.Response) -> None:
         ) from e
 
 
+def _delete_weather_lookup_timer() -> None:
+    """Delete the weather lookup scheduled task."""
+    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, WEATHER_LOOKUP_TIMER))
+    response = requests.delete(url=url, headers=CONTEXT.get().headers)
+    _raise_for_status(response)
+
+
+def _create_weather_lookup_timer(location: Location, cron: str) -> None:
+    """Create the weather lookup scheduled task."""
+    # This is a little hackish, but encoding the location in the name lets us use SmartThings itself as a datastore
+    name = location.weather_location().to_identifier()
+    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, WEATHER_LOOKUP_TIMER))
+    request = {"name": name, "cron": {"expression": cron, "timezone": "UTC"}}
+    response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
+    _raise_for_status(response)
+
+
 def _subscribe_to_event(capability: str, attribute: str) -> None:
     """Subscribe to an event by capability."""
     url = _url("/installedapps/%s/subscriptions" % CONTEXT.get().app_id)
@@ -131,6 +150,15 @@ def retrieve_location() -> Location:
     response = requests.get(url=url, headers=CONTEXT.get().headers)
     _raise_for_status(response)
     return CONVERTER.from_json(response.text, Location)
+
+
+def schedule_weather_lookup_timer(enabled: bool, cron: Optional[str]) -> None:
+    """Create or replace the weather lookup timer for a given cron expression."""
+    _delete_weather_lookup_timer()
+    if enabled and cron:
+        location = retrieve_location()
+        if location.weather_eligible():
+            _create_weather_lookup_timer(location, cron)
 
 
 def subscribe_to_temperature_events() -> None:
