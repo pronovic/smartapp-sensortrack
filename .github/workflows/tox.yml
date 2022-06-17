@@ -1,4 +1,4 @@
-namen: Test Suite
+name: Test Suite
 on:
   push:
     branches:
