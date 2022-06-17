@@ -11,7 +11,8 @@
 - [x] Write unit tests for event handler
 - [x] write unit tests for smartthings API
 - [x] figure out InfluxDB 
-- [ ] Go through Librarian and check whether any of the events can be extended further
+- [x] Go through Librarian and check whether any of the events can be extended further
 - [ ] Split out smartapp into its own Python package
 - [ ] Write documentation and publish code
 - [ ] Get server running on mercury and writing to InfluxDB on venus
+- [ ] See whether it's possible to get weather events to track outdoor temps along with indoor
