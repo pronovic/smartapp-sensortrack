@@ -4,8 +4,7 @@ version = "0.1.0"
 description = "Historically track sensor data from SmartThings"
 authors = ["Kenneth J. Pronovici <pronovic@ieee.org>"]
 license = "Apache-2.0"
-readme = "PyPI.md"
-homepage = "https://pypi.org/project/sensor-track/"
+homepage = "https://github.com/pronovic/sensor-track"
 repository = "https://github.com/pronovic/sensor-track"
 include = [
    { path = 'Changelog', format = 'sdist' },
@@ -20,12 +19,12 @@ packages = [
 classifiers=[
    "Programming Language :: Python :: 3",
    "License :: OSI Approved :: Apache Software License",
-   "Operating System :: OS Independent",
+   "Operating System :: Unix",
    "Environment :: Console",
+   "Environment :: No Input/Output (Daemon)",
    "Intended Audience :: Developers",
    "Natural Language :: English",
    "Topic :: Home Automation",
-   "Development Status :: 4 - Beta",
 ]
 
 [tool.poetry.dependencies]

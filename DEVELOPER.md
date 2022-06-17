@@ -10,6 +10,15 @@ This project uses [Poetry](https://python-poetry.org/) to manage Python packagin
 
 A coding standard is enforced using [Black](https://github.com/psf/black), [isort](https://pypi.org/project/isort/) and [Pylint](https://www.pylint.org/).  Python 3 type hinting is validated using [MyPy](https://pypi.org/project/mypy/).
 
+## Integration Testing
+
+Local integration testing against the server can be accomplished in the repo
+using a combination of `run server` and `run database`.  The `run database`
+command relies on Docker Compose.  It starts both InfluxDB and Grafana.  If you
+want to send in requests manually to watch the application's behavior, then
+it's easiest if you disable signature checking 
+in `config/local/sensortrack/server/application.yaml`.
+
 ## Continuous Integration (CI)
 
 We use [GitHub Actions](https://docs.github.com/en/actions/quickstart) for CI.  See [.github/workflows/tox.yml](.github/workflows/tox.yml) for the definition of the workflow, and go to the [Actions tab](https://github.com/pronovic/sensor-track/actions) to see what actions have been executed.  
@@ -110,14 +119,11 @@ Usage: run <command>
 
 - run install: Setup the virtualenv via Poetry and install pre-commit hooks
 - run activate: Print command needed to activate the Poetry virtualenv
-- run requirements: Regenerate the docs/requirements.txt file
 - run format: Run the code formatters
 - run checks: Run the code checkers
 - run test: Run the unit tests
 - run test -c: Run the unit tests with coverage
 - run test -ch: Run the unit tests with coverage and open the HTML report
-- run docs: Build the Spinx documentation for sensor-track.readthedocs.io
-- run docs -o: Build the Spinx documentation and open in a browser
 - run tox: Run the Tox test suite used by the GitHub CI action
 - run server: Run the REST server at localhost:8080
 - run database: Run the InfluxDB & Grafana servers via docker-compose
