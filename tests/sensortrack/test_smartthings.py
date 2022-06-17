@@ -16,6 +16,7 @@ from sensortrack.smartthings import (
     subscribe_to_humidity_events,
     subscribe_to_temperature_events,
 )
+from sensortrack.weather import WeatherLocation
 from tests.testutil import load_file
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -26,6 +27,27 @@ HEADERS = {
     "Content-Type": "application/json",
     "Authorization": "Bearer token",
 }
+
+
+class TestLocation:
+    def test_location_weather_eligible(self):
+        assert Location(location_id="", name="", country_code="USA", latitude=1, longitude=2).weather_eligible() is True
+        assert Location(location_id="", name="", country_code="GB", latitude=1, longitude=2).weather_eligible() is False
+        assert Location(location_id="", name="", country_code="USA", latitude=None, longitude=2).weather_eligible() is False
+        assert Location(location_id="", name="", country_code="USA", latitude=1, longitude=None).weather_eligible() is False
+
+    def test_location_weather_location(self):
+        assert Location(
+            location_id="l",
+            name="",
+            country_code="USA",
+            latitude=1,
+            longitude=2,
+        ).weather_location() == WeatherLocation(
+            location_id="l",
+            latitude=1,
+            longitude=2,
+        )
 
 
 class TestPublicFunctions:
@@ -51,9 +73,6 @@ class TestPublicFunctions:
             country_code="USA",
             latitude=41.024654,
             longitude=-97.37219,
-            temperature_scale="F",
-            time_zone_id="America/Chicago",
-            locale="en-US",
         )
 
         url = "https://base/locations/location"

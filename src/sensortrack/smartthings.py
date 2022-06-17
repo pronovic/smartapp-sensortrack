@@ -13,6 +13,7 @@ from attrs import field, frozen
 from smartapp.converter import CONVERTER
 
 from sensortrack.config import config
+from sensortrack.weather import WeatherLocation
 
 
 @frozen
@@ -33,9 +34,18 @@ class Location:
     country_code: str
     latitude: Optional[float]
     longitude: Optional[float]
-    temperature_scale: str  # either "F" or "C"
-    time_zone_id: str
-    locale: str
+
+    def weather_eligible(self) -> bool:
+        """Whether the location is eligible for NWS weather."""
+        return self.country_code == "USA" and self.latitude is not None and self.longitude is not None
+
+    def weather_location(self) -> WeatherLocation:
+        """The weather location for this SmartThings location."""
+        return WeatherLocation(
+            location_id=self.location_id,
+            latitude=self.latitude,  # type: ignore
+            longitude=self.longitude,  # type: ignore
+        )
 
 
 @frozen(kw_only=True)
