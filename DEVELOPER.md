@@ -129,7 +129,7 @@ Usage: run <command>
 - run server: Run the REST server at localhost:8080
 - run database: Run the InfluxDB & Grafana servers via docker-compose
 - run release: Release a specific version and tag the code
-- run publish: Publish the current code to PyPI and push to GitHub
+- run build: Build artifacts in the dist/ directory
 ```
 
 For local testing, use `run influxdb` in one window and `run server` in another.
