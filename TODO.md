@@ -11,4 +11,5 @@
 - [x] Write unit tests for event handler
 - [x] write unit tests for smartthings API
 - [ ] figure out InfluxDB 
-- [ ] Come up with some way to do logging context (https://stackoverflow.com/questions/6618513/python-logging-with-context ?)
+- [ ] Go through Librarian and check whether any of the events can be extended further
+- [ ] Split out smartapp into its own Python package
