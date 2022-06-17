@@ -44,10 +44,7 @@ class TestPublicFunctions:
     @patch("sensortrack.smartthings.config")
     def test_retrieve_location(self, config, requests, raise_for_status):
         config.return_value = MagicMock(smartthings=MagicMock(base_url="https://base"))
-
-        path = os.path.join("smartthings", "location.json")
-        data = load_file(os.path.join(FIXTURE_DIR, path))
-
+        data = load_file(os.path.join(FIXTURE_DIR, "smartthings", "location.json"))
         expected = Location(
             location_id="15526d0a-XXXX-XXXX-XXXX-b6247aacbbb2",
             name="My House",

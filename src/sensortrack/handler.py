@@ -74,7 +74,7 @@ class EventHandler(SmartAppEventHandler):
                     location_id = event.device_event["locationId"]
                     device_id = event.device_event["deviceId"]
                     attribute = event.device_event["attribute"]  # "temperature" or "humidity"
-                    measurement = float(event.device_event["value"])  # the actual value, seems to be a float
+                    measurement = round(float(event.device_event["value"]), 2)  # the actual value, seems to be a float
                     point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
                     points.append(point)
             write_api.write(bucket=bucket, record=points)
