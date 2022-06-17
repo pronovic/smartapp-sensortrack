@@ -246,7 +246,7 @@ run_release() {
       exit 1
    fi
 
-   tar zcf dist/sensortrack-config-$VERSION.tar.gz \
+   tar zcf dist/sensor_track-config-$VERSION.tar.gz \
        -C config/installed --mode="go-rwx" --owner=github --group=github .
    if [ $? != 0 ]; then
       echo "*** Config bundle step failed."

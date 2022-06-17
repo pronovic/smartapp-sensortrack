@@ -104,7 +104,7 @@ file for the [latest release](https://github.com/pronovic/sensor-track/releases/
 and install it using `pip`, like:
 
 ```
-$ pip install sensortrack-0.1.0-py3-none-any.whl
+$ pip install sensor_track-0.1.0-py3-none-any.whl
 ```
 
 Next, configure the platform.  Download the configuration bundle for the latest
@@ -112,7 +112,7 @@ release.  Extract the tar file to your user configuration directory:
 
 ```
 $ mkdir -p ~/.config
-$ tar zxvf sensortrack-config-0.1.0.tar.gz -C ~/.config
+$ tar zxvf sensor_track-config-0.1.0.tar.gz -C ~/.config
 ```
 
 This creates two directories within `~/.config`.  The `systemd` directory
