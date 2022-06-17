@@ -7,9 +7,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 from influxdb_client import Point
+from smartapp.interface import EventType
 
 from sensortrack.handler import EventHandler
-from smartapp.interface import EventType
 
 CORRELATION_ID = "xxx"
 

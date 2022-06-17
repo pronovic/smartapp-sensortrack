@@ -9,9 +9,6 @@ import logging
 from typing import Optional
 
 from influxdb_client import InfluxDBClient, Point
-
-from sensortrack.config import config
-from sensortrack.smartthings import SmartThings, subscribe_to_humidity_events, subscribe_to_temperature_events
 from smartapp.interface import (
     ConfigurationRequest,
     ConfirmationRequest,
@@ -23,6 +20,9 @@ from smartapp.interface import (
     UninstallRequest,
     UpdateRequest,
 )
+
+from sensortrack.config import config
+from sensortrack.smartthings import SmartThings, subscribe_to_humidity_events, subscribe_to_temperature_events
 
 
 class EventHandler(SmartAppEventHandler):

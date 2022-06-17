@@ -1,7 +1,0 @@
-{
-  "id": "myIconInput",
-  "name": "Some icon information",
-  "description": "Some description",
-  "type": "ICON",
-  "image": "https://some-image-url"
-}

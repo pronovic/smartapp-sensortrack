@@ -4,7 +4,8 @@ After=network.target
 
 [Service]
 ExecStart=%h/.local/bin/uvicorn sensortrack.server:API     \
-          --uds %h/.config/sensortrack/server/run/engine.sock     \
+          --port 8080 \
+          --host 0.0.0.0 \
           --log-config %h/.config/sensortrack/server/logging.yaml
 SyslogIdentifier=sensortrack
 WorkingDirectory=~

@@ -2,13 +2,23 @@
 
 ## Supported Platforms
 
-This code should work equivalently on MacOS, Linux, and Windows.
+This code runs as a daemon and is intended for use Linux and UNIX-like platforms.
 
 ## Packaging and Dependencies
 
 This project uses [Poetry](https://python-poetry.org/) to manage Python packaging and dependencies.  Most day-to-day tasks (such as running unit tests from the command line) are orchestrated through Poetry.  
 
 A coding standard is enforced using [Black](https://github.com/psf/black), [isort](https://pypi.org/project/isort/) and [Pylint](https://www.pylint.org/).  Python 3 type hinting is validated using [MyPy](https://pypi.org/project/mypy/).
+
+## Integration Testing
+
+Local integration testing against the server can be accomplished in the repo
+using a combination of `run server` and `run database`.  The `run database`
+command relies on Docker Compose.  It starts both InfluxDB and Grafana.  If you
+want to send in requests manually to watch the application's behavior, then
+it's easiest if you disable signature checking 
+in `config/local/sensortrack/server/application.yaml`.  InfluxDB is running
+at localhost:8086 and Grafana is at localhost:3000.
 
 ## Continuous Integration (CI)
 
@@ -110,19 +120,16 @@ Usage: run <command>
 
 - run install: Setup the virtualenv via Poetry and install pre-commit hooks
 - run activate: Print command needed to activate the Poetry virtualenv
-- run requirements: Regenerate the docs/requirements.txt file
 - run format: Run the code formatters
 - run checks: Run the code checkers
 - run test: Run the unit tests
 - run test -c: Run the unit tests with coverage
 - run test -ch: Run the unit tests with coverage and open the HTML report
-- run docs: Build the Spinx documentation for apologies.readthedocs.io
-- run docs -o: Build the Spinx documentation and open in a browser
 - run tox: Run the Tox test suite used by the GitHub CI action
 - run server: Run the REST server at localhost:8080
 - run database: Run the InfluxDB & Grafana servers via docker-compose
 - run release: Release a specific version and tag the code
-- run publish: Publish the current code to PyPI and push to GitHub
+- run build: Build artifacts in the dist/ directory
 ```
 
 For local testing, use `run influxdb` in one window and `run server` in another.
