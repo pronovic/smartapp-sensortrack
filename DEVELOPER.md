@@ -19,10 +19,9 @@ cache location-related lookups for up to 6 hours.
 
 ## Retries
 
-Most API calls automatically retried using [tenacity](https://tenacity.readthedocs.io/en/latest/) annotations.  All
-`GET` calls are retried repeatly with an exponential wait between retries.
-Idempotent `POST` or `DELETE` calls are retried a single time after 1-second
-wait.
+Most API calls automatically retried using [tenacity](https://tenacity.readthedocs.io/en/latest/) annotations.  This
+includes all `GET` API calls as well as any idempotent `POST` or `DELETE`
+calls.
 
 ## Integration Testing
 
