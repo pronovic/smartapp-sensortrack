@@ -24,12 +24,15 @@ from smartapp.interface import (
 from sensortrack.config import config
 from sensortrack.smartthings import (
     SmartThings,
+    retrieve_location,
     schedule_weather_lookup_timer,
     subscribe_to_humidity_events,
     subscribe_to_temperature_events,
 )
+from sensortrack.weather import retrieve_current_conditions
 
-WEATHER_LOOKUP_TIMER = "weather-lookup"  # name/id of the weather lookup timer event
+WEATHER_LOOKUP = "weather-lookup"  # name/id of the weather lookup timer event
+IS_WEATHER_LOOKUP = lambda event: "name" in event and event["name"] == WEATHER_LOOKUP
 
 
 # noinspection PyMethodMayBeStatic
@@ -70,6 +73,7 @@ class EventHandler(SmartAppEventHandler):
         bucket = config().influxdb.bucket
         with InfluxDBClient(url=url, org=org, token=token) as client:
             points = []  # type: List[Point]
+            self._handle_weather_lookup_events(request, points)
             self._handle_sensor_events(request, points)
             client.write_api().write(bucket=bucket, record=points)
             logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
@@ -81,12 +85,26 @@ class EventHandler(SmartAppEventHandler):
         weather_enabled = request.as_bool("retrieve-weather-enabled")
         weather_cron = request.as_str("retrieve-weather-cron") if weather_enabled else None
         with SmartThings(request=request):
-            schedule_weather_lookup_timer(WEATHER_LOOKUP_TIMER, weather_enabled, weather_cron)
+            schedule_weather_lookup_timer(WEATHER_LOOKUP, weather_enabled, weather_cron)
             logging.info("[%s] Completed scheduling weather lookup timer", correlation_id)
             if subscribe:
                 subscribe_to_temperature_events()
                 subscribe_to_humidity_events()
                 logging.info("[%s] Completed subscribing to device events", correlation_id)
+
+    def _handle_weather_lookup_events(self, request: EventRequest, points: List[Point]) -> None:
+        """Handle weather event lookup timer events, appending any points to be persisted to InfluxDB."""
+        if request.event_data.filter(event_type=EventType.TIMER_EVENT, predicate=IS_WEATHER_LOOKUP):
+            with SmartThings(request=request):
+                location = retrieve_location()
+                if location.country_code == "USA" and location.latitude is not None and location.longitude is not None:
+                    temperature, humidity = retrieve_current_conditions(location.latitude, location.longitude)
+                    points.append(
+                        Point("weather")
+                        .tag("location", location.location_id)
+                        .field("temperature", temperature)
+                        .field("humidity", humidity)
+                    )
 
     def _handle_sensor_events(self, request: EventRequest, points: List[Point]) -> None:
         """Handle received events from sensors, appending any points to be persisted to InfluxDB."""
