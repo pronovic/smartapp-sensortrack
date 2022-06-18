@@ -7,15 +7,13 @@
 
 This is a SmartApp that is used to historically track data from SmartThings
 temperature and humidity sensors. Optionally, users with U.S.-based locations
-can choose to periodically capture current temperature and humidity source
+can choose to periodically capture current temperature and humidity, sourced
 from the National Weather Service API.
 
 The SmartApp is written in Python 3 using the [smartapp-sdk](https://pypi.org/project/smartapp-sdk/) package.  It 
 is designed to run as a systemd user service writing data 
 to [InfluxDB 2](https://docs.influxdata.com/influxdb/v2.2/) for later visualization with a
-tool such as [Grafana](https://grafana.com/).  It was written as a learning
-exercise and technology demonstration effort, and is approximately the simplest
-SmartApp that accomplishes anything real.
+tool such as [Grafana](https://grafana.com/).
 
 ## Cautions & Limitations
 
@@ -244,8 +242,8 @@ Samsung makes it difficult to install non-standard SmartApps. See this [communit
 a discussion.  The process described below worked for me in June of 2022.
 
 > _Note:_ If you haven't logged into the Developer Workspace at least once, this
-won't work.  But if you followed the instructions above, that should be taken
-care of.
+> won't work.  But if you followed the instructions above, that should already
+> be taken care of.
 
 Follow the instructions to [Enable Developer Mode in the SmartThings App](https://developer-preview.smartthings.com/docs/devices/test-your-device/#enable-developer-mode-in-the-smartthings-app):
 
@@ -269,7 +267,10 @@ This will immediately trigger a series of webhook `POST` requests to your
 webserver.  If everything goes well, you will be prompted to configure the
 SmartApp, and you will get the option to choose which devices to collect data
 from.  If something goes wrong, you will get an error dialog in the app, and
-you'll have to look in the `journalctl` logs to debug it.
+you'll have to look in the `journalctl` logs to debug it.  If necessary, you
+can adjust config files in `~/.config/sensortrack/server` to increase the log
+level or enable JSON logging (but note that JSON logging exposes secrets into
+your log).
 
 Once you are done configuring the SmartApp, it will subscribe to events from
 your sensors.  As those events flow into the webhook, they will be recorded in
