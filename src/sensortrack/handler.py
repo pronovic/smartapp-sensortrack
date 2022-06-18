@@ -53,7 +53,7 @@ class EventHandler(SmartAppEventHandler):
             schedule_weather_lookup_timer(weather_enabled, weather_cron)
             subscribe_to_temperature_events()
             subscribe_to_humidity_events()
-            logging.info("Completed subscribing to device events for app %s", app_id)
+            logging.info("[%s] Completed subscribing to device events for app %s", correlation_id, app_id)
 
     def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
         """Handle an UPDATE lifecycle request."""
@@ -73,7 +73,6 @@ class EventHandler(SmartAppEventHandler):
         org = config().influxdb.org
         token = config().influxdb.token
         bucket = config().influxdb.bucket
-        logging.info("URL: %s, org=%s, token=%s", url, org, token)
         with InfluxDBClient(url=url, org=org, token=token) as client:
             points = []
             write_api = client.write_api()
@@ -86,4 +85,4 @@ class EventHandler(SmartAppEventHandler):
                     point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
                     points.append(point)
             write_api.write(bucket=bucket, record=points)
-            logging.debug("Completed persisting %d point(s) of data", len(points))
+            logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
