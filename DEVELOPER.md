@@ -10,6 +10,20 @@ This project uses [Poetry](https://python-poetry.org/) to manage Python packagin
 
 A coding standard is enforced using [Black](https://github.com/psf/black), [isort](https://pypi.org/project/isort/) and [Pylint](https://www.pylint.org/).  Python 3 type hinting is validated using [MyPy](https://pypi.org/project/mypy/).
 
+## Caching
+
+Some `GET` calls are cached using 
+the [cachetools ttl_cache](https://cachetools.readthedocs.io/en/latest/#cachetools.func.ttl_cache) implementation.  The 
+idea here is to cache the data, but only for a limited period of time.  We
+cache location-related lookups for up to 6 hours.
+
+## Retries
+
+Most API calls automatically retried using [tenacity](https://tenacity.readthedocs.io/en/latest/) annotations.  All
+`GET` calls are retried repeatly with an exponential wait between retries.
+Idempotent `POST` or `DELETE` calls are retried a single time after 1-second
+wait.
+
 ## Integration Testing
 
 Local integration testing against the server can be accomplished in the repo

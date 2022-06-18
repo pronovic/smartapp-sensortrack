@@ -6,7 +6,9 @@
 [![release](https://img.shields.io/github/v/release/pronovic/sensor-track)](https://github.com/pronovic/sensor-track/releases/latest)
 
 This is a SmartApp that is used to historically track data from SmartThings
-temperature and humidity sensors.
+temperature and humidity sensors. Optionally, users with U.S.-based locations
+can choose to periodically capture current temperature and humidity source
+from the National Weather Service API.
 
 The SmartApp is written in Python 3 using the [smartapp-sdk](https://pypi.org/project/smartapp-sdk/) package.  It 
 is designed to run as a systemd user service writing data 
