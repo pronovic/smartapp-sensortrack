@@ -6,10 +6,12 @@ After=network.target
 ExecStart=%h/.local/bin/uvicorn sensortrack.server:API     \
           --port 8080 \
           --host 0.0.0.0 \
-          --log-config %h/.config/sensortrack/server/logging.yaml
+          --log-config %h/.config/sensortrack/server/logging.yaml \
+          --env-file %h/.config/sensortrack/server/server.env
 SyslogIdentifier=sensortrack
 WorkingDirectory=~
 Environment=PYTHONUNBUFFERED=1
+Environment=SENSORTRACK_CONFIG_PATH=%h/.config/sensortrack/server/application.yaml
 Restart=on-failure
 
 [Install]

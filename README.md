@@ -126,6 +126,10 @@ systemd/user/sensortrack.service
 The webserver server runs on port 8080 by default.  If you want it to run on a
 different port, edit `sensortrack.service` and make the appropriate adjustment.
 
+By default, the webserver accepts connections on all interfaces (0.0.0.0).  Depending
+on your infrastructure, you may be able to restrict this to 127.0.0.1 instead.  If
+you want to do this, edit `sensortrack.service` and make the appropriate adjustment.
+
 The `sensortrack` directory contains configuration for the sensortrack daemon process.
 
 ```
