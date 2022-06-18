@@ -4,6 +4,23 @@
 
 """
 National Weather Service client.
+
+In this interface, temperature is always returned in degrees F, since this client is for
+use only with U.S. based locations.
+
+The Swagger spec for the API says that all units must be valid WMO units.  The examples
+I've seen always have "wmoUnit:degC" for temperature, and since there's no other
+temperature unit in the WMO list, I'm assuming that it will always be C and it's safe to
+always convert it to F.
+
+In theory, SmartThings offers a WEATHER_EVENT that should have this same information,
+and also for non-U.S. locations.  However, I can find no documentation about how to
+actually subscribe to such a weather event.
+
+See: https://weather-gov.github.io/api/general-faqs
+     https://api.weather.gov/openapi.json
+     http://codes.wmo.int/common/unit
+     https://github.com/weather-gov/api/discussions/215
 """
 from __future__ import annotations  # so we can return a type from one of its own methods
 
@@ -60,9 +77,7 @@ def _retrieve_station_url(latitude: float, longitude: float) -> str:
 
 
 def _retrieve_latest_observation(station_url: str) -> Tuple[float, float]:
-    """Return the latest (temperature, humidity) observation at a particular station, via its station URL."""
-    # Temperature is always returned in degrees F, since this is a client only for U.S. based locations
-    # It appears that the NWS API always returns temperatures in degrees C, so we need to convert that
+    """Return the latest (temperature in F, humidity) observation at a particular station, via its station URL."""
     url = "%s/observations/latest" % station_url
     response = requests.get(url=url)
     _raise_for_status(response)
@@ -73,6 +88,5 @@ def _retrieve_latest_observation(station_url: str) -> Tuple[float, float]:
 
 def retrieve_current_conditions(latitude: float, longitude: float) -> Tuple[float, float]:
     """Retrieve current weather conditions a particular lat/long location."""
-    # For design, see: https://github.com/weather-gov/api/discussions/215
     station_url = _retrieve_station_url(latitude, longitude)
     return _retrieve_latest_observation(station_url)

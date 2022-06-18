@@ -30,7 +30,7 @@ class TestPublicFunctions:
         config.return_value = MagicMock(weather=MagicMock(base_url="https://base"))
 
         stations = load_file(os.path.join(FIXTURE_DIR, "weather", "stations.json"))
-        stations_url = "https://base/points/lat,long/stations"
+        stations_url = "https://base/points/12.3,45.6/stations"
         stations_response = MagicMock(json=MagicMock(return_value=json.loads(stations)))
 
         observations = load_file(os.path.join(FIXTURE_DIR, "weather", "observations.json"))
@@ -39,7 +39,7 @@ class TestPublicFunctions:
 
         requests.get = MagicMock(side_effect=[stations_response, observations_response])
 
-        temperature, humidity = retrieve_current_conditions(latitude="lat", longitude="long")
+        temperature, humidity = retrieve_current_conditions(latitude=12.3, longitude=45.6)
 
         requests.get.assert_has_calls([call(url=stations_url), call(url=observations_url)])
         raise_for_status.assert_has_calls([call(stations_response), call(observations_response)])
