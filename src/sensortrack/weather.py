@@ -32,7 +32,7 @@ import requests
 from cachetools.func import ttl_cache
 
 from sensortrack.config import config
-from sensortrack.rest import RestClientError, raise_for_status
+from sensortrack.rest import DECAYING_RETRY, RestClientError, raise_for_status
 
 STATION_TTL = 6 * 60 * 60  # cache station lookups for up to six hours
 
@@ -50,6 +50,7 @@ def _url(endpoint: str) -> str:
     return "%s%s" % (config().weather.base_url, endpoint)
 
 
+@DECAYING_RETRY
 @ttl_cache(maxsize=128, ttl=STATION_TTL)
 def _retrieve_station_url(latitude: float, longitude: float) -> str:
     """Retrieve the station URL for the closest station to a latitude and longitude."""
@@ -59,6 +60,7 @@ def _retrieve_station_url(latitude: float, longitude: float) -> str:
     return str(_extract_json(response.json(), "$.features[0].id"))
 
 
+@DECAYING_RETRY
 def _retrieve_latest_observation(station_url: str) -> Tuple[float, float]:
     """Return the latest (temperature in F, humidity) observation at a particular station, via its station URL."""
     url = "%s/observations/latest" % station_url

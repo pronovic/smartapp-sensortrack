@@ -15,7 +15,7 @@ from smartapp.converter import CONVERTER
 from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 
 from sensortrack.config import config
-from sensortrack.rest import raise_for_status
+from sensortrack.rest import DECAYING_RETRY, SINGLE_RETRY, raise_for_status
 
 LOCATION_TTL = 6 * 60 * 60  # cache location lookups for up to six hours
 
@@ -78,6 +78,7 @@ def _url(endpoint: str) -> str:
     return "%s%s" % (config().smartthings.base_url, endpoint)
 
 
+@SINGLE_RETRY
 def _delete_weather_lookup_timer(name: str) -> None:
     """Delete the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
@@ -85,6 +86,7 @@ def _delete_weather_lookup_timer(name: str) -> None:
     raise_for_status(response)
 
 
+@SINGLE_RETRY
 def _create_weather_lookup_timer(name: str, cron: str) -> None:
     """Create the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
@@ -93,6 +95,7 @@ def _create_weather_lookup_timer(name: str, cron: str) -> None:
     raise_for_status(response)
 
 
+@SINGLE_RETRY
 def _subscribe_to_event(capability: str, attribute: str) -> None:
     """Subscribe to an event by capability."""
     url = _url("/installedapps/%s/subscriptions" % CONTEXT.get().app_id)
@@ -111,6 +114,7 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
     raise_for_status(response)
 
 
+@DECAYING_RETRY
 @ttl_cache(maxsize=128, ttl=LOCATION_TTL)
 def _retrieve_location(location_id: str) -> Location:
     """Retrieve details about a specific location, broken out to facilitate caching."""
