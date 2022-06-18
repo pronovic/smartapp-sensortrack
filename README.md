@@ -151,7 +151,7 @@ listening:
 
 ```
 $ curl -X GET http://localhost:8080/health
-$ curl -X GET http://localhost:8080/buildinfo
+$ curl -X GET http://localhost:8080/version
 ```
 
 You can also check the logs from the service:
@@ -204,7 +204,7 @@ With this configuration in place, your SmartApp will be located at:
 https://<yourhost>/smartthings/myapp/smartapp
 ```
 
-The same `/health` and `/buildinfo` endpoints you tested above will also be
+The same `/health` and `/version` endpoints you tested above will also be
 exposed, although SmartThings doesn't need to know about them.  Spot-check that
 the external URL appears to be working.
 
