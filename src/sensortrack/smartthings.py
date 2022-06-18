@@ -89,7 +89,7 @@ def _delete_weather_lookup_timer(name: str) -> None:
 @SINGLE_RETRY
 def _create_weather_lookup_timer(name: str, cron: str) -> None:
     """Create the weather lookup scheduled task."""
-    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
+    url = _url("/installedapps/%s/schedules" % CONTEXT.get().app_id)
     request = {"name": name, "cron": {"expression": cron, "timezone": "UTC"}}
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
     raise_for_status(response)

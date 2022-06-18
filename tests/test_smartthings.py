@@ -131,7 +131,8 @@ class TestPublicFunctions:
         exception = HTTPError("hello")
         requests.delete = MagicMock(return_value=delete_response)
         requests.post = MagicMock(side_effect=[exception, post_response])
-        url = "https://base/installedapps/app/schedules/identifier"
+        delete_url = "https://base/installedapps/app/schedules/identifier"
+        post_url = "https://base/installedapps/app/schedules"
 
         request = {"name": "identifier", "cron": {"expression": "expr", "timezone": "UTC"}}
 
@@ -139,6 +140,6 @@ class TestPublicFunctions:
             schedule_weather_lookup_timer("identifier", True, "expr")
 
         # enabled, so we delete and re-add
-        requests.delete.assert_called_once_with(url=url, headers=HEADERS)
-        requests.post.assert_has_calls([call(url=url, headers=HEADERS, json=request)] * 2)
+        requests.delete.assert_called_once_with(url=delete_url, headers=HEADERS)
+        requests.post.assert_has_calls([call(url=post_url, headers=HEADERS, json=request)] * 2)
         raise_for_status.assert_has_calls([call(delete_response), call(post_response)])
