@@ -99,29 +99,19 @@ class TestEventHandler:
     @patch("sensortrack.handler.InfluxDBClient")
     @patch("sensortrack.handler.config")
     def test_handle_event(self, config, influxdb, handler):
-        request = MagicMock(
-            event_data=MagicMock(
-                events=[
-                    MagicMock(
-                        event_type=EventType.TIMER_EVENT,  # represents any other kind of event
-                        device_event=None,
-                    ),
-                    MagicMock(
-                        event_type=EventType.DEVICE_EVENT,
-                        device_event=None,  # will be ignored unless it has both the correct event type and the dict
-                    ),
-                    MagicMock(
-                        event_type=EventType.DEVICE_EVENT,
-                        device_event={
-                            "locationId": "l",
-                            "deviceId": "d",
-                            "attribute": "t",
-                            "value": 23.7,
-                        },
-                    ),
-                ]
-            )
+        request = MagicMock()
+        request.event_data = MagicMock()
+        request.event_data.filter = MagicMock(
+            return_value=[
+                {
+                    "locationId": "l",
+                    "deviceId": "d",
+                    "attribute": "t",
+                    "value": 23.7,
+                },
+            ]
         )
+
         config.return_value = MagicMock(
             influxdb=MagicMock(
                 url="url",
@@ -143,6 +133,7 @@ class TestEventHandler:
         handler.handle_event(CORRELATION_ID, request)
 
         influxdb.assert_called_once_with(url="url", org="org", token="token")
+        request.event_data.filter.assert_called_once_with(event_type=EventType.DEVICE_EVENT)
 
         # there's no equality available on the Point class, so we have to do this the hard way
         (_, kwargs) = client.__enter__.return_value.write_api.return_value.write.call_args

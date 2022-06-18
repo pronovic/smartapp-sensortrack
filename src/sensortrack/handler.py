@@ -6,7 +6,7 @@
 SmartApp event handler.
 """
 import logging
-from typing import Optional, Union
+from typing import Callable, List, Optional, Union
 
 from influxdb_client import InfluxDBClient, Point
 from smartapp.interface import (
@@ -67,18 +67,13 @@ class EventHandler(SmartAppEventHandler):
         token = config().influxdb.token
         bucket = config().influxdb.bucket
         with InfluxDBClient(url=url, org=org, token=token) as client:
-            points = []
             write_api = client.write_api()
-            for event in request.event_data.events:
-                if event.event_type == EventType.DEVICE_EVENT and event.device_event:
-                    location_id = event.device_event["locationId"]
-                    device_id = event.device_event["deviceId"]
-                    attribute = event.device_event["attribute"]  # "temperature" or "humidity"
-                    measurement = round(float(event.device_event["value"]), 2)  # the actual value, seems to be a float
-                    point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
-                    points.append(point)
-            write_api.write(bucket=bucket, record=points)
-            logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
+
+            def writer(points: List[Point]) -> None:
+                write_api.write(bucket=bucket, record=points)
+                logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
+
+            self._handle_sensor_events(request, writer)
 
     def _handle_config_refresh(
         self, correlation_id: Optional[str], request: Union[InstallRequest, UpdateRequest], subscribe: bool
@@ -96,3 +91,15 @@ class EventHandler(SmartAppEventHandler):
                 subscribe_to_temperature_events()
                 subscribe_to_humidity_events()
                 logging.info("[%s] Completed subscribing to device events for app %s", correlation_id, app_id)
+
+    def _handle_sensor_events(self, request: EventRequest, writer: Callable[[List[Point]], None]) -> None:
+        """Handle received events from temperature and humidity sensors."""
+        points = []
+        for event in request.event_data.filter(event_type=EventType.DEVICE_EVENT):
+            location_id = event["locationId"]
+            device_id = event["deviceId"]
+            attribute = event["attribute"]  # "temperature" or "humidity"
+            measurement = round(float(event["value"]), 2)
+            point = Point("sensor").tag("location", location_id).tag("device", device_id).field(attribute, measurement)
+            points.append(point)
+        writer(points)
