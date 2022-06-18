@@ -4,6 +4,8 @@ import json
 import os
 from unittest.mock import MagicMock, call, patch
 
+from requests import HTTPError
+
 from sensortrack.weather import retrieve_current_conditions
 from tests.testutil import load_file
 
@@ -17,6 +19,8 @@ class TestPublicFunctions:
     def test_retrieve_current_conditions(self, config, requests, raise_for_status):
         config.return_value = MagicMock(weather=MagicMock(base_url="https://base"))
 
+        exception = HTTPError("hello")
+
         stations = load_file(os.path.join(FIXTURE_DIR, "weather", "stations.json"))
         stations_url = "https://base/points/12.3,45.6/stations"
         stations_response = MagicMock(json=MagicMock(return_value=json.loads(stations)))
@@ -25,7 +29,10 @@ class TestPublicFunctions:
         observations_url = "https://api.weather.gov/stations/KALO/observations/latest"  # first station from JSON, which is closest
         observations_response = MagicMock(json=MagicMock(return_value=json.loads(observations)))
 
-        requests.get = MagicMock(side_effect=[stations_response, observations_response, observations_response])
+        # each exception is thrown, and that is handled by the retry annotation, which is not reflected in call verification below
+        requests.get = MagicMock(
+            side_effect=[exception, stations_response, exception, observations_response, observations_response]
+        )
 
         # expected temperature taken from Google, to sanity-check library
         # the second call is partially cached, so we'll only do the observations lookup and not the station
