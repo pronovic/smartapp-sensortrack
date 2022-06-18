@@ -10,19 +10,14 @@ from typing import Dict, Optional, Union
 
 import requests
 from attrs import field, frozen
+from cachetools.func import ttl_cache
 from smartapp.converter import CONVERTER
 from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 
 from sensortrack.config import config
+from sensortrack.rest import DECAYING_RETRY, SINGLE_RETRY, raise_for_status
 
-
-@frozen
-class SmartThingsClientError(Exception):
-    """An error invoking the SmartThings API."""
-
-    message: str
-    request_body: Optional[Union[bytes, str]] = None
-    response_body: Optional[str] = None
+LOCATION_TTL = 6 * 60 * 60  # cache location lookups for up to six hours
 
 
 @frozen(kw_only=True)
@@ -83,33 +78,24 @@ def _url(endpoint: str) -> str:
     return "%s%s" % (config().smartthings.base_url, endpoint)
 
 
-def _raise_for_status(response: requests.Response) -> None:
-    """Check response status, raising SmartThingsClientError for errors"""
-    try:
-        response.raise_for_status()
-    except requests.models.HTTPError as e:
-        raise SmartThingsClientError(
-            message="Failed SmartThings API call: %s" % e,
-            request_body=response.request.body,
-            response_body=response.text,
-        ) from e
-
-
+@SINGLE_RETRY
 def _delete_weather_lookup_timer(name: str) -> None:
     """Delete the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
     response = requests.delete(url=url, headers=CONTEXT.get().headers)
-    _raise_for_status(response)
+    raise_for_status(response)
 
 
+@SINGLE_RETRY
 def _create_weather_lookup_timer(name: str, cron: str) -> None:
     """Create the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
     request = {"name": name, "cron": {"expression": cron, "timezone": "UTC"}}
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
-    _raise_for_status(response)
+    raise_for_status(response)
 
 
+@SINGLE_RETRY
 def _subscribe_to_event(capability: str, attribute: str) -> None:
     """Subscribe to an event by capability."""
     url = _url("/installedapps/%s/subscriptions" % CONTEXT.get().app_id)
@@ -125,15 +111,22 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
         },
     }
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
-    _raise_for_status(response)
+    raise_for_status(response)
+
+
+@DECAYING_RETRY
+@ttl_cache(maxsize=128, ttl=LOCATION_TTL)
+def _retrieve_location(location_id: str) -> Location:
+    """Retrieve details about a specific location, broken out to facilitate caching."""
+    url = _url("/locations/%s" % location_id)
+    response = requests.get(url=url, headers=CONTEXT.get().headers)
+    raise_for_status(response)
+    return CONVERTER.from_json(response.text, Location)
 
 
 def retrieve_location() -> Location:
     """Retrieve details about the location."""
-    url = _url("/locations/%s" % CONTEXT.get().location_id)
-    response = requests.get(url=url, headers=CONTEXT.get().headers)
-    _raise_for_status(response)
-    return CONVERTER.from_json(response.text, Location)
+    return _retrieve_location(CONTEXT.get().location_id)
 
 
 def schedule_weather_lookup_timer(name: str, enabled: bool, cron: Optional[str]) -> None:

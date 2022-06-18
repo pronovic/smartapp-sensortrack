@@ -24,23 +24,17 @@ See: https://weather-gov.github.io/api/general-faqs
 """
 from __future__ import annotations  # so we can return a type from one of its own methods
 
-from typing import Any, Dict, Optional, Tuple, Union
+from typing import Any, Dict, Tuple
 
 import jsonpath_ng
 import pytemperature
 import requests
-from attrs import frozen
+from cachetools.func import ttl_cache
 
 from sensortrack.config import config
+from sensortrack.rest import DECAYING_RETRY, RestClientError, raise_for_status
 
-
-@frozen
-class WeatherClientError(Exception):
-    """An error invoking the National Weather Service API."""
-
-    message: str
-    request_body: Optional[Union[bytes, str]] = None
-    response_body: Optional[str] = None
+STATION_TTL = 6 * 60 * 60  # cache station lookups for up to six hours
 
 
 def _extract_json(json: Dict[str, Any], jsonpath: str) -> Any:
@@ -48,7 +42,7 @@ def _extract_json(json: Dict[str, Any], jsonpath: str) -> Any:
     try:
         return jsonpath_ng.parse(jsonpath).find(json)[0].value
     except Exception as e:
-        raise WeatherClientError("Could not find JSON attribute: %s" % jsonpath) from e
+        raise RestClientError("Could not find JSON attribute: %s" % jsonpath) from e
 
 
 def _url(endpoint: str) -> str:
@@ -56,31 +50,22 @@ def _url(endpoint: str) -> str:
     return "%s%s" % (config().weather.base_url, endpoint)
 
 
-def _raise_for_status(response: requests.Response) -> None:
-    """Check response status, raising WeatherClientError for errors"""
-    try:
-        response.raise_for_status()
-    except requests.models.HTTPError as e:
-        raise WeatherClientError(
-            message="Failed weather API call: %s" % e,
-            request_body=response.request.body,
-            response_body=response.text,
-        ) from e
-
-
+@DECAYING_RETRY
+@ttl_cache(maxsize=128, ttl=STATION_TTL)
 def _retrieve_station_url(latitude: float, longitude: float) -> str:
     """Retrieve the station URL for the closest station to a latitude and longitude."""
     url = _url("/points/%s,%s/stations" % (latitude, longitude))
     response = requests.get(url=url)
-    _raise_for_status(response)
+    raise_for_status(response)
     return str(_extract_json(response.json(), "$.features[0].id"))
 
 
+@DECAYING_RETRY
 def _retrieve_latest_observation(station_url: str) -> Tuple[float, float]:
     """Return the latest (temperature in F, humidity) observation at a particular station, via its station URL."""
     url = "%s/observations/latest" % station_url
     response = requests.get(url=url)
-    _raise_for_status(response)
+    raise_for_status(response)
     temperature = pytemperature.c2f(_extract_json(response.json(), "$.properties.temperature.value"))
     humidity = round(float(_extract_json(response.json(), "$.properties.relativeHumidity.value")), 2)
     return temperature, humidity

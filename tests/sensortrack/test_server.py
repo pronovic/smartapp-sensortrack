@@ -8,19 +8,19 @@ from fastapi.testclient import TestClient
 from influxdb_client.client.exceptions import InfluxDBError
 from smartapp.interface import BadRequestError, InternalError, SignatureError, SmartAppRequestContext
 
+from sensortrack.rest import RestClientError
 from sensortrack.server import (
     API,
     API_VERSION,
     bad_request_handler,
     exception_handler,
     influxdb_error_handler,
+    rest_client_error_handler,
     shutdown_event,
     signature_error_handler,
     smartapp_error_handler,
-    smartthings_client_error_handler,
     startup_event,
 )
-from sensortrack.smartthings import SmartThingsClientError
 
 CLIENT = TestClient(API)
 
@@ -44,9 +44,9 @@ class TestErrorHandlers:
         response = await smartapp_error_handler(None, e)
         assert response.status_code == 500
 
-    async def test_smartthings_client_error_handler(self):
-        e = SmartThingsClientError("hello")
-        response = await smartthings_client_error_handler(None, e)
+    async def test_rest_client_error_handler(self):
+        e = RestClientError("hello")
+        response = await rest_client_error_handler(None, e)
         assert response.status_code == 500
 
     async def test_influxdb_error_handler(self):

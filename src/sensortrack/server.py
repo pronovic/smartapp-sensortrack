@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module:
 from smartapp.interface import BadRequestError, SignatureError, SmartAppError, SmartAppRequestContext
 
 from sensortrack.dispatcher import dispatcher
-from sensortrack.smartthings import SmartThingsClientError
+from sensortrack.rest import RestClientError
 
 API_VERSION = "1.0.0"
 API = FastAPI(version=API_VERSION, docs_url=None, redoc_url=None)  # no Swagger or ReDoc endpoints
@@ -57,9 +57,9 @@ async def smartapp_error_handler(_: Request, e: SmartAppError) -> Response:
     return _generic_error_handler(e, 500, "[%s] SmartApp error: %s" % (e.correlation_id, e))
 
 
-@API.exception_handler(SmartThingsClientError)
-async def smartthings_client_error_handler(_: Request, e: SmartAppError) -> Response:
-    return _generic_error_handler(e, 500, "SmartThings client error: %s" % e)
+@API.exception_handler(RestClientError)
+async def rest_client_error_handler(_: Request, e: RestClientError) -> Response:
+    return _generic_error_handler(e, 500, "%s" % e)
 
 
 @API.exception_handler(InfluxDBError)
