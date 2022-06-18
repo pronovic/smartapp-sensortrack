@@ -96,9 +96,10 @@ class TestPublicFunctions:
         response = MagicMock(text=data)
         requests.get = MagicMock(return_value=response)
 
+        # the second call is cached
         with SmartThings(request=REQUEST):
-            retrieved = retrieve_location()
-            assert retrieved == expected
+            assert retrieve_location() == expected
+            assert retrieve_location() == expected
 
         requests.get.assert_called_once_with(url=url, headers=HEADERS)
         raise_for_status.assert_called_once_with(response)

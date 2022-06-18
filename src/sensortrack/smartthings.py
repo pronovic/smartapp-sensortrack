@@ -10,10 +10,13 @@ from typing import Dict, Optional, Union
 
 import requests
 from attrs import field, frozen
+from cachetools.func import ttl_cache
 from smartapp.converter import CONVERTER
 from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 
 from sensortrack.config import config
+
+LOCATION_TTL = 6 * 60 * 60  # cache location lookups for up to six hours
 
 
 @frozen
@@ -128,12 +131,18 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
     _raise_for_status(response)
 
 
-def retrieve_location() -> Location:
-    """Retrieve details about the location."""
-    url = _url("/locations/%s" % CONTEXT.get().location_id)
+@ttl_cache(maxsize=128, ttl=LOCATION_TTL)
+def _retrieve_location(location_id: str) -> Location:
+    """Retrieve details about a specific location, broken out to facilitate caching."""
+    url = _url("/locations/%s" % location_id)
     response = requests.get(url=url, headers=CONTEXT.get().headers)
     _raise_for_status(response)
     return CONVERTER.from_json(response.text, Location)
+
+
+def retrieve_location() -> Location:
+    """Retrieve details about the location."""
+    return _retrieve_location(CONTEXT.get().location_id)
 
 
 def schedule_weather_lookup_timer(name: str, enabled: bool, cron: Optional[str]) -> None:
