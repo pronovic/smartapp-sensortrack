@@ -30,8 +30,11 @@ import jsonpath_ng
 import pytemperature
 import requests
 from attrs import frozen
+from cachetools.func import ttl_cache
 
 from sensortrack.config import config
+
+STATION_TTL = 6 * 60 * 60  # cache station lookups for up to six hours
 
 
 @frozen
@@ -68,6 +71,7 @@ def _raise_for_status(response: requests.Response) -> None:
         ) from e
 
 
+@ttl_cache(maxsize=128, ttl=STATION_TTL)
 def _retrieve_station_url(latitude: float, longitude: float) -> str:
     """Retrieve the station URL for the closest station to a latitude and longitude."""
     url = _url("/points/%s,%s/stations" % (latitude, longitude))
