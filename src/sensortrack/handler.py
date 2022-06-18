@@ -22,7 +22,12 @@ from smartapp.interface import (
 )
 
 from sensortrack.config import config
-from sensortrack.smartthings import SmartThings, subscribe_to_humidity_events, subscribe_to_temperature_events
+from sensortrack.smartthings import (
+    SmartThings,
+    schedule_weather_lookup_timer,
+    subscribe_to_humidity_events,
+    subscribe_to_temperature_events,
+)
 
 
 class EventHandler(SmartAppEventHandler):
@@ -42,7 +47,10 @@ class EventHandler(SmartAppEventHandler):
         token = request.install_data.auth_token
         app_id = request.install_data.installed_app.installed_app_id
         location_id = request.install_data.installed_app.location_id
+        weather_enabled = request.install_data.as_bool("retrieve-weather-enabled")
+        weather_cron = request.install_data.as_str("retrieve-weather-cron") if weather_enabled else None
         with SmartThings(token=token, app_id=app_id, location_id=location_id):
+            schedule_weather_lookup_timer(weather_enabled, weather_cron)
             subscribe_to_temperature_events()
             subscribe_to_humidity_events()
             logging.info("Completed subscribing to device events for app %s", app_id)

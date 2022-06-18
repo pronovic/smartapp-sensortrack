@@ -37,18 +37,36 @@ class TestEventHandler:
 
     @patch("sensortrack.handler.subscribe_to_temperature_events")
     @patch("sensortrack.handler.subscribe_to_humidity_events")
+    @patch("sensortrack.handler.schedule_weather_lookup_timer")
     @patch("sensortrack.handler.SmartThings")
-    def test_handle_install(self, smartthings, humidity, temperature, handler):
+    @pytest.mark.parametrize(
+        "enabled,expr,provided",
+        [
+            (True, "expr", "expr"),
+            (False, "expr", None),
+        ],
+    )
+    def test_handle_install(self, smartthings, schedule, humidity, temperature, handler, enabled, expr, provided):
         request = MagicMock(
             install_data=MagicMock(
                 auth_token="token",
                 installed_app=MagicMock(installed_app_id="app", location_id="location"),
             )
         )
+        request.install_data.as_bool = MagicMock(return_value=enabled)
+        request.install_data.as_str = MagicMock(return_value=expr)
+
         handler.handle_install(CORRELATION_ID, request)
+
         smartthings.assert_called_once_with(token="token", app_id="app", location_id="location")
+        schedule.assert_called_once_with(enabled, provided)
         temperature.assert_called_once()
         humidity.assert_called_once()
+        request.install_data.as_bool.assert_called_once_with("retrieve-weather-enabled")
+        if enabled:
+            request.install_data.as_str.assert_called_once_with("retrieve-weather-cron")
+        else:
+            request.install_data.as_str.assert_not_called()
 
     @patch("sensortrack.handler.InfluxDBClient")
     @patch("sensortrack.handler.config")

@@ -47,7 +47,7 @@ configPages:
       type: BOOLEAN
       required: true
       defaultValue: 'false'
-    - id: retrieve-weather-frequency
+    - id: retrieve-weather-cron
       name: Frequency
       description: Tap to set
       required: true
