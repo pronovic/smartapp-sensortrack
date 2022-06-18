@@ -4,26 +4,14 @@ import json
 import os
 from unittest.mock import MagicMock, call, patch
 
-import pytest
-from requests.exceptions import HTTPError
-
-from sensortrack.weather import WeatherClientError, _raise_for_status, retrieve_current_conditions
+from sensortrack.weather import retrieve_current_conditions
 from tests.testutil import load_file
 
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 
-class TestPrivateFunctions:
-    def test_raise_for_status(self):
-        response = MagicMock()
-        response.raise_for_status = MagicMock()
-        response.raise_for_status.side_effect = HTTPError("hello")
-        with pytest.raises(WeatherClientError):
-            _raise_for_status(response)
-
-
 class TestPublicFunctions:
-    @patch("sensortrack.weather._raise_for_status")
+    @patch("sensortrack.weather.raise_for_status")
     @patch("sensortrack.weather.requests")
     @patch("sensortrack.weather.config")
     def test_retrieve_current_conditions(self, config, requests, raise_for_status):

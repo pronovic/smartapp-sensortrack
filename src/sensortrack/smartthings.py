@@ -15,17 +15,9 @@ from smartapp.converter import CONVERTER
 from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 
 from sensortrack.config import config
+from sensortrack.rest import raise_for_status
 
 LOCATION_TTL = 6 * 60 * 60  # cache location lookups for up to six hours
-
-
-@frozen
-class SmartThingsClientError(Exception):
-    """An error invoking the SmartThings API."""
-
-    message: str
-    request_body: Optional[Union[bytes, str]] = None
-    response_body: Optional[str] = None
 
 
 @frozen(kw_only=True)
@@ -86,23 +78,11 @@ def _url(endpoint: str) -> str:
     return "%s%s" % (config().smartthings.base_url, endpoint)
 
 
-def _raise_for_status(response: requests.Response) -> None:
-    """Check response status, raising SmartThingsClientError for errors"""
-    try:
-        response.raise_for_status()
-    except requests.models.HTTPError as e:
-        raise SmartThingsClientError(
-            message="Failed SmartThings API call: %s" % e,
-            request_body=response.request.body,
-            response_body=response.text,
-        ) from e
-
-
 def _delete_weather_lookup_timer(name: str) -> None:
     """Delete the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
     response = requests.delete(url=url, headers=CONTEXT.get().headers)
-    _raise_for_status(response)
+    raise_for_status(response)
 
 
 def _create_weather_lookup_timer(name: str, cron: str) -> None:
@@ -110,7 +90,7 @@ def _create_weather_lookup_timer(name: str, cron: str) -> None:
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
     request = {"name": name, "cron": {"expression": cron, "timezone": "UTC"}}
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
-    _raise_for_status(response)
+    raise_for_status(response)
 
 
 def _subscribe_to_event(capability: str, attribute: str) -> None:
@@ -128,7 +108,7 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
         },
     }
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
-    _raise_for_status(response)
+    raise_for_status(response)
 
 
 @ttl_cache(maxsize=128, ttl=LOCATION_TTL)
@@ -136,7 +116,7 @@ def _retrieve_location(location_id: str) -> Location:
     """Retrieve details about a specific location, broken out to facilitate caching."""
     url = _url("/locations/%s" % location_id)
     response = requests.get(url=url, headers=CONTEXT.get().headers)
-    _raise_for_status(response)
+    raise_for_status(response)
     return CONVERTER.from_json(response.text, Location)
 
 

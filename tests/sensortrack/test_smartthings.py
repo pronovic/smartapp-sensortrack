@@ -4,13 +4,10 @@ import os
 from unittest.mock import MagicMock, call, patch
 
 import pytest
-from requests.exceptions import HTTPError
 
 from sensortrack.smartthings import (
     Location,
     SmartThings,
-    SmartThingsClientError,
-    _raise_for_status,
     retrieve_location,
     schedule_weather_lookup_timer,
     subscribe_to_humidity_events,
@@ -34,16 +31,7 @@ REQUEST.app_id = MagicMock(return_value="app")
 REQUEST.location_id = MagicMock(return_value="location")
 
 
-class TestPrivateFunctions:
-    def test_raise_for_status(self):
-        response = MagicMock()
-        response.raise_for_status = MagicMock()
-        response.raise_for_status.side_effect = HTTPError("hello")
-        with pytest.raises(SmartThingsClientError):
-            _raise_for_status(response)
-
-
-@patch("sensortrack.smartthings._raise_for_status")
+@patch("sensortrack.smartthings.raise_for_status")
 @patch("sensortrack.smartthings.requests")
 @patch("sensortrack.smartthings.config")
 class TestPublicFunctions:
