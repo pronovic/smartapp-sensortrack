@@ -26,9 +26,6 @@ class TestEventHandler:
     def test_handle_configuration(self, handler):
         handler.handle_configuration(CORRELATION_ID, MagicMock())  # just make sure it doesn't blow up
 
-    def test_handle_update(self, handler):
-        handler.handle_update(CORRELATION_ID, MagicMock())  # just make sure it doesn't blow up
-
     def test_handle_uninstall(self, handler):
         handler.handle_uninstall(CORRELATION_ID, MagicMock())  # just make sure it doesn't blow up
 
@@ -67,6 +64,39 @@ class TestEventHandler:
             request.install_data.as_str.assert_called_once_with("retrieve-weather-cron")
         else:
             request.install_data.as_str.assert_not_called()
+
+    @patch("sensortrack.handler.subscribe_to_temperature_events")
+    @patch("sensortrack.handler.subscribe_to_humidity_events")
+    @patch("sensortrack.handler.schedule_weather_lookup_timer")
+    @patch("sensortrack.handler.SmartThings")
+    @pytest.mark.parametrize(
+        "enabled,expr,provided",
+        [
+            (True, "expr", "expr"),
+            (False, "expr", None),
+        ],
+    )
+    def test_handle_update(self, smartthings, schedule, humidity, temperature, handler, enabled, expr, provided):
+        request = MagicMock(
+            update_data=MagicMock(
+                auth_token="token",
+                installed_app=MagicMock(installed_app_id="app", location_id="location"),
+            )
+        )
+        request.update_data.as_bool = MagicMock(return_value=enabled)
+        request.update_data.as_str = MagicMock(return_value=expr)
+
+        handler.handle_update(CORRELATION_ID, request)
+
+        smartthings.assert_called_once_with(token="token", app_id="app", location_id="location")
+        schedule.assert_called_once_with(enabled, provided)
+        temperature.assert_not_called()
+        humidity.assert_not_called()
+        request.update_data.as_bool.assert_called_once_with("retrieve-weather-enabled")
+        if enabled:
+            request.update_data.as_str.assert_called_once_with("retrieve-weather-cron")
+        else:
+            request.update_data.as_str.assert_not_called()
 
     @patch("sensortrack.handler.InfluxDBClient")
     @patch("sensortrack.handler.config")

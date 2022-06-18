@@ -51,21 +51,30 @@ class EventHandler(SmartAppEventHandler):
         weather_cron = request.install_data.as_str("retrieve-weather-cron") if weather_enabled else None
         with SmartThings(token=token, app_id=app_id, location_id=location_id):
             schedule_weather_lookup_timer(weather_enabled, weather_cron)
+            logging.info("[%s] Completed scheduling weather lookup timer for %s", correlation_id, app_id)
             subscribe_to_temperature_events()
             subscribe_to_humidity_events()
             logging.info("[%s] Completed subscribing to device events for app %s", correlation_id, app_id)
 
     def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
         """Handle an UPDATE lifecycle request."""
-        pass  # no action needed for this event, since we are already subscribed to all devices by capability
+        # Note: no need to subscribe to device events, because the CAPABILITY subscription should already cover all devices
+        token = request.update_data.auth_token
+        app_id = request.update_data.installed_app.installed_app_id
+        location_id = request.update_data.installed_app.location_id
+        weather_enabled = request.update_data.as_bool("retrieve-weather-enabled")
+        weather_cron = request.update_data.as_str("retrieve-weather-cron") if weather_enabled else None
+        with SmartThings(token=token, app_id=app_id, location_id=location_id):
+            schedule_weather_lookup_timer(weather_enabled, weather_cron)
+            logging.info("[%s] Completed scheduling weather lookup timer for %s", correlation_id, app_id)
 
     def handle_uninstall(self, correlation_id: Optional[str], request: UninstallRequest) -> None:
         """Handle an UNINSTALL lifecycle request."""
-        pass  # no action needed for this event, subscriptions and schedules have already been deleted
+        pass  # no action needed for this event, since subscriptions and schedules have already been deleted
 
     def handle_oauth_callback(self, correlation_id: Optional[str], request: OauthCallbackRequest) -> None:
         """Handle an OAUTH_CALLBACK lifecycle request."""
-        pass  # no action needed for this event, we don't use any special oauth integration
+        pass  # no action needed for this event, since we don't use any special oauth integration
 
     def handle_event(self, correlation_id: Optional[str], request: EventRequest) -> None:
         """Handle an EVENT lifecycle request."""
