@@ -44,14 +44,12 @@ class TestEventHandler:
         ],
     )
     def test_handle_install(self, smartthings, schedule, humidity, temperature, handler, enabled, expr, provided):
-        request = MagicMock(
-            install_data=MagicMock(
-                auth_token="token",
-                installed_app=MagicMock(installed_app_id="app", location_id="location"),
-            )
-        )
-        request.install_data.as_bool = MagicMock(return_value=enabled)
-        request.install_data.as_str = MagicMock(return_value=expr)
+        request = MagicMock()
+        request.token = MagicMock(return_value="token")
+        request.app_id = MagicMock(return_value="app")
+        request.location_id = MagicMock(return_value="location")
+        request.as_bool = MagicMock(return_value=enabled)
+        request.as_str = MagicMock(return_value=expr)
 
         handler.handle_install(CORRELATION_ID, request)
 
@@ -59,11 +57,11 @@ class TestEventHandler:
         schedule.assert_called_once_with(enabled, provided)
         temperature.assert_called_once()
         humidity.assert_called_once()
-        request.install_data.as_bool.assert_called_once_with("retrieve-weather-enabled")
+        request.as_bool.assert_called_once_with("retrieve-weather-enabled")
         if enabled:
-            request.install_data.as_str.assert_called_once_with("retrieve-weather-cron")
+            request.as_str.assert_called_once_with("retrieve-weather-cron")
         else:
-            request.install_data.as_str.assert_not_called()
+            request.as_str.assert_not_called()
 
     @patch("sensortrack.handler.subscribe_to_temperature_events")
     @patch("sensortrack.handler.subscribe_to_humidity_events")
@@ -77,12 +75,12 @@ class TestEventHandler:
         ],
     )
     def test_handle_update(self, smartthings, schedule, humidity, temperature, handler, enabled, expr, provided):
-        request = MagicMock(
-            update_data=MagicMock(
-                auth_token="token",
-                installed_app=MagicMock(installed_app_id="app", location_id="location"),
-            )
-        )
+        request = MagicMock()
+        request.token = MagicMock(return_value="token")
+        request.app_id = MagicMock(return_value="app")
+        request.location_id = MagicMock(return_value="location")
+        request.as_bool = MagicMock(return_value=enabled)
+        request.as_str = MagicMock(return_value=expr)
         request.update_data.as_bool = MagicMock(return_value=enabled)
         request.update_data.as_str = MagicMock(return_value=expr)
 
@@ -92,11 +90,11 @@ class TestEventHandler:
         schedule.assert_called_once_with(enabled, provided)
         temperature.assert_not_called()
         humidity.assert_not_called()
-        request.update_data.as_bool.assert_called_once_with("retrieve-weather-enabled")
+        request.as_bool.assert_called_once_with("retrieve-weather-enabled")
         if enabled:
-            request.update_data.as_str.assert_called_once_with("retrieve-weather-cron")
+            request.as_str.assert_called_once_with("retrieve-weather-cron")
         else:
-            request.update_data.as_str.assert_not_called()
+            request.as_str.assert_not_called()
 
     @patch("sensortrack.handler.InfluxDBClient")
     @patch("sensortrack.handler.config")

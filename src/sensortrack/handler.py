@@ -6,7 +6,7 @@
 SmartApp event handler.
 """
 import logging
-from typing import Optional
+from typing import Optional, Union
 
 from influxdb_client import InfluxDBClient, Point
 from smartapp.interface import (
@@ -30,6 +30,7 @@ from sensortrack.smartthings import (
 )
 
 
+# noinspection PyMethodMayBeStatic
 class EventHandler(SmartAppEventHandler):
 
     """SmartApp event handler."""
@@ -44,29 +45,12 @@ class EventHandler(SmartAppEventHandler):
 
     def handle_install(self, correlation_id: Optional[str], request: InstallRequest) -> None:
         """Handle an INSTALL lifecycle request."""
-        token = request.install_data.auth_token
-        app_id = request.install_data.installed_app.installed_app_id
-        location_id = request.install_data.installed_app.location_id
-        weather_enabled = request.install_data.as_bool("retrieve-weather-enabled")
-        weather_cron = request.install_data.as_str("retrieve-weather-cron") if weather_enabled else None
-        with SmartThings(token=token, app_id=app_id, location_id=location_id):
-            schedule_weather_lookup_timer(weather_enabled, weather_cron)
-            logging.info("[%s] Completed scheduling weather lookup timer for %s", correlation_id, app_id)
-            subscribe_to_temperature_events()
-            subscribe_to_humidity_events()
-            logging.info("[%s] Completed subscribing to device events for app %s", correlation_id, app_id)
+        self._handle_config_refresh(correlation_id, request, subscribe=True)
 
     def handle_update(self, correlation_id: Optional[str], request: UpdateRequest) -> None:
         """Handle an UPDATE lifecycle request."""
         # Note: no need to subscribe to device events, because the CAPABILITY subscription should already cover all devices
-        token = request.update_data.auth_token
-        app_id = request.update_data.installed_app.installed_app_id
-        location_id = request.update_data.installed_app.location_id
-        weather_enabled = request.update_data.as_bool("retrieve-weather-enabled")
-        weather_cron = request.update_data.as_str("retrieve-weather-cron") if weather_enabled else None
-        with SmartThings(token=token, app_id=app_id, location_id=location_id):
-            schedule_weather_lookup_timer(weather_enabled, weather_cron)
-            logging.info("[%s] Completed scheduling weather lookup timer for %s", correlation_id, app_id)
+        self._handle_config_refresh(correlation_id, request, subscribe=False)
 
     def handle_uninstall(self, correlation_id: Optional[str], request: UninstallRequest) -> None:
         """Handle an UNINSTALL lifecycle request."""
@@ -95,3 +79,20 @@ class EventHandler(SmartAppEventHandler):
                     points.append(point)
             write_api.write(bucket=bucket, record=points)
             logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
+
+    def _handle_config_refresh(
+        self, correlation_id: Optional[str], request: Union[InstallRequest, UpdateRequest], subscribe: bool
+    ) -> None:
+        """Handle configuration refresh for an INSTALL or UPDATE event."""
+        token = request.token()
+        app_id = request.app_id()
+        location_id = request.location_id()
+        weather_enabled = request.as_bool("retrieve-weather-enabled")
+        weather_cron = request.as_str("retrieve-weather-cron") if weather_enabled else None
+        with SmartThings(token=token, app_id=app_id, location_id=location_id):
+            schedule_weather_lookup_timer(weather_enabled, weather_cron)
+            logging.info("[%s] Completed scheduling weather lookup timer for %s", correlation_id, app_id)
+            if subscribe:
+                subscribe_to_temperature_events()
+                subscribe_to_humidity_events()
+                logging.info("[%s] Completed subscribing to device events for app %s", correlation_id, app_id)
