@@ -26,6 +26,13 @@ class ConfigError(Exception):
 
 
 @frozen
+class WeatherApiConfig:
+    """National Weather Service API configuration."""
+
+    base_url: str
+
+
+@frozen
 class SmartThingsApiConfig:
     """SmartThings API configuration."""
 
@@ -48,6 +55,7 @@ class ServerConfig:
 
     dispatcher: SmartAppDispatcherConfig
     smartthings: SmartThingsApiConfig
+    weather: WeatherApiConfig
     influxdb: InfluxDbConfig
 
 

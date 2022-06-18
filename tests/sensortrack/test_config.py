@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from smartapp.interface import SmartAppDispatcherConfig
 
-from sensortrack.config import ConfigError, InfluxDbConfig, ServerConfig, SmartThingsApiConfig, config, reset
+from sensortrack.config import ConfigError, InfluxDbConfig, ServerConfig, SmartThingsApiConfig, WeatherApiConfig, config, reset
 
 
 def fixture(filename: str) -> str:
@@ -97,6 +97,9 @@ class TestConfig:
             ),
             smartthings=SmartThingsApiConfig(
                 base_url="https://api.smartthings.com",
+            ),
+            weather=WeatherApiConfig(
+                base_url="https://api.weather.gov",
             ),
             influxdb=InfluxDbConfig(
                 url=INFLUXDB_URL,
