@@ -16,14 +16,14 @@ from tenacity.retry import retry_if_exception_type
 from tenacity.stop import stop_after_attempt
 from tenacity.wait import wait_exponential, wait_fixed
 
-# This configures a single retry (2 total attempts), waiting 2 seconds before retrying
+# This configures a single retry (2 total attempts), waiting 1 second before retrying
 SINGLE_RETRY = retry(
-    stop=stop_after_attempt(1),
-    wait=wait_fixed(2),
+    stop=stop_after_attempt(2),
+    wait=wait_fixed(1),
     retry=retry_if_exception_type((RequestsConnectionError, HTTPError)),
 )
 
-# This configures 5 retries (6 total attempts), waiting 0.25 seconds before first
+# This configures 4 retries (5 total attempts), waiting 0.25 seconds before first
 # retry, and limiting the wait between retries to 2 seconds.
 DECAYING_RETRY = retry(
     stop=stop_after_attempt(5),

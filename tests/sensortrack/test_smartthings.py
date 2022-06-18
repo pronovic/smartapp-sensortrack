@@ -4,6 +4,7 @@ import os
 from unittest.mock import MagicMock, call, patch
 
 import pytest
+from requests import HTTPError
 
 from sensortrack.smartthings import (
     Location,
@@ -58,13 +59,15 @@ class TestPublicFunctions:
             },
         }
 
+        # the exception is thrown and that is handled by the retry annotation
+        exception = HTTPError("hello")
         response = MagicMock()
-        requests.post = MagicMock(return_value=response)
+        requests.post = MagicMock(side_effect=[exception, response])
 
         with SmartThings(request=REQUEST):
             function()
 
-        requests.post.assert_called_once_with(url=url, headers=HEADERS, json=request)
+        requests.post.assert_has_calls([call(url=url, headers=HEADERS, json=request)] * 2)
         raise_for_status.assert_called_once_with(response)
 
     def test_retrieve_location(self, config, requests, raise_for_status):
@@ -81,15 +84,17 @@ class TestPublicFunctions:
 
         url = "https://base/locations/location"
 
+        # the exception is thrown and that is handled by the retry annotation
+        exception = HTTPError("hello")
         response = MagicMock(text=data)
-        requests.get = MagicMock(return_value=response)
+        requests.get = MagicMock(side_effect=[exception, response])
 
-        # the second call is cached
+        # the second attempt is cached, so we get 2 total calls to get() instead of 3
         with SmartThings(request=REQUEST):
             assert retrieve_location() == expected
             assert retrieve_location() == expected
 
-        requests.get.assert_called_once_with(url=url, headers=HEADERS)
+        requests.get.assert_has_calls([call(url=url, headers=HEADERS)] * 2)
         raise_for_status.assert_called_once_with(response)
 
     @pytest.mark.parametrize(
@@ -104,14 +109,16 @@ class TestPublicFunctions:
 
         delete_response = MagicMock()
 
-        requests.delete = MagicMock(return_value=delete_response)
+        # the exception is thrown and that is handled by the retry annotation
+        exception = HTTPError("hello")
+        requests.delete = MagicMock(side_effect=[exception, delete_response])
         url = "https://base/installedapps/app/schedules/identifier"
 
         with SmartThings(request=REQUEST):
             schedule_weather_lookup_timer("identifier", enabled, cron)
 
         # not enabled, so we delete only
-        requests.delete.assert_called_once_with(url=url, headers=HEADERS)
+        requests.delete.assert_has_calls([call(url=url, headers=HEADERS)] * 2)
         raise_for_status.assert_called_once_with(delete_response)
 
     def test_schedule_weather_lookup_timer_enabled(self, config, requests, raise_for_status):
@@ -120,8 +127,10 @@ class TestPublicFunctions:
         delete_response = MagicMock()
         post_response = MagicMock()
 
+        # the exception is thrown and that is handled by the retry annotation
+        exception = HTTPError("hello")
         requests.delete = MagicMock(return_value=delete_response)
-        requests.post = MagicMock(return_value=post_response)
+        requests.post = MagicMock(side_effect=[exception, post_response])
         url = "https://base/installedapps/app/schedules/identifier"
 
         request = {"name": "identifier", "cron": {"expression": "expr", "timezone": "UTC"}}
@@ -131,5 +140,5 @@ class TestPublicFunctions:
 
         # enabled, so we delete and re-add
         requests.delete.assert_called_once_with(url=url, headers=HEADERS)
-        requests.post.assert_called_once_with(url=url, headers=HEADERS, json=request)
+        requests.post.assert_has_calls([call(url=url, headers=HEADERS, json=request)] * 2)
         raise_for_status.assert_has_calls([call(delete_response), call(post_response)])

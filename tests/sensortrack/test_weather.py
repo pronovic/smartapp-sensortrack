@@ -29,7 +29,7 @@ class TestPublicFunctions:
         observations_url = "https://api.weather.gov/stations/KALO/observations/latest"  # first station from JSON, which is closest
         observations_response = MagicMock(json=MagicMock(return_value=json.loads(observations)))
 
-        # each exception is thrown, and that is handled by the retry annotation, which is not reflected in call verification below
+        # each exception is thrown, and that is handled by the retry annotation
         requests.get = MagicMock(
             side_effect=[exception, stations_response, exception, observations_response, observations_response]
         )
@@ -42,6 +42,8 @@ class TestPublicFunctions:
         requests.get.assert_has_calls(
             [
                 call(url=stations_url),
+                call(url=stations_url),
+                call(url=observations_url),
                 call(url=observations_url),
                 call(url=observations_url),
             ]
