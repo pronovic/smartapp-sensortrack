@@ -10,8 +10,11 @@ from sensortrack.rest import RestClientError, raise_for_status
 
 class TestFunctions:
     def test_raise_for_status(self):
-        response = MagicMock()
+        request = MagicMock(body="request")
+        response = MagicMock(request=request, text="response")
         response.raise_for_status = MagicMock()
         response.raise_for_status.side_effect = HTTPError("hello")
-        with pytest.raises(RestClientError):
+        with pytest.raises(RestClientError) as e:
             raise_for_status(response)
+        assert e.value.request_body == "request"
+        assert e.value.response_body == "response"
