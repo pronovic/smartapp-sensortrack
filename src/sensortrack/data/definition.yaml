@@ -4,6 +4,7 @@ description: Track historical data for SmartThings temperature and humidity sens
 targetUrl: https://daystrom.cedar-solutions.com/smartthings/sensortrack/smartapp
 permissions:
 - r:devices:*
+- r:locations:*
 configPages:
 - pageName: Configuration
   sections:
