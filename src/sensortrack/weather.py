@@ -26,23 +26,6 @@ class WeatherClientError(Exception):
     response_body: Optional[str] = None
 
 
-@frozen(kw_only=True)
-class WeatherLocation:
-    location_id: str
-    latitude: float
-    longitude: float
-
-    def to_identifier(self) -> str:
-        """Encode a weather location into a string identifier."""
-        return "weather/%s/%s/%s" % (self.location_id, self.latitude, self.longitude)
-
-    @staticmethod
-    def from_identifier(identifier: str) -> WeatherLocation:
-        """Decode a weather location out of a string identifier."""
-        location_id, latitude, longitude = identifier[len("weather/") :].split("/")
-        return WeatherLocation(location_id=location_id, latitude=float(latitude), longitude=float(longitude))
-
-
 def _extract_json(json: Dict[str, Any], jsonpath: str) -> Any:
     """Extract a value from a JSON document using jsonpath, returning None if it can't be parsed."""
     try:
@@ -88,8 +71,8 @@ def _retrieve_latest_observation(station_url: str) -> Tuple[float, float]:
     return temperature, humidity
 
 
-def retrieve_current_conditions(location: WeatherLocation) -> Tuple[float, float]:
-    """Retrieve current weather conditions a particular location."""
+def retrieve_current_conditions(latitude: float, longitude: float) -> Tuple[float, float]:
+    """Retrieve current weather conditions a particular lat/long location."""
     # For design, see: https://github.com/weather-gov/api/discussions/215
-    station_url = _retrieve_station_url(location.latitude, location.longitude)
+    station_url = _retrieve_station_url(latitude, longitude)
     return _retrieve_latest_observation(station_url)
