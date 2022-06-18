@@ -9,7 +9,7 @@ import pytest
 from influxdb_client import Point
 from smartapp.interface import EventType
 
-from sensortrack.handler import EventHandler
+from sensortrack.handler import WEATHER_LOOKUP_TIMER, EventHandler
 
 CORRELATION_ID = "xxx"
 
@@ -45,16 +45,13 @@ class TestEventHandler:
     )
     def test_handle_install(self, smartthings, schedule, humidity, temperature, handler, enabled, expr, provided):
         request = MagicMock()
-        request.token = MagicMock(return_value="token")
-        request.app_id = MagicMock(return_value="app")
-        request.location_id = MagicMock(return_value="location")
         request.as_bool = MagicMock(return_value=enabled)
         request.as_str = MagicMock(return_value=expr)
 
         handler.handle_install(CORRELATION_ID, request)
 
-        smartthings.assert_called_once_with(token="token", app_id="app", location_id="location")
-        schedule.assert_called_once_with(enabled, provided)
+        smartthings.assert_called_once_with(request=request)
+        schedule.assert_called_once_with(WEATHER_LOOKUP_TIMER, enabled, provided)
         temperature.assert_called_once()
         humidity.assert_called_once()
         request.as_bool.assert_called_once_with("retrieve-weather-enabled")
@@ -76,9 +73,6 @@ class TestEventHandler:
     )
     def test_handle_update(self, smartthings, schedule, humidity, temperature, handler, enabled, expr, provided):
         request = MagicMock()
-        request.token = MagicMock(return_value="token")
-        request.app_id = MagicMock(return_value="app")
-        request.location_id = MagicMock(return_value="location")
         request.as_bool = MagicMock(return_value=enabled)
         request.as_str = MagicMock(return_value=expr)
         request.update_data.as_bool = MagicMock(return_value=enabled)
@@ -86,8 +80,8 @@ class TestEventHandler:
 
         handler.handle_update(CORRELATION_ID, request)
 
-        smartthings.assert_called_once_with(token="token", app_id="app", location_id="location")
-        schedule.assert_called_once_with(enabled, provided)
+        smartthings.assert_called_once_with(request=request)
+        schedule.assert_called_once_with(WEATHER_LOOKUP_TIMER, enabled, provided)
         temperature.assert_not_called()
         humidity.assert_not_called()
         request.as_bool.assert_called_once_with("retrieve-weather-enabled")

@@ -29,6 +29,8 @@ from sensortrack.smartthings import (
     subscribe_to_temperature_events,
 )
 
+WEATHER_LOOKUP_TIMER = "weather-lookup"  # name/id of the weather lookup timer event
+
 
 # noinspection PyMethodMayBeStatic
 class EventHandler(SmartAppEventHandler):
@@ -79,18 +81,15 @@ class EventHandler(SmartAppEventHandler):
         self, correlation_id: Optional[str], request: Union[InstallRequest, UpdateRequest], subscribe: bool
     ) -> None:
         """Handle configuration refresh for an INSTALL or UPDATE event."""
-        token = request.token()
-        app_id = request.app_id()
-        location_id = request.location_id()
         weather_enabled = request.as_bool("retrieve-weather-enabled")
         weather_cron = request.as_str("retrieve-weather-cron") if weather_enabled else None
-        with SmartThings(token=token, app_id=app_id, location_id=location_id):
-            schedule_weather_lookup_timer(weather_enabled, weather_cron)
-            logging.info("[%s] Completed scheduling weather lookup timer for %s", correlation_id, app_id)
+        with SmartThings(request=request):
+            schedule_weather_lookup_timer(WEATHER_LOOKUP_TIMER, weather_enabled, weather_cron)
+            logging.info("[%s] Completed scheduling weather lookup timer", correlation_id)
             if subscribe:
                 subscribe_to_temperature_events()
                 subscribe_to_humidity_events()
-                logging.info("[%s] Completed subscribing to device events for app %s", correlation_id, app_id)
+                logging.info("[%s] Completed subscribing to device events", correlation_id)
 
     def _handle_sensor_events(self, request: EventRequest, writer: Callable[[List[Point]], None]) -> None:
         """Handle received events from temperature and humidity sensors."""

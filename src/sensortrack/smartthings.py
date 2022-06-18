@@ -11,11 +11,10 @@ from typing import Dict, Optional, Union
 import requests
 from attrs import field, frozen
 from smartapp.converter import CONVERTER
+from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 
 from sensortrack.config import config
 from sensortrack.weather import WeatherLocation
-
-WEATHER_LOOKUP_TIMER = "weather-lookup"  # id of the weather lookup timer event
 
 
 @frozen
@@ -76,12 +75,12 @@ CONTEXT: ContextVar[SmartThingsApiContext] = ContextVar("CONTEXT")
 class SmartThings:
     """Context manager for SmartThings API."""
 
-    def __init__(self, token: str, app_id: str, location_id: str) -> None:
+    def __init__(self, request: Union[InstallRequest, UpdateRequest, EventRequest]) -> None:
         self.context = CONTEXT.set(
             SmartThingsApiContext(
-                token=token,
-                app_id=app_id,
-                location_id=location_id,
+                token=request.token(),
+                app_id=request.app_id(),
+                location_id=request.location_id(),
             )
         )
 
@@ -109,18 +108,16 @@ def _raise_for_status(response: requests.Response) -> None:
         ) from e
 
 
-def _delete_weather_lookup_timer() -> None:
+def _delete_weather_lookup_timer(name: str) -> None:
     """Delete the weather lookup scheduled task."""
-    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, WEATHER_LOOKUP_TIMER))
+    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
     response = requests.delete(url=url, headers=CONTEXT.get().headers)
     _raise_for_status(response)
 
 
-def _create_weather_lookup_timer(location: Location, cron: str) -> None:
+def _create_weather_lookup_timer(name: str, cron: str) -> None:
     """Create the weather lookup scheduled task."""
-    # This is a little hackish, but encoding the location in the name lets us use SmartThings itself as a datastore
-    name = location.weather_location().to_identifier()
-    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, WEATHER_LOOKUP_TIMER))
+    url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
     request = {"name": name, "cron": {"expression": cron, "timezone": "UTC"}}
     response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
     _raise_for_status(response)
@@ -152,13 +149,11 @@ def retrieve_location() -> Location:
     return CONVERTER.from_json(response.text, Location)
 
 
-def schedule_weather_lookup_timer(enabled: bool, cron: Optional[str]) -> None:
+def schedule_weather_lookup_timer(name: str, enabled: bool, cron: Optional[str]) -> None:
     """Create or replace the weather lookup timer for a given cron expression."""
-    _delete_weather_lookup_timer()
+    _delete_weather_lookup_timer(name)
     if enabled and cron:
-        location = retrieve_location()
-        if location.weather_eligible():
-            _create_weather_lookup_timer(location, cron)
+        _create_weather_lookup_timer(name, cron)
 
 
 def subscribe_to_temperature_events() -> None:

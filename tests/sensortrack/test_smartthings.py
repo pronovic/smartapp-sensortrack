@@ -29,6 +29,11 @@ HEADERS = {
     "Authorization": "Bearer token",
 }
 
+REQUEST = MagicMock()
+REQUEST.token = MagicMock(return_value="token")
+REQUEST.app_id = MagicMock(return_value="app")
+REQUEST.location_id = MagicMock(return_value="location")
+
 
 class TestLocation:
     def test_location_weather_eligible(self):
@@ -90,7 +95,7 @@ class TestPublicFunctions:
         response = MagicMock()
         requests.post = MagicMock(return_value=response)
 
-        with SmartThings(token="token", app_id="app", location_id="location"):
+        with SmartThings(request=REQUEST):
             function()
 
         requests.post.assert_called_once_with(url=url, headers=HEADERS, json=request)
@@ -113,7 +118,7 @@ class TestPublicFunctions:
         response = MagicMock(text=data)
         requests.get = MagicMock(return_value=response)
 
-        with SmartThings(token="token", app_id="app", location_id="location"):
+        with SmartThings(request=REQUEST):
             retrieved = retrieve_location()
             assert retrieved == expected
 
@@ -133,63 +138,31 @@ class TestPublicFunctions:
         delete_response = MagicMock()
 
         requests.delete = MagicMock(return_value=delete_response)
-        requests.get = MagicMock()
-        url = "https://base/installedapps/app/schedules/weather-lookup"
+        url = "https://base/installedapps/app/schedules/identifier"
 
-        with SmartThings(token="token", app_id="app", location_id="location"):
-            schedule_weather_lookup_timer(enabled, cron)
+        with SmartThings(request=REQUEST):
+            schedule_weather_lookup_timer("identifier", enabled, cron)
 
         # not enabled, so we delete only
         requests.delete.assert_called_once_with(url=url, headers=HEADERS)
-        requests.get.assert_not_called()
         raise_for_status.assert_called_once_with(delete_response)
 
-    @patch("sensortrack.smartthings.retrieve_location")
-    def test_schedule_weather_lookup_timer_not_eligible(self, retrieve, config, requests, raise_for_status):
+    def test_schedule_weather_lookup_timer_enabled(self, config, requests, raise_for_status):
         config.return_value = CONFIG
-
-        location = MagicMock()
-        location.weather_eligible = MagicMock(return_value=False)
-        retrieve.return_value = location
-
-        delete_response = MagicMock()
-
-        requests.delete = MagicMock(return_value=delete_response)
-        requests.post = MagicMock()
-        url = "https://base/installedapps/app/schedules/weather-lookup"
-
-        with SmartThings(token="token", app_id="app", location_id="location"):
-            schedule_weather_lookup_timer(True, "expr")
-
-        # enabled but not eligible, so we delete only
-        requests.delete.assert_called_once_with(url=url, headers=HEADERS)
-        requests.post.assert_not_called()
-        raise_for_status.assert_called_once_with(delete_response)
-
-    @patch("sensortrack.smartthings.retrieve_location")
-    def test_schedule_weather_lookup_timer_enabled(self, retrieve, config, requests, raise_for_status):
-        config.return_value = CONFIG
-
-        weather = MagicMock()
-        weather.to_identifier = MagicMock(return_value="identifier")
-        location = MagicMock()
-        location.weather_eligible = MagicMock(return_value=True)
-        location.weather_location = MagicMock(return_value=weather)
-        retrieve.return_value = location
 
         delete_response = MagicMock()
         post_response = MagicMock()
 
         requests.delete = MagicMock(return_value=delete_response)
         requests.post = MagicMock(return_value=post_response)
-        url = "https://base/installedapps/app/schedules/weather-lookup"
+        url = "https://base/installedapps/app/schedules/identifier"
 
         request = {"name": "identifier", "cron": {"expression": "expr", "timezone": "UTC"}}
 
-        with SmartThings(token="token", app_id="app", location_id="location"):
-            schedule_weather_lookup_timer(True, "expr")
+        with SmartThings(request=REQUEST):
+            schedule_weather_lookup_timer("identifier", True, "expr")
 
-        # eligible, so we delete and re-add
+        # enabled, so we delete and re-add
         requests.delete.assert_called_once_with(url=url, headers=HEADERS)
         requests.post.assert_called_once_with(url=url, headers=HEADERS, json=request)
         raise_for_status.assert_has_calls([call(delete_response), call(post_response)])
