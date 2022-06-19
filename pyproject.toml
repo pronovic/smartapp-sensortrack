@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "smartapp-sensortrack"
+name = "sensortrack"
 version = "0.3.0"
 description = "Historically track sensor data from SmartThings"
 authors = ["Kenneth J. Pronovici <pronovic@ieee.org>"]
