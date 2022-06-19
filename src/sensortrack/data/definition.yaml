@@ -1,4 +1,4 @@
-id: sensor-track
+id: sensortrack
 name: Sensor Tracking
 description: Track historical data for SmartThings temperature and humidity sensors
 targetUrl: https://daystrom.cedar-solutions.com/smartthings/sensortrack/smartapp

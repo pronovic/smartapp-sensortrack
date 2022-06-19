@@ -35,7 +35,7 @@ at localhost:8086 and Grafana is at localhost:3000.
 
 ## Continuous Integration (CI)
 
-We use [GitHub Actions](https://docs.github.com/en/actions/quickstart) for CI.  See [.github/workflows/tox.yml](.github/workflows/tox.yml) for the definition of the workflow, and go to the [Actions tab](https://github.com/pronovic/sensor-track/actions) to see what actions have been executed.  
+We use [GitHub Actions](https://docs.github.com/en/actions/quickstart) for CI.  See [.github/workflows/tox.yml](.github/workflows/tox.yml) for the definition of the workflow, and go to the [Actions tab](https://github.com/pronovic/smartapp-sensortrack/actions) to see what actions have been executed.  
 
 ## Pre-Commit Hooks
 
@@ -175,7 +175,7 @@ $ run install && run checks && run test
 ### Open the Project
 
 Once you have a working shell development environment, **Open** (do not
-**Import**) the `sensor-track` directory in PyCharm, then follow the remaining
+**Import**) the `smartapp-sensortrack` directory in PyCharm, then follow the remaining
 instructions below.  By using **Open**, the existing `.idea` directory will be
 retained and all of the existing settings will be used.
 
@@ -190,7 +190,7 @@ environment.
 
 ### Project Structure
 
-Go to the PyCharm settings and find the `sensor-track` project.  Under **Project
+Go to the PyCharm settings and find the `smartapp-sensortrack` project.  Under **Project
 Structure**, mark both `src` and `tests` as source folders.  In the **Exclude
 Files** box, enter the following:
 

@@ -246,7 +246,7 @@ run_release() {
       exit 1
    fi
 
-   tar zcf dist/sensor_track-config-$VERSION.tar.gz \
+   tar zcf dist/sensortrack-config-$VERSION.tar.gz \
        -C config/installed --mode="go-rwx" --owner=github --group=github .
    if [ $? != 0 ]; then
       echo "*** Config bundle step failed."
@@ -258,7 +258,7 @@ run_release() {
    echo ""
    echo "Next, push: git push --follow-tags"
    echo ""
-   echo "Then go to: https://github.com/pronovic/sensor-track/releases/tag/v$VERSION"
+   echo "Then go to: https://github.com/pronovic/smartapp-sensortrack/releases/tag/v$VERSION"
    echo ""
    echo "Convert the tag to a release and attach build artifacts:"
    ls -l dist

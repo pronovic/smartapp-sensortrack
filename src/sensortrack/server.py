@@ -93,7 +93,7 @@ async def health() -> Health:
 @API.get("/version")
 async def version() -> Version:
     """Return the API version, including both the package version and the API version"""
-    return Version(package=metadata_version("sensor-track"), api=API.version)
+    return Version(package=metadata_version("sensortrack"), api=API.version)
 
 
 @API.post("/smartapp")

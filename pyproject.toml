@@ -1,11 +1,11 @@
 [tool.poetry]
-name = "sensor-track"
+name = "smartapp-sensortrack"
 version = "0.3.0"
 description = "Historically track sensor data from SmartThings"
 authors = ["Kenneth J. Pronovici <pronovic@ieee.org>"]
 license = "Apache-2.0"
-homepage = "https://github.com/pronovic/sensor-track"
-repository = "https://github.com/pronovic/sensor-track"
+homepage = "https://github.com/pronovic/smartapp-sensortrack"
+repository = "https://github.com/pronovic/smartapp-sensortrack"
 include = [
    { path = 'Changelog', format = 'sdist' },
    { path = 'LICENSE', format = 'sdist' },

@@ -25,7 +25,7 @@ class TestDispatcher:
         assert dispatcher().config is not None
 
         # Spot-check the SmartApp definition, just to be sure it loaded ok from disk
-        assert dispatcher().definition.id == "sensor-track"
+        assert dispatcher().definition.id == "smartapp-sensortrack"
         assert dispatcher().definition.name == "Sensor Tracking"
 
         # Confirm that event handler is set as expected

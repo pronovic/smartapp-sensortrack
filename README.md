@@ -1,14 +1,15 @@
-# Sensor Tracking for SmartThings
+# SmartApp - Sensor Tracking
 
-[![license](https://img.shields.io/github/license/pronovic/sensor-track)](https://github.com/pronovic/sensor-track/blob/master/LICENSE)
-[![Test Suite](https://github.com/pronovic/sensor-track/workflows/Test%20Suite/badge.svg)](https://github.com/pronovic/sensor-track/actions?query=workflow%3A%22Test+Suite%22)
-[![coverage](https://coveralls.io/repos/github/pronovic/sensor-track/badge.svg?branch=master)](https://coveralls.io/github/pronovic/sensor-track?branch=master)
-[![release](https://img.shields.io/github/v/release/pronovic/sensor-track)](https://github.com/pronovic/sensor-track/releases/latest)
+[![license](https://img.shields.io/github/license/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/blob/master/LICENSE)
+[![Test Suite](https://github.com/pronovic/smartapp-sensortrack/workflows/Test%20Suite/badge.svg)](https://github.com/pronovic/smartapp-sensortrack/actions?query=workflow%3A%22Test+Suite%22)
+[![coverage](https://coveralls.io/repos/github/pronovic/smartapp-sensortrack/badge.svg?branch=master)](https://coveralls.io/github/pronovic/smartapp-sensortrack?branch=master)
+[![release](https://img.shields.io/github/v/release/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/releases/latest)
 
-This is a SmartApp that is used to historically track data from SmartThings
-temperature and humidity sensors. Optionally, users with U.S.-based locations
-can choose to periodically capture current temperature and humidity, sourced
-from the National Weather Service API.
+This is a SmartThings SmartApp that is used to capture data from SmartThings
+temperature and humidity sensors and write it to an metrics database.
+Optionally, users with U.S.-based locations can choose to periodically capture
+current temperature and humidity, sourced from the National Weather Service
+API.
 
 The SmartApp is written in Python 3 using the [smartapp-sdk](https://pypi.org/project/smartapp-sdk/) package.  It 
 is designed to run as a systemd user service writing data 
@@ -100,11 +101,11 @@ organization (`iot`), the default bucket (`metrics`) and the token
 ## Installing the SmartApp Server
 
 The platform is distributed at GitHub.  To install the software, download the `.whl`
-file for the [latest release](https://github.com/pronovic/sensor-track/releases/latest),
+file for the [latest release](https://github.com/pronovic/smartapp-sensortrack/releases/latest),
 and install it using `pip`, like:
 
 ```
-$ pip install sensor_track-0.1.0-py3-none-any.whl
+$ pip install sensortrack-0.4.0-py3-none-any.whl
 ```
 
 Next, configure the platform.  Download the configuration bundle for the latest
@@ -112,7 +113,7 @@ release.  Extract the tar file to your user configuration directory:
 
 ```
 $ mkdir -p ~/.config
-$ tar zxvf sensor_track-config-0.1.0.tar.gz -C ~/.config
+$ tar zxvf sensortrack-config-0.4.0.tar.gz -C ~/.config
 ```
 
 This creates two directories within `~/.config`.  The `systemd` directory
