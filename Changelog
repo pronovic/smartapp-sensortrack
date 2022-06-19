@@ -1,3 +1,7 @@
+Version 0.3.1     unreleased
+
+	* Remove cache for smartthings.retrieve_location().
+
 Version 0.3.0     18 Jun 2022
 
 	* Improvements/fixes to install process and documentation.

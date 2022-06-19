@@ -10,14 +10,11 @@ from typing import Dict, Optional, Union
 
 import requests
 from attrs import field, frozen
-from cachetools.func import ttl_cache
 from smartapp.converter import CONVERTER
 from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 
 from sensortrack.config import config
 from sensortrack.rest import DECAYING_RETRY, raise_for_status
-
-LOCATION_TTL = 6 * 60 * 60  # cache location lookups for up to six hours
 
 
 @frozen(kw_only=True)
@@ -114,8 +111,12 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
     raise_for_status(response)
 
 
+# Note: I originally cached this, but then decided against it.  Access to location
+# data is limited by permissions on the specific installed app, and it seems iffy
+# to have that data sitting around in cache to be retrieved only by location id.
+
+
 @DECAYING_RETRY
-@ttl_cache(maxsize=128, ttl=LOCATION_TTL)
 def _retrieve_location(location_id: str) -> Location:
     """Retrieve details about a specific location, broken out to facilitate caching."""
     url = _url("/locations/%s" % location_id)

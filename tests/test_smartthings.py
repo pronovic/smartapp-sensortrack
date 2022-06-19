@@ -89,9 +89,7 @@ class TestPublicFunctions:
         response = MagicMock(text=data)
         requests.get = MagicMock(side_effect=[exception, response])
 
-        # the second attempt is cached, so we get 2 total calls to get() instead of 3
         with SmartThings(request=REQUEST):
-            assert retrieve_location() == expected
             assert retrieve_location() == expected
 
         requests.get.assert_has_calls([call(url=url, headers=HEADERS)] * 2)
