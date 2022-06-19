@@ -1,5 +1,6 @@
-Version 0.3.1     unreleased
+Version 0.4.0     19 Jun 2022
 
+	* Rename GitHub repo to smartapp-sensortrack.
 	* Remove cache for smartthings.retrieve_location().
 
 Version 0.3.0     18 Jun 2022
@@ -12,5 +13,5 @@ Version 0.2.0     18 Jun 2022
 
 Version 0.1.0     17 Jun 2022
 
-	* Initial public release
+	* Initial public release.
 
