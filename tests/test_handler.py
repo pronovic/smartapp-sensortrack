@@ -249,12 +249,16 @@ class TestEventHandler:
         points: List[Point] = kwargs["record"]
         assert bucket == "bucket"
         if eligible:
-            assert len(points) == 1
+            assert len(points) == 2
             assert len(points[0]._tags) == 1
-            assert len(points[0]._fields) == 2
+            assert len(points[0]._fields) == 1
             assert points[0]._name == "weather"
             assert points[0]._tags["location"] == "l"
             assert points[0]._fields["temperature"] == 78.9
-            assert points[0]._fields["humidity"] == 10.2
+            assert len(points[1]._tags) == 1
+            assert len(points[1]._fields) == 1
+            assert points[1]._name == "weather"
+            assert points[1]._tags["location"] == "l"
+            assert points[1]._fields["humidity"] == 10.2
         else:
             assert len(points) == 0

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
-# pylint: disable=unnecessary-pass:
 
 """
 National Weather Service client.
@@ -24,25 +23,14 @@ See: https://weather-gov.github.io/api/general-faqs
 """
 from __future__ import annotations  # so we can return a type from one of its own methods
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import jsonpath_ng
 import pytemperature
 import requests
-from cachetools.func import ttl_cache
 
 from sensortrack.config import config
-from sensortrack.rest import DECAYING_RETRY, RestClientError, raise_for_status
-
-STATION_TTL = 6 * 60 * 60  # cache station lookups for up to six hours
-
-
-def _extract_json(json: Dict[str, Any], jsonpath: str) -> Any:
-    """Extract a value from a JSON document using jsonpath, returning None if it can't be parsed."""
-    try:
-        return jsonpath_ng.parse(jsonpath).find(json)[0].value
-    except Exception as e:
-        raise RestClientError("Could not find JSON attribute: %s" % jsonpath) from e
+from sensortrack.rest import DECAYING_RETRY, raise_for_status
 
 
 def _url(endpoint: str) -> str:
@@ -50,28 +38,48 @@ def _url(endpoint: str) -> str:
     return "%s%s" % (config().weather.base_url, endpoint)
 
 
+def _extract_float(json: Dict[str, Any], jsonpath: str) -> float:
+    """Extract a float from a JSON document using jsonpath."""
+    return jsonpath_ng.parse(jsonpath).find(json)[0].value  # type: ignore
+
+
+def _extract_temperature(response: requests.Response) -> Optional[float]:
+    """Extract temperature from the response, returning None if it can't be extracted."""
+    try:
+        return pytemperature.c2f(_extract_float(response.json(), "$.properties.temperature.value"))  # type: ignore
+    except:  # pylint: disable=bare-except:
+        return None
+
+
+def _extract_humidity(response: requests.Response) -> Optional[float]:
+    """Extract humidity from the response, returning None if it can't be extracted."""
+    try:
+        return round(float(_extract_float(response.json(), "$.properties.relativeHumidity.value")), 2)
+    except:  # pylint: disable=bare-except:
+        return None
+
+
 @DECAYING_RETRY
-@ttl_cache(maxsize=128, ttl=STATION_TTL)
 def _retrieve_station_url(latitude: float, longitude: float) -> str:
     """Retrieve the station URL for the closest station to a latitude and longitude."""
     url = _url("/points/%s,%s/stations" % (latitude, longitude))
     response = requests.get(url=url)
     raise_for_status(response)
-    return str(_extract_json(response.json(), "$.features[0].id"))
+    return str(_extract_float(response.json(), "$.features[0].id"))
 
 
 @DECAYING_RETRY
-def _retrieve_latest_observation(station_url: str) -> Tuple[float, float]:
+def _retrieve_latest_observation(station_url: str) -> Tuple[Optional[float], Optional[float]]:
     """Return the latest (temperature in F, humidity) observation at a particular station, via its station URL."""
     url = "%s/observations/latest" % station_url
     response = requests.get(url=url)
     raise_for_status(response)
-    temperature = pytemperature.c2f(_extract_json(response.json(), "$.properties.temperature.value"))
-    humidity = round(float(_extract_json(response.json(), "$.properties.relativeHumidity.value")), 2)
+    temperature = _extract_temperature(response)
+    humidity = _extract_humidity(response)
     return temperature, humidity
 
 
-def retrieve_current_conditions(latitude: float, longitude: float) -> Tuple[float, float]:
+def retrieve_current_conditions(latitude: float, longitude: float) -> Tuple[Optional[float], Optional[float]]:
     """Retrieve current weather conditions a particular lat/long location."""
     station_url = _retrieve_station_url(latitude, longitude)
     return _retrieve_latest_observation(station_url)
