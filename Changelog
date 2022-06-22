@@ -1,4 +1,4 @@
-Version 0.4.1     unreleased
+Version 0.4.1     22 Jun 2022
 
 	* Use InfluxDBClient.write_api(SYNCHRONOUS) so file handles are closed.
 	* Remove cache for weather API and better handle bad data when received.
