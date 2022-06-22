@@ -100,12 +100,10 @@ class EventHandler(SmartAppEventHandler):
                 location = retrieve_location()
                 if location.country_code == "USA" and location.latitude is not None and location.longitude is not None:
                     temperature, humidity = retrieve_current_conditions(location.latitude, location.longitude)
-                    points.append(
-                        Point("weather")
-                        .tag("location", location.location_id)
-                        .field("temperature", temperature)
-                        .field("humidity", humidity)
-                    )
+                    if temperature:
+                        points.append(Point("weather").tag("location", location.location_id).field("temperature", temperature))
+                    if humidity:
+                        points.append(Point("weather").tag("location", location.location_id).field("humidity", humidity))
 
     def _handle_sensor_events(self, request: EventRequest, points: List[Point]) -> None:
         """Handle received events from sensors, appending any points to be persisted to InfluxDB."""
