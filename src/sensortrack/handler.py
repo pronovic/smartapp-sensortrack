@@ -9,6 +9,7 @@ import logging
 from typing import List, Optional, Union
 
 from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 from smartapp.interface import (
     ConfigurationRequest,
     ConfirmationRequest,
@@ -75,7 +76,7 @@ class EventHandler(SmartAppEventHandler):
             points = []  # type: List[Point]
             self._handle_weather_lookup_events(request, points)
             self._handle_sensor_events(request, points)
-            client.write_api().write(bucket=bucket, record=points)
+            client.write_api(write_options=SYNCHRONOUS).write(bucket=bucket, record=points)
             logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
 
     def _handle_config_refresh(
