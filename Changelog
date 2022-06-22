@@ -1,3 +1,7 @@
+Version 0.4.1     unreleased
+
+	* Use InfluxDBClient.write_api(SYNCHRONOUS) so file handles are closed.
+
 Version 0.4.0     19 Jun 2022
 
 	* Rename GitHub repo to smartapp-sensortrack.
