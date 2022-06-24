@@ -1,3 +1,7 @@
+Version 0.4.2     unreleased
+
+	* Upgrade to smartapp-sdk v0.5.0.
+
 Version 0.4.1     22 Jun 2022
 
 	* Use InfluxDBClient.write_api(SYNCHRONOUS) so file handles are closed.
