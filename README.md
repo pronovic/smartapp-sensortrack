@@ -100,7 +100,7 @@ organization (`iot`), the default bucket (`metrics`) and the token
 
 ## Installing the SmartApp Server
 
-The platform is distributed at GitHub.  To install the software, download the `.whl`
+The software is distributed at GitHub.  To install the software, download the `.whl`
 file for the [latest release](https://github.com/pronovic/smartapp-sensortrack/releases/latest),
 and install it using `pip`, like:
 
@@ -108,7 +108,7 @@ and install it using `pip`, like:
 $ pip install sensortrack-0.4.0-py3-none-any.whl
 ```
 
-Next, configure the platform.  Download the configuration bundle for the latest
+Next, configure the server.  Download the configuration bundle for the latest
 release.  Extract the tar file to your user configuration directory:
 
 ```
