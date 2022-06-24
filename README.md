@@ -219,8 +219,8 @@ Now that you have a working webserver and you can look at the logs, you have
 everything you need to actually create and install the SmartApp in the
 SmartThings infrastructure.
 
-First, make sure that you have a console window open.  Watch the SmartApp logs
-with `journalctl`, as described above.
+First, make sure that the webserver is running and that you have a console
+window open.  Watch the SmartApp logs with `journalctl`, as described above.
 
 Next, log into the [Developer Workspace](https://smartthings.developer.samsung.com/workspace/) with 
 your Samsung Account credentials.  Once there:
@@ -230,9 +230,17 @@ your Samsung Account credentials.  Once there:
 - Enter a project name and click **Create Project**
 - In the next screen, click **Register App**
 - Choose the **Webhook Endpoint** option
-- Paste in the URL for your webhook
+- Paste in the URL for your webhook and then proceed to the next page
+- Enter a name and description for the SmartApp
+- Under permissions, select the following and then proceed to the next page
+  - r:devices:*
+  - r:locations:*
+- Leave remaining optional configuration unchanged and click **Save**
 
-At this point, the SmartThings infrastructure will send a `CONFIRMATION` event
+At this point, you will get a client id and secret associated with your SmartApp.
+Save off these values, because you will not be able to see them again.
+
+Simultaneously, the SmartThings infrastructure will send a `CONFIRMATION` event
 to your webhook.  The application will handle that event and log an application
 ID and a confirmation URL that you can see using `journalctl`.  Copy out that
 URL and view it in a browser.  This step confirms that you control the webhook.
