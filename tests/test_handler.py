@@ -9,7 +9,7 @@ import pytest
 from influxdb_client import Point
 from smartapp.interface import EventType
 
-from sensortrack.handler import IS_WEATHER_LOOKUP, WEATHER_LOOKUP, EventHandler
+from sensortrack.handler import WEATHER_LOOKUP, EventHandler, is_weather_lookup
 
 CORRELATION_ID = "xxx"
 
@@ -31,7 +31,7 @@ class TestEventHandler:
         ],
     )
     def test_is_weather_lookup(self, event, expected):
-        assert IS_WEATHER_LOOKUP(event) is expected
+        assert is_weather_lookup(event) is expected
 
     def test_handle_confirmation(self, handler):
         handler.handle_confirmation(CORRELATION_ID, MagicMock())  # just make sure it doesn't blow up
@@ -150,7 +150,7 @@ class TestEventHandler:
         influxdb.assert_called_once_with(url="url", org="org", token="token")
         request.event_data.filter.assert_has_calls(
             [
-                call(event_type=EventType.TIMER_EVENT, predicate=IS_WEATHER_LOOKUP),
+                call(event_type=EventType.TIMER_EVENT, predicate=is_weather_lookup),
                 call(event_type=EventType.DEVICE_EVENT),
             ]
         )
@@ -230,7 +230,7 @@ class TestEventHandler:
 
         request.event_data.filter.assert_has_calls(
             [
-                call(event_type=EventType.TIMER_EVENT, predicate=IS_WEATHER_LOOKUP),
+                call(event_type=EventType.TIMER_EVENT, predicate=is_weather_lookup),
                 call(event_type=EventType.DEVICE_EVENT),
             ]
         )

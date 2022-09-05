@@ -6,7 +6,7 @@
 SmartApp event handler.
 """
 import logging
-from typing import List, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -33,7 +33,11 @@ from sensortrack.smartthings import (
 from sensortrack.weather import retrieve_current_conditions
 
 WEATHER_LOOKUP = "weather-lookup"  # name/id of the weather lookup timer event
-IS_WEATHER_LOOKUP = lambda event: "name" in event and event["name"] == WEATHER_LOOKUP
+
+
+def is_weather_lookup(event: Dict[str, Any]) -> bool:
+    """Whether an event is a weather lookup timer event."""
+    return "name" in event and event["name"] == WEATHER_LOOKUP
 
 
 # noinspection PyMethodMayBeStatic
@@ -95,7 +99,7 @@ class EventHandler(SmartAppEventHandler):
 
     def _handle_weather_lookup_events(self, request: EventRequest, points: List[Point]) -> None:
         """Handle weather event lookup timer events, appending any points to be persisted to InfluxDB."""
-        if request.event_data.filter(event_type=EventType.TIMER_EVENT, predicate=IS_WEATHER_LOOKUP):
+        if request.event_data.filter(event_type=EventType.TIMER_EVENT, predicate=is_weather_lookup):
             with SmartThings(request=request):
                 location = retrieve_location()
                 if location.country_code == "USA" and location.latitude is not None and location.longitude is not None:

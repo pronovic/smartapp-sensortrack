@@ -40,10 +40,10 @@ class TestPublicFunctions:
 
         requests.get.assert_has_calls(
             [
-                call(url=stations_url),
-                call(url=stations_url),
-                call(url=observations_url),
-                call(url=observations_url),
+                call(url=stations_url, timeout=5.0),
+                call(url=stations_url, timeout=5.0),
+                call(url=observations_url, timeout=5.0),
+                call(url=observations_url, timeout=5.0),
             ]
         )
         raise_for_status.assert_has_calls(
@@ -82,8 +82,8 @@ class TestPublicFunctions:
 
         requests.get.assert_has_calls(
             [
-                call(url=stations_url),
-                call(url=observations_url),
+                call(url=stations_url, timeout=5.0),
+                call(url=observations_url, timeout=5.0),
             ]
         )
         raise_for_status.assert_has_calls(

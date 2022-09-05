@@ -67,7 +67,7 @@ class TestPublicFunctions:
         with SmartThings(request=REQUEST):
             function()
 
-        requests.post.assert_has_calls([call(url=url, headers=HEADERS, json=request)] * 2)
+        requests.post.assert_has_calls([call(url=url, headers=HEADERS, json=request, timeout=5.0)] * 2)
         raise_for_status.assert_called_once_with(response)
 
     def test_retrieve_location(self, config, requests, raise_for_status):
@@ -92,7 +92,7 @@ class TestPublicFunctions:
         with SmartThings(request=REQUEST):
             assert retrieve_location() == expected
 
-        requests.get.assert_has_calls([call(url=url, headers=HEADERS)] * 2)
+        requests.get.assert_has_calls([call(url=url, headers=HEADERS, timeout=5.0)] * 2)
         raise_for_status.assert_called_once_with(response)
 
     @pytest.mark.parametrize(
@@ -116,7 +116,7 @@ class TestPublicFunctions:
             schedule_weather_lookup_timer("identifier", enabled, cron)
 
         # not enabled, so we delete only
-        requests.delete.assert_has_calls([call(url=url, headers=HEADERS)] * 2)
+        requests.delete.assert_has_calls([call(url=url, headers=HEADERS, timeout=5.0)] * 2)
         raise_for_status.assert_called_once_with(delete_response)
 
     def test_schedule_weather_lookup_timer_enabled(self, config, requests, raise_for_status):
@@ -138,6 +138,6 @@ class TestPublicFunctions:
             schedule_weather_lookup_timer("identifier", True, "expr")
 
         # enabled, so we delete and re-add
-        requests.delete.assert_called_once_with(url=delete_url, headers=HEADERS)
-        requests.post.assert_has_calls([call(url=post_url, headers=HEADERS, json=request)] * 2)
+        requests.delete.assert_called_once_with(url=delete_url, headers=HEADERS, timeout=5.0)
+        requests.post.assert_has_calls([call(url=post_url, headers=HEADERS, json=request, timeout=5.0)] * 2)
         raise_for_status.assert_has_calls([call(delete_response), call(post_response)])
