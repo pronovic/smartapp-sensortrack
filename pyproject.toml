@@ -37,7 +37,7 @@ smartapp-sdk = "^0.5.0"
 jsonpath-ng = "^1.5.3"
 pytemperature = "^1.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.1.2"
 pytest-testdox = "^3.0.1"
 coverage = "^6.3.2"
@@ -52,6 +52,7 @@ coveralls = "^3.3.1"
 types-PyYAML = "^6.0.8"
 pytest-asyncio = "^0.18.3"
 types-requests = "^2.27.30"
+types-Jinja2 = "^2.11.9"
 
 [tool.black]
 line-length = 132
