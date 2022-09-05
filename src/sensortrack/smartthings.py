@@ -16,6 +16,8 @@ from smartapp.interface import EventRequest, InstallRequest, UpdateRequest
 from sensortrack.config import config
 from sensortrack.rest import DECAYING_RETRY, raise_for_status
 
+_CLIENT_TIMEOUT_SEC = 5.0  # we want some fairly large timeout so that requests can't hang forever
+
 
 @frozen(kw_only=True)
 class Location:
@@ -79,7 +81,7 @@ def _url(endpoint: str) -> str:
 def _delete_weather_lookup_timer(name: str) -> None:
     """Delete the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules/%s" % (CONTEXT.get().app_id, name))
-    response = requests.delete(url=url, headers=CONTEXT.get().headers)
+    response = requests.delete(url=url, headers=CONTEXT.get().headers, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
 
 
@@ -88,7 +90,7 @@ def _create_weather_lookup_timer(name: str, cron: str) -> None:
     """Create the weather lookup scheduled task."""
     url = _url("/installedapps/%s/schedules" % CONTEXT.get().app_id)
     request = {"name": name, "cron": {"expression": cron, "timezone": "UTC"}}
-    response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
+    response = requests.post(url=url, headers=CONTEXT.get().headers, json=request, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
 
 
@@ -107,7 +109,7 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
             "subscriptionName": "all-%s" % capability,  # note: limited to 36 characters
         },
     }
-    response = requests.post(url=url, headers=CONTEXT.get().headers, json=request)
+    response = requests.post(url=url, headers=CONTEXT.get().headers, json=request, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
 
 
@@ -120,7 +122,7 @@ def _subscribe_to_event(capability: str, attribute: str) -> None:
 def _retrieve_location(location_id: str) -> Location:
     """Retrieve details about a specific location, broken out to facilitate caching."""
     url = _url("/locations/%s" % location_id)
-    response = requests.get(url=url, headers=CONTEXT.get().headers)
+    response = requests.get(url=url, headers=CONTEXT.get().headers, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
     return CONVERTER.from_json(response.text, Location)
 

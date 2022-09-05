@@ -32,6 +32,8 @@ import requests
 from sensortrack.config import config
 from sensortrack.rest import DECAYING_RETRY, raise_for_status
 
+_CLIENT_TIMEOUT_SEC = 5.0  # we want some fairly large timeout so that requests can't hang forever
+
 
 def _url(endpoint: str) -> str:
     """Build a URL based on API configuration."""
@@ -63,7 +65,7 @@ def _extract_humidity(response: requests.Response) -> Optional[float]:
 def _retrieve_station_url(latitude: float, longitude: float) -> str:
     """Retrieve the station URL for the closest station to a latitude and longitude."""
     url = _url("/points/%s,%s/stations" % (latitude, longitude))
-    response = requests.get(url=url)
+    response = requests.get(url=url, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
     return str(_extract_float(response.json(), "$.features[0].id"))
 
@@ -72,7 +74,7 @@ def _retrieve_station_url(latitude: float, longitude: float) -> str:
 def _retrieve_latest_observation(station_url: str) -> Tuple[Optional[float], Optional[float]]:
     """Return the latest (temperature in F, humidity) observation at a particular station, via its station URL."""
     url = "%s/observations/latest" % station_url
-    response = requests.get(url=url)
+    response = requests.get(url=url, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
     temperature = _extract_temperature(response)
     humidity = _extract_humidity(response)

@@ -37,12 +37,12 @@ smartapp-sdk = "^0.5.0"
 jsonpath-ng = "^1.5.3"
 pytemperature = "^1.1"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.1.2"
 pytest-testdox = "^3.0.1"
 coverage = "^6.3.2"
 tox = "^3.25.0"
-pylint = "~2.12"  # versions after 2.12 get into an infinite loop on Windows
+pylint = "^2.15.0"
 toml = "^0.10.2"
 pre-commit = "^2.18.1"
 black = "^22.3.0"
@@ -52,6 +52,7 @@ coveralls = "^3.3.1"
 types-PyYAML = "^6.0.8"
 pytest-asyncio = "^0.18.3"
 types-requests = "^2.27.30"
+types-Jinja2 = "^2.11.9"
 
 [tool.black]
 line-length = 132
