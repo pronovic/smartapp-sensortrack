@@ -64,6 +64,7 @@ exclude = '''
   | __pycache__
   | \.tox
   | \.venv
+  | \.poetry
   | build
   | dist
   | docs
