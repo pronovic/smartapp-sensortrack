@@ -8,6 +8,7 @@ SmartApp event handler.
 import logging
 from typing import Any, Dict, List, Optional, Union
 
+import requests
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 from smartapp.interface import (
@@ -23,6 +24,7 @@ from smartapp.interface import (
 )
 
 from sensortrack.config import config
+from sensortrack.rest import RestClientError
 from sensortrack.smartthings import (
     SmartThings,
     retrieve_location,
@@ -78,7 +80,7 @@ class EventHandler(SmartAppEventHandler):
         bucket = config().influxdb.bucket
         with InfluxDBClient(url=url, org=org, token=token) as client:
             points = []  # type: List[Point]
-            self._handle_weather_lookup_events(request, points)
+            self._handle_weather_lookup_events(correlation_id, request, points)
             self._handle_sensor_events(request, points)
             client.write_api(write_options=SYNCHRONOUS).write(bucket=bucket, record=points)
             logging.debug("[%s] Completed persisting %d point(s) of data", correlation_id, len(points))
@@ -97,17 +99,23 @@ class EventHandler(SmartAppEventHandler):
                 subscribe_to_humidity_events()
                 logging.info("[%s] Completed subscribing to device events", correlation_id)
 
-    def _handle_weather_lookup_events(self, request: EventRequest, points: List[Point]) -> None:
+    def _handle_weather_lookup_events(self, correlation_id: Optional[str], request: EventRequest, points: List[Point]) -> None:
         """Handle weather event lookup timer events, appending any points to be persisted to InfluxDB."""
         if request.event_data.filter(event_type=EventType.TIMER_EVENT, predicate=is_weather_lookup):
             with SmartThings(request=request):
                 location = retrieve_location()
                 if location.country_code == "USA" and location.latitude is not None and location.longitude is not None:
-                    temperature, humidity = retrieve_current_conditions(location.latitude, location.longitude)
-                    if temperature:
-                        points.append(Point("weather").tag("location", location.location_id).field("temperature", temperature))
-                    if humidity:
-                        points.append(Point("weather").tag("location", location.location_id).field("humidity", humidity))
+                    try:
+                        temperature, humidity = retrieve_current_conditions(location.latitude, location.longitude)
+                        if temperature:
+                            points.append(Point("weather").tag("location", location.location_id).field("temperature", temperature))
+                        if humidity:
+                            points.append(Point("weather").tag("location", location.location_id).field("humidity", humidity))
+                    except RestClientError as e:
+                        logging.error("[%s] Call to weather.gov failed: %s", correlation_id, e.message)
+                    except requests.RequestException as e:
+                        # it's hard to get any other specifics from the exception, so we just go with the exception type
+                        logging.error("[%s] Call to weather.gov failed: %s", correlation_id, type(e).__name__)
 
     def _handle_sensor_events(self, request: EventRequest, points: List[Point]) -> None:
         """Handle received events from sensors, appending any points to be persisted to InfluxDB."""
