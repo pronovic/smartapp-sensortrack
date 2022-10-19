@@ -1,4 +1,4 @@
-Version 0.4.4     unreleased
+Version 0.4.4     18 Oct 2022
 
 	* Handle weather.gov errors with a simple logged error message.
 
