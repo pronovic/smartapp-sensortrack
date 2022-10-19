@@ -291,3 +291,35 @@ InfluxDB.  There's no way to know exactly when the first event will be
 triggered, so keep an eye on the logs and confirm that you don't see any
 errors. You should see at least one event within the first hour or so,
 depending on how you have your sensors configured.
+
+## Upgrading the SmartApp Server
+
+The process is similar to installing.  Download the `.whl`
+file for the [latest release](https://github.com/pronovic/smartapp-sensortrack/releases/latest),
+and install it using `pip`, like:
+
+```
+$ pip install sensortrack-0.4.0-py3-none-any.whl
+```
+
+Reload configuration and restart the systemd service::
+
+```
+$ systemctl --user daemon-reload
+$ systemctl --user restart sensortrack
+```
+
+At this point, the systemd service should be running.  Check that it is
+listening:
+
+```
+$ curl -X GET http://localhost:8080/health
+$ curl -X GET http://localhost:8080/version
+```
+
+You can also check the logs from the service:
+
+```
+$ journalctl --pager-end --user-unit sensortrack
+```
+
