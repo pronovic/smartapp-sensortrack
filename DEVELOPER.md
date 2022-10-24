@@ -26,10 +26,6 @@ it's easiest if you disable signature checking
 in `config/local/sensortrack/server/application.yaml`.  InfluxDB is running
 at localhost:8086 and Grafana is at localhost:3000.
 
-## Continuous Integration (CI)
-
-We use [GitHub Actions](https://docs.github.com/en/actions/quickstart) for CI.  See [.github/workflows/tox.yml](.github/workflows/tox.yml) for the definition of the workflow, and go to the [Actions tab](https://github.com/pronovic/smartapp-sensortrack/actions) to see what actions have been executed.  
-
 ## Pre-Commit Hooks
 
 We rely on pre-commit hooks to ensure that the code is properly-formatted,
@@ -45,12 +41,12 @@ checks, so the build will fail.
 
 The [`.gitattributes`](.gitattributes) file controls line endings for the files
 in this repository.  Instead of relying on automatic behavior, the
-`.gitattributes` file forces most files to have UNIX line endings.  
+`.gitattributes` file forces most files to have UNIX line endings.
 
 ## Prerequisites
 
 Nearly all prerequisites are managed by Poetry.  All you need to do is make
-sure that you have a working Python 3 enviroment and install Poetry itself.  
+sure that you have a working Python 3 enviroment and install Poetry itself.
 
 ### Poetry Version
 
@@ -125,13 +121,13 @@ curl -sSL https://install.python-poetry.org | python3 -
 The [`run`](run) script provides shortcuts for common developer tasks:
 
 ```
-$ run
+$ run --help
 
 ------------------------------------
 Shortcuts for common developer tasks
 ------------------------------------
 
-Usage: run <command>
+Basic tasks:
 
 - run install: Setup the virtualenv via Poetry and install pre-commit hooks
 - run format: Run the code formatters
@@ -139,14 +135,17 @@ Usage: run <command>
 - run test: Run the unit tests
 - run test -c: Run the unit tests with coverage
 - run test -ch: Run the unit tests with coverage and open the HTML report
-- run tox: Run the Tox test suite used by the GitHub CI action
-- run server: Run the REST server at localhost:8080
+- run suite: Run the complete test suite, as for the GitHub Actions CI build
+
+Additional tasks:
+
+- run build: Build artifacts in the dist/ directory
 - run database: Run the InfluxDB & Grafana servers via docker-compose
 - run release: Release a specific version and tag the code
-- run build: Build artifacts in the dist/ directory
+- run server: Run the REST server at localhost:8080
 ```
 
-For local testing, use `run influxdb` in one window and `run server` in another.
+For local testing, use `run database` in one window and `run server` in another.
 The standard local configuration is able to connect to the database.
 
 ## Integration with PyCharm
@@ -170,7 +169,7 @@ order.  In particular, if you do not run the install step, there will be no
 virtualenv for PyCharm to use:
 
 ```
-run install && run checks && run test
+run install && run suite
 ```
 
 ### Open the Project
@@ -196,7 +195,7 @@ Structure**, mark both `src` and `tests` as source folders.  In the **Exclude
 Files** box, enter the following:
 
 ```
-LICENSE;NOTICE;PyPI.md;.coverage;.coveragerc;.github;.gitignore;.gitattributes;.htmlcov;.idea;.isort.cfg;.mypy.ini;.mypy_cache;.pre-commit-config.yaml;.pylintrc;.pytest_cache;.readthedocs.yml;.tox;.toxrc;.tabignore;build;dist;docs/_build;out;poetry.lock;poetry.toml;run;.runtime;pytest.ini
+LICENSE;NOTICE;PyPI.md;.coverage;.coveragerc;.github;.gitignore;.gitattributes;.htmlcov;.idea;.isort.cfg;.mypy.ini;.mypy_cache;.pre-commit-config.yaml;.pylintrc;.pytest_cache;.readthedocs.yml;.tabignore;build;dist;docs/_build;out;poetry.lock;poetry.toml;run;.run;.venv;.runtime;pytest.ini
 ```
 
 When you're done, click **Ok**.  Then, go to the gear icon in the project panel 
@@ -256,7 +255,7 @@ source ~/.bash_profile
 |Field|Value|
 |-----|-----|
 |Name|`Format Code`|
-|Description|`Run the Black and isort code formatters`|
+|Description|`Run the code formatters`|
 |Group|`Developer Tools`|
 |Program|`$ProjectFileDir$/run`|
 |Arguments|`format`|
