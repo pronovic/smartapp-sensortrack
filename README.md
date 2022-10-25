@@ -323,3 +323,4 @@ You can also check the logs from the service:
 $ journalctl --pager-end --user-unit sensortrack
 ```
 
+
