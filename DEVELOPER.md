@@ -8,7 +8,7 @@ This code runs as a daemon and is intended for use Linux and UNIX-like platforms
 
 This project uses [Poetry](https://python-poetry.org/) to manage Python packaging and dependencies.  Most day-to-day tasks (such as running unit tests from the command line) are orchestrated through Poetry.
 
-A coding standard is enforced using [Black](https://github.com/psf/black), [isort](https://pypi.org/project/isort/) and [Pylint](https://www.pylint.org/).  Python 3 type hinting is validated using [MyPy](https://pypi.org/project/mypy/).
+A coding standard is enforced using [Black](https://pypi.org/project/black/), [isort](https://pypi.org/project/isort/) and [Pylint](https://pypi.org/project/pylint/).  Python 3 type hinting is validated using [MyPy](https://pypi.org/project/mypy/).
 
 ## Retries
 
@@ -121,7 +121,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 The [`run`](run) script provides shortcuts for common developer tasks:
 
 ```
-$ run --help
+$ ./run --help
 
 ------------------------------------
 Shortcuts for common developer tasks
@@ -169,7 +169,7 @@ order.  In particular, if you do not run the install step, there will be no
 virtualenv for PyCharm to use:
 
 ```
-run install && run suite
+./run install && ./run suite
 ```
 
 ### Open the Project
