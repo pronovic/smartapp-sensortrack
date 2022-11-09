@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "sensortrack"
-version = "0.4.5"
+version = "0.4.6"
 description = "Historically track sensor data from SmartThings"
 authors = ["Kenneth J. Pronovici <pronovic@ieee.org>"]
 license = "Apache-2.0"

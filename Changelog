@@ -1,4 +1,4 @@
-Version 0.4.6     unreleased
+Version 0.4.6     09 Nov 2022
 
 	* Support Python 3.11.
 	* Convert to modern importlib-resources files() pattern to fix deprecation.
