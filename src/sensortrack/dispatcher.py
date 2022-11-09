@@ -4,23 +4,24 @@
 """
 SmartApp dispatcher.
 """
-import importlib.resources
 from typing import Optional
 
+from importlib_resources import files
 from smartapp.converter import CONVERTER
 from smartapp.dispatcher import SmartAppDispatcher
 from smartapp.interface import SmartAppDefinition
 
+import sensortrack.data
+
 from .config import config
 from .handler import EventHandler
 
-_DATA_PACKAGE = "sensortrack.data"
 _DEFINITION_FILE = "definition.yaml"  # definition of the SmartApp
 
 
 def _load_definition() -> SmartAppDefinition:
-    with importlib.resources.open_text(_DATA_PACKAGE, _DEFINITION_FILE) as f:
-        return CONVERTER.from_yaml(f.read(), SmartAppDefinition)
+    yaml = files(sensortrack.data).joinpath(_DEFINITION_FILE).read_text()
+    return CONVERTER.from_yaml(yaml, SmartAppDefinition)
 
 
 _DISPATCHER: Optional[SmartAppDispatcher] = None
