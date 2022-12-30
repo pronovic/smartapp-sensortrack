@@ -312,13 +312,13 @@ Ensure that the `Changelog` is up-to-date and reflects all of the changes that
 will be published.  The top line must show your version as unreleased:
 
 ```
-Version 3.3.0     unreleased
+Version 0.4.7     unreleased
 ```
 
 Run the release command:
 
 ```
-./run release 3.3.0
+./run release 0.4.7
 ```
 
 This command updates `NOTICE` and `Changelog` to reflect the release version
