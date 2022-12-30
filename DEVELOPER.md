@@ -141,7 +141,7 @@ Basic tasks:
 Additional tasks:
 
 - run database: Run the InfluxDB & Grafana servers via docker-compose
-- run release: Release a specific version and tag the code
+- run release: Tag and release the code, triggering GHA to publish artifacts
 - run server: Run the REST server at localhost:8080
 ```
 
@@ -297,3 +297,31 @@ source ~/.bash_profile
 |Make console active on message in stdout|_Checked_|
 |Make console active on message in stderr|_Checked_|
 |Output filters|`$FILE_PATH$:$LINE$:$COLUMN.*`|
+
+## Release Process
+
+There is a partially-automated process to publish a new release to GitHub.
+
+> _Note:_ In order to publish code, you must must have push permissions to the
+> GitHub repo.
+
+Ensure that you are on the `master` branch.  Releases must always be done from
+`master`.
+
+Ensure that the `Changelog` is up-to-date and reflects all of the changes that
+will be published.  The top line must show your version as unreleased:
+
+```
+Version 0.4.7     unreleased
+```
+
+Run the release command:
+
+```
+./run release 0.4.7
+```
+
+This command updates `NOTICE` and `Changelog` to reflect the release version
+and release date, commits those changes, tags the code, and pushes to GitHub.
+The new tag triggers a GitHub Actions build that runs the test suite, generates
+the artifacts, and finally creates a release from the tag.
