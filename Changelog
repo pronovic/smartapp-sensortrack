@@ -1,4 +1,4 @@
-Version 0.4.8     unreleased
+Version 0.4.8     26 Feb 2023
 
 	* Upgrade all dependencies to the latest major version.
 	* Address dependabot warning for starlette < 0.25.0 via fastapi.
