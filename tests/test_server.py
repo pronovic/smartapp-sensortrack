@@ -26,7 +26,6 @@ CLIENT = TestClient(API)
 
 
 class TestErrorHandlers:
-
     pytestmark = pytest.mark.asyncio
 
     async def test_bad_request_handler(self):
@@ -61,7 +60,6 @@ class TestErrorHandlers:
 
 
 class TestLifecycle:
-
     pytestmark = pytest.mark.asyncio
 
     async def test_startup_event(self):
@@ -87,7 +85,7 @@ class TestRoutes:
     @patch("sensortrack.server.dispatcher")
     def test_smartapp(self, d):
         d.return_value = MagicMock(dispatch=MagicMock(return_value="result"))
-        response = CLIENT.post(url="/smartapp", headers={"a": "b"}, data="body")
+        response = CLIENT.post(url="/smartapp", headers={"a": "b"}, content="body")
         assert response.status_code == 200
         assert codecs.decode(response.content) == "result"
         assert response.headers["content-type"] == "application/json"
