@@ -38,8 +38,8 @@ format-jinja = "{% if distance == 0 and not dirty %}{{ base }}{% else %}{{ base 
 
 [tool.poetry.dependencies]
 python = ">=3.9,<4"
-fastapi = "~0, >=0.78.0"
-uvicorn = "~0, >=0.17.6"
+fastapi = "~0, >=0.92.0"
+uvicorn = "~0, >=0.20.0"
 influxdb-client = "^1.36.1"
 python-dotenv = "^1.0.0"
 smartapp-sdk = "~0, >=0.5.0"
