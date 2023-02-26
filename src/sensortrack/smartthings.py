@@ -32,7 +32,6 @@ class Location:
 
 @frozen(kw_only=True)
 class SmartThingsApiContext:
-
     token: str
     app_id: str
     location_id: str
