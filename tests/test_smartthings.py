@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
 import os
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
-from requests import HTTPError
+import responses
+from responses import matchers
+from responses.registries import OrderedRegistry
 
 from sensortrack.smartthings import (
     Location,
@@ -31,9 +33,10 @@ REQUEST.token = MagicMock(return_value="token")
 REQUEST.app_id = MagicMock(return_value="app")
 REQUEST.location_id = MagicMock(return_value="location")
 
+TIMEOUT_MATCHER = matchers.request_kwargs_matcher({"timeout": 5.0})
+HEADERS_MATCHER = matchers.header_matcher(HEADERS)
 
-@patch("sensortrack.smartthings.raise_for_status")
-@patch("sensortrack.smartthings.requests")
+
 @patch("sensortrack.smartthings.config")
 class TestPublicFunctions:
     @pytest.mark.parametrize(
@@ -43,10 +46,8 @@ class TestPublicFunctions:
             (subscribe_to_humidity_events, "relativeHumidityMeasurement", "humidity"),
         ],
     )
-    def test_subscribe_to_events(self, config, requests, raise_for_status, function, capability, attribute):
+    def test_subscribe_to_events(self, config, function, capability, attribute):
         config.return_value = CONFIG
-
-        url = "https://base/installedapps/app/subscriptions"
         request = {
             "sourceType": "CAPABILITY",
             "capability": {
@@ -58,42 +59,46 @@ class TestPublicFunctions:
                 "subscriptionName": "all-%s" % capability,
             },
         }
+        with responses.RequestsMock(registry=OrderedRegistry) as r:
+            r.post(
+                url="https://base/installedapps/app/subscriptions",
+                status=500,
+                json=request,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            r.post(
+                url="https://base/installedapps/app/subscriptions",
+                status=200,
+                json=request,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            with SmartThings(request=REQUEST):
+                function()
+            assert len(r.calls) == 2  # one for the the failed attempt, one for the retry
 
-        # the exception is thrown and that is handled by the retry annotation
-        exception = HTTPError("hello")
-        response = MagicMock()
-        requests.post = MagicMock(side_effect=[exception, response])
-
-        with SmartThings(request=REQUEST):
-            function()
-
-        requests.post.assert_has_calls([call(url=url, headers=HEADERS, json=request, timeout=5.0)] * 2)
-        raise_for_status.assert_called_once_with(response)
-
-    def test_retrieve_location(self, config, requests, raise_for_status):
+    def test_retrieve_location(self, config):
         config.return_value = CONFIG
-
-        data = load_file(os.path.join(FIXTURE_DIR, "smartthings", "location.json"))
-        expected = Location(
-            location_id="15526d0a-XXXX-XXXX-XXXX-b6247aacbbb2",
-            name="My House",
-            country_code="USA",
-            latitude=41.024654,
-            longitude=-97.37219,
-        )
-
-        url = "https://base/locations/location"
-
-        # the exception is thrown and that is handled by the retry annotation
-        exception = HTTPError("hello")
-        response = MagicMock(text=data)
-        requests.get = MagicMock(side_effect=[exception, response])
-
-        with SmartThings(request=REQUEST):
-            assert retrieve_location() == expected
-
-        requests.get.assert_has_calls([call(url=url, headers=HEADERS, timeout=5.0)] * 2)
-        raise_for_status.assert_called_once_with(response)
+        with responses.RequestsMock(registry=OrderedRegistry) as r:
+            r.get(
+                url="https://base/locations/location",
+                status=500,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            r.get(
+                url="https://base/locations/location",
+                status=200,
+                body=load_file(os.path.join(FIXTURE_DIR, "smartthings", "location.json")),
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            with SmartThings(request=REQUEST):
+                assert retrieve_location() == Location(
+                    location_id="15526d0a-XXXX-XXXX-XXXX-b6247aacbbb2",
+                    name="My House",
+                    country_code="USA",
+                    latitude=41.024654,
+                    longitude=-97.37219,
+                )
+            assert len(r.calls) == 2  # one for the the failed attempt, one for the retry
 
     @pytest.mark.parametrize(
         "enabled,cron",
@@ -102,42 +107,44 @@ class TestPublicFunctions:
             (True, None),
         ],
     )
-    def test_schedule_weather_lookup_timer_disabled(self, config, requests, raise_for_status, enabled, cron):
+    def test_schedule_weather_lookup_timer_disabled(self, config, enabled, cron):
         config.return_value = CONFIG
+        with responses.RequestsMock(registry=OrderedRegistry) as r:
+            r.delete(
+                url="https://base/installedapps/app/schedules/identifier",
+                status=500,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            r.delete(
+                url="https://base/installedapps/app/schedules/identifier",
+                status=200,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            with SmartThings(request=REQUEST):
+                schedule_weather_lookup_timer("identifier", enabled, cron)
+            assert len(r.calls) == 2  # one for the the failed attempt, one for the retry
 
-        delete_response = MagicMock()
-
-        # the exception is thrown and that is handled by the retry annotation
-        exception = HTTPError("hello")
-        requests.delete = MagicMock(side_effect=[exception, delete_response])
-        url = "https://base/installedapps/app/schedules/identifier"
-
-        with SmartThings(request=REQUEST):
-            schedule_weather_lookup_timer("identifier", enabled, cron)
-
-        # not enabled, so we delete only
-        requests.delete.assert_has_calls([call(url=url, headers=HEADERS, timeout=5.0)] * 2)
-        raise_for_status.assert_called_once_with(delete_response)
-
-    def test_schedule_weather_lookup_timer_enabled(self, config, requests, raise_for_status):
+    def test_schedule_weather_lookup_timer_enabled(self, config):
         config.return_value = CONFIG
-
-        delete_response = MagicMock()
-        post_response = MagicMock()
-
-        # the exception is thrown and that is handled by the retry annotation
-        exception = HTTPError("hello")
-        requests.delete = MagicMock(return_value=delete_response)
-        requests.post = MagicMock(side_effect=[exception, post_response])
-        delete_url = "https://base/installedapps/app/schedules/identifier"
-        post_url = "https://base/installedapps/app/schedules"
-
         request = {"name": "identifier", "cron": {"expression": "expr", "timezone": "UTC"}}
-
-        with SmartThings(request=REQUEST):
-            schedule_weather_lookup_timer("identifier", True, "expr")
-
-        # enabled, so we delete and re-add
-        requests.delete.assert_called_once_with(url=delete_url, headers=HEADERS, timeout=5.0)
-        requests.post.assert_has_calls([call(url=post_url, headers=HEADERS, json=request, timeout=5.0)] * 2)
-        raise_for_status.assert_has_calls([call(delete_response), call(post_response)])
+        with responses.RequestsMock(registry=OrderedRegistry) as r:
+            r.delete(
+                url="https://base/installedapps/app/schedules/identifier",
+                status=200,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            r.post(
+                url="https://base/installedapps/app/schedules",
+                status=500,
+                json=request,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            r.post(
+                url="https://base/installedapps/app/schedules",
+                status=200,
+                json=request,
+                match=[TIMEOUT_MATCHER, HEADERS_MATCHER],
+            )
+            with SmartThings(request=REQUEST):
+                schedule_weather_lookup_timer("identifier", True, "expr")
+            assert len(r.calls) == 3  # one for the delete, one for the failed post, one for the retry
