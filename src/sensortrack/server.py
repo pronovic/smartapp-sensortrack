@@ -23,7 +23,7 @@ API = FastAPI(version=API_VERSION, docs_url=None, redoc_url=None)  # no Swagger 
 class Health(BaseModel):
     """API health data"""
 
-    status: str = Field("OK")
+    status: str = Field(default="OK")
 
 
 class Version(BaseModel):
