@@ -1198,13 +1198,13 @@ files = [
 
 [[package]]
 name = "smartapp-sdk"
-version = "0.6.1"
+version = "0.6.2"
 description = "Framework to build a webhook-based SmartThings SmartApp"
 optional = false
 python-versions = ">=3.9,<4"
 files = [
-    {file = "smartapp_sdk-0.6.1-py3-none-any.whl", hash = "sha256:fb7ba1ea15d8cca79f775850016e480a5e0509285007ca13d54e9d869aa27f6f"},
-    {file = "smartapp_sdk-0.6.1.tar.gz", hash = "sha256:d2245bd5704d791a9e019cb2f7211da755bf8ecb42d96e2a3c095b5220702679"},
+    {file = "smartapp_sdk-0.6.2-py3-none-any.whl", hash = "sha256:eded91899ace815ade613c1517dc01b188c6711e9fcb133c8cb07d015cd29062"},
+    {file = "smartapp_sdk-0.6.2.tar.gz", hash = "sha256:89049df805e5c90afb41ee8b7f124897118a00aea4e04066c0feb1dfccdc96af"},
 ]
 
 [package.dependencies]
@@ -1524,4 +1524,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<4"
-content-hash = "6f3aa35c5b621e147a9d8f06375ab9e2e4ea74696bb9089f1396ab247345267c"
+content-hash = "9f1680f339ce2030751fcd1239509fc464685ca7d59b113fd3df93e38b6ed604"
