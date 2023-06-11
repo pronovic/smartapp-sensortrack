@@ -102,18 +102,20 @@ organization (`iot`), the default bucket (`metrics`) and the token
 
 The software is distributed at GitHub.  To install the software, download the `.whl`
 file for the [latest release](https://github.com/pronovic/smartapp-sensortrack/releases/latest),
-and install it using `pip`, like:
+and install it using [pipx](https://pypa.github.io/pipx/), like:
 
 ```
-$ pip install sensortrack-0.4.0-py3-none-any.whl
+$ pipx install --force --include-deps ./sensortrack-0.4.10-py3-none-any.whl
 ```
+
+> On Debian, I install pipx using: `apt-get install pipx --no-install-suggests --no-install-recommends`
 
 Next, configure the server.  Download the configuration bundle for the latest
 release.  Extract the tar file to your user configuration directory:
 
 ```
 $ mkdir -p ~/.config
-$ tar zxvf sensortrack-config-0.4.0.tar.gz -C ~/.config
+$ tar zxvf sensortrack-config-0.4.10.tar.gz -C ~/.config
 ```
 
 This creates two directories within `~/.config`.  The `systemd` directory
@@ -296,11 +298,13 @@ depending on how you have your sensors configured.
 
 The process is similar to installing.  Download the `.whl`
 file for the [latest release](https://github.com/pronovic/smartapp-sensortrack/releases/latest),
-and install it using `pip`, like:
+and install it using [pipx](https://pypa.github.io/pipx/), like:
 
 ```
-$ pip install sensortrack-0.4.0-py3-none-any.whl
+$ pipx install --force --include-deps ./sensortrack-0.4.10-py3-none-any.whl
 ```
+
+> On Debian, I install pipx using: `apt-get install pipx --no-install-suggests --no-install-recommends`
 
 Reload configuration and restart the systemd service::
 
