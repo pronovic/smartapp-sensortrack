@@ -273,10 +273,10 @@ Follow the instructions to [Enable Developer Mode in the SmartThings App](https:
 Once you've enabled Developer Mode and restarted, you need to find your
 SmartApp:
 
-- Tap on the **Automations** tab
-- Click on **+** in the upper right of the screen
-- Tap **Add Routine** and choose the **Discover** tab at the top
+- Tap on the **Routines** tab
+- Click on the little round icon that means **Discover** in the upper right of the screen (next to **+**)
 - Scroll all of the way to the bottom to find your custom SmartApp, which should have whatever name you registered above
+- Click the SmartApp to configure it
 
 This will immediately trigger a series of webhook `POST` requests to your
 webserver.  If everything goes well, you will be prompted to configure the
