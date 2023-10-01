@@ -30,7 +30,7 @@ import pytemperature
 import requests
 
 from sensortrack.config import config
-from sensortrack.rest import DECAYING_RETRY, raise_for_status
+from sensortrack.rest import DECAYING_RETRY, RestDataError, raise_for_status
 
 _CLIENT_TIMEOUT_SEC = 5.0  # we want some fairly large timeout so that requests can't hang forever
 
@@ -67,7 +67,10 @@ def _retrieve_station_url(latitude: float, longitude: float) -> str:
     url = _url("/points/%s,%s/stations" % (latitude, longitude))
     response = requests.get(url=url, timeout=_CLIENT_TIMEOUT_SEC)
     raise_for_status(response)
-    return str(_extract_float(response.json(), "$.features[0].id"))
+    try:
+        return str(_extract_float(response.json(), "$.features[0].id"))
+    except Exception as e:  # pylint: disable=bare-except
+        raise RestDataError("Failed to retrieve any valid stations for %s,%s" % (latitude, longitude)) from e
 
 
 @DECAYING_RETRY

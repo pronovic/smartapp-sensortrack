@@ -8,6 +8,7 @@ import responses
 from responses import matchers
 from responses.registries import OrderedRegistry
 
+from sensortrack.rest import RestDataError
 from sensortrack.weather import retrieve_current_conditions
 from tests.testutil import load_file
 
@@ -28,7 +29,7 @@ class TestPublicFunctions:
             r.get(
                 url="https://base/points/12.3,45.6/stations",
                 status=200,
-                body=load_file(os.path.join(FIXTURE_DIR, "weather", "stations.json")),
+                body=load_file(os.path.join(FIXTURE_DIR, "weather/stations", "stations.json")),
                 match=[TIMEOUT_MATCHER],
             )
             r.get(
@@ -47,6 +48,19 @@ class TestPublicFunctions:
             assert len(r.calls) == 4  # one retry and one success for each endpoint
 
     @patch("sensortrack.weather.config")
+    def test_retrieve_current_conditions_bad_stations(self, config):
+        config.return_value = MagicMock(weather=MagicMock(base_url="https://base"))
+        with responses.RequestsMock(registry=OrderedRegistry) as r:
+            r.get(
+                url="https://base/points/12.3,45.6/stations",
+                status=200,
+                body=load_file(os.path.join(FIXTURE_DIR, "weather/stations", "empty.json")),
+                match=[TIMEOUT_MATCHER],
+            )
+            with pytest.raises(RestDataError):
+                assert retrieve_current_conditions(latitude=12.3, longitude=45.6) == "xxx"
+
+    @patch("sensortrack.weather.config")
     @pytest.mark.parametrize(
         "input_file,expected",
         [
@@ -61,7 +75,7 @@ class TestPublicFunctions:
             r.get(
                 url="https://base/points/12.3,45.6/stations",
                 status=200,
-                body=load_file(os.path.join(FIXTURE_DIR, "weather", "stations.json")),
+                body=load_file(os.path.join(FIXTURE_DIR, "weather/stations", "stations.json")),
                 match=[TIMEOUT_MATCHER],
             )
             r.get(

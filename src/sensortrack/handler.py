@@ -24,7 +24,7 @@ from smartapp.interface import (
 )
 
 from sensortrack.config import config
-from sensortrack.rest import RestClientError
+from sensortrack.rest import RestClientError, RestDataError
 from sensortrack.smartthings import (
     SmartThings,
     retrieve_location,
@@ -112,6 +112,8 @@ class EventHandler(SmartAppEventHandler):
                         if humidity:
                             points.append(Point("weather").tag("location", location.location_id).field("humidity", humidity))
                     except RestClientError as e:
+                        logging.error("[%s] Call to weather.gov failed: %s", correlation_id, e.message)
+                    except RestDataError as e:
                         logging.error("[%s] Call to weather.gov failed: %s", correlation_id, e.message)
                     except requests.RequestException as e:
                         # it's hard to get any other specifics from the exception, so we just go with the exception type

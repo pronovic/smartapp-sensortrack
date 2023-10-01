@@ -27,6 +27,13 @@ class RestClientError(Exception):
     response_body: Optional[str] = None
 
 
+@frozen
+class RestDataError(Exception):
+    """An error involving data received from a RESTful API."""
+
+    message: str
+
+
 def raise_for_status(response: requests.Response) -> None:
     """Check response status, raising RestClientError for errors"""
     try:
