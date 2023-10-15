@@ -4,6 +4,7 @@
 [![Test Suite](https://github.com/pronovic/smartapp-sensortrack/workflows/Test%20Suite/badge.svg)](https://github.com/pronovic/smartapp-sensortrack/actions?query=workflow%3A%22Test+Suite%22)
 [![coverage](https://coveralls.io/repos/github/pronovic/smartapp-sensortrack/badge.svg?branch=master)](https://coveralls.io/github/pronovic/smartapp-sensortrack?branch=master)
 [![release](https://img.shields.io/github/v/release/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/releases/latest)
+[![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 
 This is a SmartThings SmartApp that is used to capture data from SmartThings
 temperature and humidity sensors and write it to an metrics database.
