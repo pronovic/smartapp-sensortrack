@@ -16,10 +16,8 @@ from sensortrack.server import (
     exception_handler,
     influxdb_error_handler,
     rest_client_error_handler,
-    shutdown_event,
     signature_error_handler,
     smartapp_error_handler,
-    startup_event,
 )
 
 CLIENT = TestClient(API)
@@ -57,16 +55,6 @@ class TestErrorHandlers:
         e = Exception("hello")
         response = await exception_handler(None, e)
         assert response.status_code == 500
-
-
-class TestLifecycle:
-    pytestmark = pytest.mark.asyncio
-
-    async def test_startup_event(self):
-        await startup_event()  # just make sure it runs
-
-    async def test_shutdown_event(self):
-        await shutdown_event()  # just make sure it runs
 
 
 class TestRoutes:

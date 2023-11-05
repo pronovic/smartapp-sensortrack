@@ -72,18 +72,6 @@ async def exception_handler(_: Request, e: Exception) -> Response:
     return _generic_error_handler(e, 500, "Internal error: %s" % e)
 
 
-@API.on_event("startup")
-async def startup_event() -> None:
-    """Do setup at server startup."""
-    logging.info("Server startup complete")
-
-
-@API.on_event("shutdown")
-async def shutdown_event() -> None:
-    """Do cleanup at server shutdown."""
-    logging.info("Server shutdown complete")
-
-
 @API.get("/health")
 async def health() -> Health:
     """Return an API health indicator."""
