@@ -37,7 +37,7 @@ pattern = '^[vV](?P<base>\d+\.\d+\.\d+)'  # this extracts the version from our v
 format-jinja = "{% if distance == 0 and not dirty %}{{ base }}{% else %}{{ base }}+{{ distance }}.{{ commit }}{% endif %}"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<4"
+python = ">=3.10,<4"
 fastapi = "~0, >=0.103.2"
 uvicorn = "~0, >=0.23.2"
 influxdb-client = "^1.38.0"
@@ -68,7 +68,7 @@ responses = "~0, >=0.23.3"
 
 [tool.black]
 line-length = 132
-target-version = [ 'py39', 'py310', 'py311', 'py312' ]
+target-version = [ 'py310', 'py311', 'py312' ]
 include = '(src\/scripts\/.*$|\.pyi?$)'
 exclude = '''
 /(
