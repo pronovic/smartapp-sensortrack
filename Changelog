@@ -1,4 +1,4 @@
-Version 0.4.14     unreleased
+Version 0.4.14     17 Jan 2024
 
 	* Update jinja2 to address CVE-2024-22195 from Dependabot.
 	* Update dependencies and fix new MyPy warning about covariance.
