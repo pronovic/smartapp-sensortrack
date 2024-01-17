@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # vim: set ft=python ts=4 sw=4 expandtab:
 import os
+from typing import Dict, Pattern
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -21,7 +22,7 @@ from tests.testutil import load_file
 FIXTURE_DIR = os.path.join(os.path.dirname(__file__), "fixtures")
 
 CONFIG = MagicMock(smartthings=MagicMock(base_url="https://base"))
-HEADERS = {
+HEADERS: Dict[str, str | Pattern[str]] = {
     "Accept": "application/vnd.smartthings+json;v=1",
     "Accept-Language": "en_US",
     "Content-Type": "application/json",
