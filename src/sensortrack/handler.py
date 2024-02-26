@@ -44,7 +44,6 @@ def is_weather_lookup(event: Dict[str, Any]) -> bool:
 
 # noinspection PyMethodMayBeStatic
 class EventHandler(SmartAppEventHandler):
-
     """SmartApp event handler."""
 
     def handle_confirmation(self, correlation_id: Optional[str], request: ConfirmationRequest) -> None:

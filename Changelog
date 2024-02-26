@@ -5,11 +5,7 @@ Version 0.4.15     unreleased
 	* Update Poetry install instructions in DEVELOPER.md.
 	* Pull in latest version of run-script-framework.
 	* Upgrade to gha-shared-workflows@v4 with new Poetry setup.
-
-Version 0.4.15     unreleased
-
-	* Update cryptography to address CVE-2024-0727 from Dependabot.
-	* Update fastapi and starlette to address CVE-2024-24762 from Dependabot.
+	* Add support for 'run outdated' and update dependencies.
 
 Version 0.4.14     17 Jan 2024
 
