@@ -3,6 +3,9 @@ Version 0.4.16     unreleased
 	* Pull in latest updates from run-script-framework.
 	* Simplify GHA integration with coveralls.io.
 	* Update transitive dependencies to address Dependabot warnings.
+	* Add support for Python v3.13.
+	* Upgrade to Poetry v1.8.4 for official Python 3.13 support.
+	* Add dev dependency on types-influxdb-client to fix MyPy warning.
 
 Version 0.4.15     26 Feb 2024
 
