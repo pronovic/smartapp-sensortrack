@@ -1,8 +1,8 @@
 # SmartApp - Sensor Tracking
 
-[![license](https://img.shields.io/github/license/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/blob/master/LICENSE)
+[![license](https://img.shields.io/github/license/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/blob/main/LICENSE)
 [![Test Suite](https://github.com/pronovic/smartapp-sensortrack/workflows/Test%20Suite/badge.svg)](https://github.com/pronovic/smartapp-sensortrack/actions?query=workflow%3A%22Test+Suite%22)
-[![coverage](https://coveralls.io/repos/github/pronovic/smartapp-sensortrack/badge.svg?branch=master)](https://coveralls.io/github/pronovic/smartapp-sensortrack?branch=master)
+[![coverage](https://coveralls.io/repos/github/pronovic/smartapp-sensortrack/badge.svg?branch=main)](https://coveralls.io/github/pronovic/smartapp-sensortrack?branch=main)
 [![release](https://img.shields.io/github/v/release/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/releases/latest)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
 
