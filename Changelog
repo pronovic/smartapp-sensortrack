@@ -1,5 +1,6 @@
 Version 0.4.17     unreleased
 
+	* Add GitHub security policy in SECURITY.md.
 	* Update dependencies to address Dependabot warnings.
 	* Upgrade to gha-shared-workflows@v7 with publish improvements.
 	* Set asyncio_default_fixture_loop_scope=function in pytest.ini.
