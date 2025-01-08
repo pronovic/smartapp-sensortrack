@@ -69,14 +69,12 @@ Finally, install Poetry itself and then verify your installation:
 
 ```
 pipx install poetry
-pipx inject poetry poetry-dynamic-versioning
-pipx list --include-injected
 ```
 
 To upgrade this installation later, use:
 
 ```
-pipx upgrade --include-injected poetry
+pipx upgrade poetry
 ```
 
 ### Debian
@@ -94,14 +92,12 @@ Finally, install Poetry itself and then verify your installation:
 
 ```
 pipx install poetry
-pipx inject poetry poetry-dynamic-versioning
-pipx list --include-injected
 ```
 
 To upgrade this installation later, use:
 
 ```
-pipx upgrade --include-injected poetry
+pipx upgrade poetry
 ```
 
 ## Developer Tasks
