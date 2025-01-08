@@ -6,7 +6,7 @@ This code runs as a daemon and is intended for use Linux and UNIX-like platforms
 
 ## Packaging and Dependencies
 
-This project uses [Poetry](https://python-poetry.org/) to manage Python packaging and dependencies.  Most day-to-day tasks (such as running unit tests from the command line) are orchestrated through Poetry.
+This project uses [Poetry v2](https://python-poetry.org/) to manage Python packaging and dependencies.  Most day-to-day tasks (such as running unit tests from the command line) are orchestrated through Poetry.
 
 A coding standard is enforced using [Black](https://pypi.org/project/black/), [isort](https://pypi.org/project/isort/) and [Pylint](https://pypi.org/project/pylint/).  Python 3 type hinting is validated using [MyPy](https://pypi.org/project/mypy/).
 
@@ -50,7 +50,7 @@ sure that you have a working Python 3 enviroment and install Poetry itself.
 
 ### Poetry Version
 
-The project is designed to work with Poetry >= 1.8.0.  If you already have an older
+The project is designed to work with Poetry >= 2.0.0.  If you already have an older
 version of Poetry installed on your system, upgrade it first.
 
 ### MacOS
