@@ -1,10 +1,14 @@
 # SmartApp - Sensor Tracking
 
 [![license](https://img.shields.io/github/license/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/blob/main/LICENSE)
-[![Test Suite](https://github.com/pronovic/smartapp-sensortrack/workflows/Test%20Suite/badge.svg)](https://github.com/pronovic/smartapp-sensortrack/actions?query=workflow%3A%22Test+Suite%22)
-[![coverage](https://coveralls.io/repos/github/pronovic/smartapp-sensortrack/badge.svg?branch=main)](https://coveralls.io/github/pronovic/smartapp-sensortrack?branch=main)
 [![release](https://img.shields.io/github/v/release/pronovic/smartapp-sensortrack)](https://github.com/pronovic/smartapp-sensortrack/releases/latest)
 [![Poetry](https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json)](https://python-poetry.org/)
+
+_Note: As of January 2025, I have migrated my home automation infrastructure
+from SmartThings to Home Assistant, so I no longer use this software.  It does
+work, and is still a decent example of how to write a compliant SmartApp using
+my smartapp-sdk library.  However, the repository is archived and you should
+consider this code to be unmaintained._
 
 This is a SmartThings SmartApp that is used to capture data from SmartThings
 temperature and humidity sensors and write it to an metrics database.
